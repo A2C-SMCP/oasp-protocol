@@ -1,0 +1,25 @@
+[project]
+name = "oasp-protocol"
+version = "0.1.0"
+description = "Office AddIn Socket Protocol - Office AddIn 与后端服务之间的实时通信协议规范"
+authors = [
+    { name = "JQQ", email = "jqq1716@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.0.0",
+    "mike>=2.0.0",
+    "invoke>=2.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = []

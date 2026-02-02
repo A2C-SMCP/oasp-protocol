@@ -1,0 +1,67 @@
+site_name: OASP - Office AddIn Socket Protocol
+site_description: Office AddIn 与后端服务之间的实时通信协议规范
+site_author: JQQ
+
+repo_name: oasp-protocol
+docs_dir: docs
+
+theme:
+  name: material
+  language: zh
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: 切换至深色模式
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: 切换至浅色模式
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - 首页: index.md
+  - 协议规范:
+    - 概述: specification/index.md
+    - 架构设计: specification/architecture.md
+    - 连接与握手: specification/connection.md
+    - 事件定义:
+      - Word 事件: specification/events-word.md
+      - PPT 事件 [Draft]: specification/events-ppt.md
+      - Excel 事件 [Draft]: specification/events-excel.md
+    - 数据结构: specification/data-structures.md
+    - 错误处理: specification/error-handling.md
+    - 通用约定: specification/conventions.md
+  - 附录:
+    - 术语表: appendix/glossary.md
+    - 变更日志: appendix/changelog.md
+
+extra:
+  version:
+    provider: mike
