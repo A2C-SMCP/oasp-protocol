@@ -7,6 +7,47 @@
 
 ---
 
+## [0.1.1] - 2026-02-02
+
+### 变更
+
+**事件命名规范化**
+
+为保持命名一致性，统一采用 `{namespace}:{action}:{target}` 格式：
+
+- PPT 事件:
+  - `ppt:slide:add` → `ppt:add:slide`
+  - `ppt:slide:delete` → `ppt:delete:slide`
+  - `ppt:slide:move` → `ppt:move:slide`
+  - `ppt:slide:goto` → `ppt:goto:slide`
+
+- Excel 事件:
+  - `excel:get:rangeValues` → `excel:get:range`
+  - `excel:set:rangeValues` → `excel:set:range`
+  - `excel:sheet:add` → `excel:add:sheet`
+  - `excel:sheet:delete` → `excel:delete:sheet`
+  - `excel:sheet:rename` → `excel:rename:sheet`
+  - `excel:sheet:activate` → `excel:activate:sheet`
+
+**错误码调整**
+
+- `2002` 从 `CONNECTION_LOST` 改为 `INVALID_TOKEN`（令牌无效）
+- 新增 `2005 CONNECTION_LOST`（连接丢失）
+
+**数据类型简化**
+
+- `ChartType`: 简化为 Column, Bar, Line, Pie, Area, Scatter, Doughnut
+- `ShapeType`: 合并两端实现，现包含 Rectangle, RoundedRectangle, Circle, Oval, Triangle, Diamond, Pentagon, Hexagon, Line, Arrow, Star, TextBox
+
+### 新增
+
+**PPT 事件**
+
+- `ppt:insert:table` - 在幻灯片中插入表格
+- `ppt:update:textBox` - 更新幻灯片中的文本框
+
+---
+
 ## [0.1.0] - 2026-02-02
 
 ### 新增

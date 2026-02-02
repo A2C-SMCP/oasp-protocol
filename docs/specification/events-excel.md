@@ -16,14 +16,14 @@
 | [excel:get:selectedRange](#excelgetselectedrange) | 📋 Draft | 获取选中范围 |
 | [excel:get:usedRange](#excelgetusedrange) | 📋 Draft | 获取已使用范围 |
 | [excel:get:cellValue](#excelgetcellvalue) | 📋 Draft | 获取单元格值 |
-| [excel:get:rangeValues](#excelgetrangevalues) | 📋 Draft | 获取范围内的值 |
+| [excel:get:range](#excelgetrange) | 📋 Draft | 获取范围内的值 |
 
 ### 内容操作类
 
 | 事件名 | 状态 | 说明 |
 |--------|------|------|
 | [excel:set:cellValue](#excelsetcellvalue) | 📋 Draft | 设置单元格值 |
-| [excel:set:rangeValues](#excelsetrangevalues) | 📋 Draft | 设置范围内的值 |
+| [excel:set:range](#excelsetrange) | 📋 Draft | 设置范围内的值 |
 | [excel:insert:table](#excelInserttable) | 📋 Draft | 插入表格 |
 | [excel:insert:chart](#excelinsertchart) | 📋 Draft | 插入图表 |
 
@@ -31,10 +31,10 @@
 
 | 事件名 | 状态 | 说明 |
 |--------|------|------|
-| [excel:sheet:add](#excelsheetadd) | 📋 Draft | 添加工作表 |
-| [excel:sheet:delete](#excelsheetdelete) | 📋 Draft | 删除工作表 |
-| [excel:sheet:rename](#excelsheetrename) | 📋 Draft | 重命名工作表 |
-| [excel:sheet:activate](#excelsheetactivate) | 📋 Draft | 激活工作表 |
+| [excel:add:sheet](#exceladdsheet) | 📋 Draft | 添加工作表 |
+| [excel:delete:sheet](#exceldeletesheet) | 📋 Draft | 删除工作表 |
+| [excel:rename:sheet](#excelrenamesheet) | 📋 Draft | 重命名工作表 |
+| [excel:activate:sheet](#excelactivatesheet) | 📋 Draft | 激活工作表 |
 
 ---
 
@@ -170,7 +170,7 @@ interface GetCellValueResponse {
 
 ---
 
-### excel:get:rangeValues
+### excel:get:range
 
 **方向**: Server → AddIn（请求-响应）
 
@@ -282,7 +282,7 @@ interface SetCellValueResponse {
 
 ---
 
-### excel:set:rangeValues
+### excel:set:range
 
 **方向**: Server → AddIn（请求-响应）
 
@@ -379,7 +379,7 @@ interface InsertChartRequest {
 
 ## 工作表管理类
 
-### excel:sheet:add
+### excel:add:sheet
 
 **方向**: Server → AddIn（请求-响应）
 
@@ -403,7 +403,7 @@ interface AddSheetRequest {
 
 ---
 
-### excel:sheet:delete
+### excel:delete:sheet
 
 **方向**: Server → AddIn（请求-响应）
 
@@ -424,7 +424,7 @@ interface DeleteSheetRequest {
 
 ---
 
-### excel:sheet:rename
+### excel:rename:sheet
 
 **方向**: Server → AddIn（请求-响应）
 
@@ -446,7 +446,7 @@ interface RenameSheetRequest {
 
 ---
 
-### excel:sheet:activate
+### excel:activate:sheet
 
 **方向**: Server → AddIn（请求-响应）
 

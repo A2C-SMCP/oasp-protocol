@@ -279,13 +279,16 @@ type SlideElementType =
 type ShapeType =
   | "Rectangle"            // 矩形
   | "RoundedRectangle"     // 圆角矩形
+  | "Circle"               // 圆形
   | "Oval"                 // 椭圆
   | "Triangle"             // 三角形
   | "Diamond"              // 菱形
   | "Pentagon"             // 五边形
   | "Hexagon"              // 六边形
+  | "Line"                 // 直线
   | "Arrow"                // 箭头
-  | "Star";                // 星形
+  | "Star"                 // 星形
+  | "TextBox";             // 文本框
 ```
 
 ---
@@ -325,14 +328,13 @@ type CellValueType =
 
 ```typescript
 type ChartType =
-  | "ColumnClustered"      // 簇状柱形图
-  | "ColumnStacked"        // 堆积柱形图
-  | "BarClustered"         // 簇状条形图
+  | "Column"               // 柱形图
+  | "Bar"                  // 条形图
   | "Line"                 // 折线图
   | "Pie"                  // 饼图
   | "Area"                 // 面积图
   | "Scatter"              // 散点图
-  | "Radar";               // 雷达图
+  | "Doughnut";            // 圆环图
 ```
 
 ---

@@ -71,9 +71,10 @@ interface ErrorResponse {
 |--------|------|------|
 | `2000` | `UNAUTHORIZED` | 未授权 |
 | `2001` | `TOKEN_EXPIRED` | 令牌已过期 |
-| `2002` | `CONNECTION_LOST` | 连接丢失 |
+| `2002` | `INVALID_TOKEN` | 令牌无效 |
 | `2003` | `HANDSHAKE_FAILED` | 握手失败 |
 | `2004` | `SESSION_INVALID` | 会话无效 |
+| `2005` | `CONNECTION_LOST` | 连接丢失 |
 
 ### 3xxx - 文档与操作错误
 

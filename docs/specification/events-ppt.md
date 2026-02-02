@@ -24,15 +24,17 @@
 | [ppt:insert:text](#pptinserttext) | 📋 Draft | 插入文本 |
 | [ppt:insert:shape](#pptinsertshape) | 📋 Draft | 插入形状 |
 | [ppt:insert:image](#pptinsertimage) | 📋 Draft | 插入图片 |
+| [ppt:insert:table](#pptinserttable) | 📋 Draft | 插入表格 |
+| [ppt:update:textBox](#pptupdatetextbox) | 📋 Draft | 更新文本框 |
 
 ### 幻灯片管理类
 
 | 事件名 | 状态 | 说明 |
 |--------|------|------|
-| [ppt:slide:add](#pptslideadd) | 📋 Draft | 添加幻灯片 |
-| [ppt:slide:delete](#pptslidedelete) | 📋 Draft | 删除幻灯片 |
-| [ppt:slide:move](#pptslidemove) | 📋 Draft | 移动幻灯片 |
-| [ppt:slide:goto](#pptslidegoto) | 📋 Draft | 跳转到幻灯片 |
+| [ppt:add:slide](#pptaddslide) | 📋 Draft | 添加幻灯片 |
+| [ppt:delete:slide](#pptdeleteslide) | 📋 Draft | 删除幻灯片 |
+| [ppt:move:slide](#pptmoveslide) | 📋 Draft | 移动幻灯片 |
+| [ppt:goto:slide](#pptgotoslide) | 📋 Draft | 跳转到幻灯片 |
 
 ---
 
@@ -229,9 +231,95 @@ interface PPTInsertImageRequest {
 
 ---
 
+### ppt:insert:table
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: 在幻灯片中插入表格。
+
+**请求数据**:
+
+```typescript
+interface PPTInsertTableRequest {
+  requestId: string;
+  documentUri: string;
+  timestamp: number;
+  options: {
+    rows: number;            // 行数（>= 1）
+    columns: number;         // 列数（>= 1）
+    slideIndex?: number;     // 幻灯片索引，默认当前幻灯片
+    left?: number;           // 左边距（点）
+    top?: number;            // 上边距（点）
+    data?: string[][];       // 初始数据（二维数组）
+  };
+}
+```
+
+**响应数据**:
+
+```typescript
+interface PPTInsertTableResponse {
+  requestId: string;
+  success: true;
+  data: {
+    elementId: string;       // 创建的表格元素 ID
+  };
+  timestamp: number;
+  duration: number;
+}
+```
+
+---
+
+### ppt:update:textBox
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: 更新幻灯片中现有文本框的内容或样式。
+
+**请求数据**:
+
+```typescript
+interface PPTUpdateTextBoxRequest {
+  requestId: string;
+  documentUri: string;
+  timestamp: number;
+  elementId: string;         // 要更新的文本框元素 ID
+  updates: {
+    text?: string;           // 新文本内容
+    fontSize?: number;       // 字号
+    fontName?: string;       // 字体名称
+    color?: string;          // 文字颜色（十六进制）
+    fillColor?: string;      // 填充颜色（十六进制）
+    bold?: boolean;          // 粗体
+    italic?: boolean;        // 斜体
+  };
+}
+```
+
+**响应数据**:
+
+```typescript
+interface PPTUpdateTextBoxResponse {
+  requestId: string;
+  success: true;
+  data: {
+    elementId: string;       // 更新的元素 ID
+  };
+  timestamp: number;
+  duration: number;
+}
+```
+
+---
+
 ## 幻灯片管理类
 
-### ppt:slide:add
+### ppt:add:slide
 
 **方向**: Server → AddIn（请求-响应）
 
@@ -255,7 +343,7 @@ interface AddSlideRequest {
 
 ---
 
-### ppt:slide:delete
+### ppt:delete:slide
 
 **方向**: Server → AddIn（请求-响应）
 
@@ -276,7 +364,7 @@ interface DeleteSlideRequest {
 
 ---
 
-### ppt:slide:move
+### ppt:move:slide
 
 **方向**: Server → AddIn（请求-响应）
 
@@ -298,7 +386,7 @@ interface MoveSlideRequest {
 
 ---
 
-### ppt:slide:goto
+### ppt:goto:slide
 
 **方向**: Server → AddIn（请求-响应）
 
