@@ -853,19 +853,30 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#010-2026-02-02" class="md-nav__link">
+  <a href="#011-2026-02-02" class="md-nav__link">
     <span class="md-ellipsis">
       
-        [0.1.0] - 2026-02-02
+        [0.1.1] - 2026-02-02
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="[0.1.0] - 2026-02-02">
+    <nav class="md-nav" aria-label="[0.1.1] - 2026-02-02">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        变更
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         新增
@@ -881,7 +892,35 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#010-2026-02-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.0] - 2026-02-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.0] - 2026-02-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        新增
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         版本号说明
@@ -934,19 +973,30 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#010-2026-02-02" class="md-nav__link">
+  <a href="#011-2026-02-02" class="md-nav__link">
     <span class="md-ellipsis">
       
-        [0.1.0] - 2026-02-02
+        [0.1.1] - 2026-02-02
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="[0.1.0] - 2026-02-02">
+    <nav class="md-nav" aria-label="[0.1.1] - 2026-02-02">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        变更
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         新增
@@ -962,7 +1012,35 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#010-2026-02-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.0] - 2026-02-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.0] - 2026-02-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        新增
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         版本号说明
@@ -994,8 +1072,47 @@
 <p>格式基于 <a href="https://keepachangelog.com/zh-CN/1.0.0/">Keep a Changelog</a>，
 版本号遵循 <a href="https://semver.org/lang/zh-CN/">语义化版本</a>。</p>
 <hr />
+<h2 id="011-2026-02-02">[0.1.1] - 2026-02-02<a class="headerlink" href="#011-2026-02-02" title="Permanent link">&para;</a></h2>
+<h3 id="_2">变更<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<p><strong>事件命名规范化</strong></p>
+<p>为保持命名一致性，统一采用 <code>{namespace}:{action}:{target}</code> 格式：</p>
+<ul>
+<li>PPT 事件:</li>
+<li><code>ppt:slide:add</code> → <code>ppt:add:slide</code></li>
+<li><code>ppt:slide:delete</code> → <code>ppt:delete:slide</code></li>
+<li><code>ppt:slide:move</code> → <code>ppt:move:slide</code></li>
+<li>
+<p><code>ppt:slide:goto</code> → <code>ppt:goto:slide</code></p>
+</li>
+<li>
+<p>Excel 事件:</p>
+</li>
+<li><code>excel:get:rangeValues</code> → <code>excel:get:range</code></li>
+<li><code>excel:set:rangeValues</code> → <code>excel:set:range</code></li>
+<li><code>excel:sheet:add</code> → <code>excel:add:sheet</code></li>
+<li><code>excel:sheet:delete</code> → <code>excel:delete:sheet</code></li>
+<li><code>excel:sheet:rename</code> → <code>excel:rename:sheet</code></li>
+<li><code>excel:sheet:activate</code> → <code>excel:activate:sheet</code></li>
+</ul>
+<p><strong>错误码调整</strong></p>
+<ul>
+<li><code>2002</code> 从 <code>CONNECTION_LOST</code> 改为 <code>INVALID_TOKEN</code>（令牌无效）</li>
+<li>新增 <code>2005 CONNECTION_LOST</code>（连接丢失）</li>
+</ul>
+<p><strong>数据类型简化</strong></p>
+<ul>
+<li><code>ChartType</code>: 简化为 Column, Bar, Line, Pie, Area, Scatter, Doughnut</li>
+<li><code>ShapeType</code>: 合并两端实现，现包含 Rectangle, RoundedRectangle, Circle, Oval, Triangle, Diamond, Pentagon, Hexagon, Line, Arrow, Star, TextBox</li>
+</ul>
+<h3 id="_3">新增<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<p><strong>PPT 事件</strong></p>
+<ul>
+<li><code>ppt:insert:table</code> - 在幻灯片中插入表格</li>
+<li><code>ppt:update:textBox</code> - 更新幻灯片中的文本框</li>
+</ul>
+<hr />
 <h2 id="010-2026-02-02">[0.1.0] - 2026-02-02<a class="headerlink" href="#010-2026-02-02" title="Permanent link">&para;</a></h2>
-<h3 id="_2">新增<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<h3 id="_4">新增<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
 <p><strong>核心协议</strong></p>
 <ul>
 <li>定义了协议名称: OASP (Office AddIn Socket Protocol)</li>
@@ -1090,7 +1207,7 @@
 <li>创建了变更日志</li>
 </ul>
 <hr />
-<h2 id="_3">版本号说明<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h2 id="_5">版本号说明<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>主版本号 (Major)</strong>: 不兼容的 API 变更</li>
 <li><strong>次版本号 (Minor)</strong>: 向后兼容的功能新增</li>
