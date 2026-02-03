@@ -153,9 +153,7 @@ interface GetSelectionRequest {
 interface GetSelectionResponse {
   requestId: string;
   success: true;
-  data: {
-    selection: SelectionInfo;
-  };
+  data: SelectionInfo;
   timestamp: number;
   duration: number;      // 操作耗时（毫秒）
 }
@@ -168,13 +166,11 @@ interface GetSelectionResponse {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "success": true,
   "data": {
-    "selection": {
-      "isEmpty": false,
-      "type": "Normal",
-      "start": 100,
-      "end": 150,
-      "text": "Hello World"
-    }
+    "isEmpty": false,
+    "type": "Normal",
+    "start": 100,
+    "end": 150,
+    "text": "Hello World"
   },
   "timestamp": 1704067200500,
   "duration": 50
@@ -315,9 +311,7 @@ interface GetDocumentStructureRequest {
 interface GetDocumentStructureResponse {
   requestId: string;
   success: true;
-  data: {
-    structure: DocumentStructure;
-  };
+  data: DocumentStructure;
   timestamp: number;
   duration: number;
 }
@@ -330,12 +324,10 @@ interface GetDocumentStructureResponse {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "success": true,
   "data": {
-    "structure": {
-      "paragraphCount": 25,
-      "tableCount": 3,
-      "imageCount": 5,
-      "sectionCount": 4
-    }
+    "paragraphCount": 25,
+    "tableCount": 3,
+    "imageCount": 5,
+    "sectionCount": 4
   },
   "timestamp": 1704067200500,
   "duration": 120
@@ -358,9 +350,7 @@ interface GetDocumentStructureResponse {
 interface GetDocumentStatsResponse {
   requestId: string;
   success: true;
-  data: {
-    stats: DocumentStats;
-  };
+  data: DocumentStats;
   timestamp: number;
   duration: number;
 }
@@ -373,11 +363,9 @@ interface GetDocumentStatsResponse {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "success": true,
   "data": {
-    "stats": {
-      "wordCount": 1500,
-      "characterCount": 8500,
-      "paragraphCount": 25
-    }
+    "wordCount": 1500,
+    "characterCount": 8500,
+    "paragraphCount": 25
   },
   "timestamp": 1704067200500,
   "duration": 150
