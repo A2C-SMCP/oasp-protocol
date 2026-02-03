@@ -18,14 +18,23 @@ def build(c: Context) -> None:
 
 
 @task
-def deploy(c: Context, version: str = "latest") -> None:
+def deploy(c: Context, versions: str = "latest") -> None:
     """Deploy documentation to the documentation server.
 
     Args:
-        version: Version label for the deployment (default: latest)
+        versions: Comma-separated version labels to deploy (default: latest).
+                  Use for bug fixes that need to update historical versions.
+
+    Examples:
+        inv docs.deploy                      # Deploy only 'latest'
+        inv docs.deploy --versions=latest    # Same as above
+        inv docs.deploy --versions=0.1.0,latest  # Bug fix: update both versions
     """
-    # Build with mike for versioning
-    c.run(f"mike deploy --push --update-aliases {version}")
+    version_list = [v.strip() for v in versions.split(",")]
+
+    for version in version_list:
+        print(f"Deploying version: {version}")
+        c.run(f"mike deploy --push {version}")
 
 
 @task
