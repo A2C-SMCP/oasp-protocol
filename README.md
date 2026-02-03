@@ -8,7 +8,8 @@ OASP (Office AddIn Socket Protocol) 是一个基于 Socket.IO 的通信协议，
 
 ## 文档
 
-- **在线文档**: [内部文档服务器地址]
+- **GitHub Pages**: https://a2c-smcp.github.io/oasp-protocol/
+- **内部文档服务器**: https://doc.turingfocus.cn/oasp/
 - **本地预览**: `inv docs.serve`
 
 ## 快速开始
