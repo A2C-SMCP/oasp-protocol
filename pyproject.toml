@@ -15,6 +15,7 @@ docs = [
     "mkdocs-material>=9.0.0",
     "mike>=2.0.0",
     "invoke>=2.0.0",
+    "paramiko>=3.0.0",
 ]
 
 [build-system]
