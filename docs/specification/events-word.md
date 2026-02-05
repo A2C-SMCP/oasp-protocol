@@ -849,14 +849,26 @@ interface InsertTextResponse {
 !!! warning "前置条件"
     选区必须非空。如果选区为空，将返回错误码 `SELECTION_EMPTY` (3002)。
 
+!!! important "格式优先级规则"
+    - `format`（最高优先级）：包含直接格式属性和 `format.styleName`
+    - `styleName`（仅在 `format` 未提供时使用）
+    - 默认保持选区原有格式
+
 **请求数据**:
 
 ```typescript
 interface ReplaceSelectionRequest {
   requestId: string;
   documentUri: string;
-  timestamp: number;
+  timestamp?: number;
   content: ReplaceContent;  // 替换内容
+}
+
+interface ReplaceContent {
+  text?: string;            // 替换文本
+  images?: ImageData[];     // 替换图片（可插入多张）
+  format?: TextFormat;      // 文本格式（最高优先级）
+  styleName?: string;       // Word 样式名（仅在 format 未提供时使用）
 }
 ```
 
@@ -866,13 +878,48 @@ interface ReplaceSelectionRequest {
 {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "documentUri": "file:///Users/john/Documents/report.docx",
-  "timestamp": 1704067200000,
   "content": {
     "text": "新的替换文本",
     "format": {
       "bold": true
     }
   }
+}
+```
+
+**请求示例（含图片替换）**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/report.docx",
+  "content": {
+    "text": "替换文本",
+    "images": [
+      {
+        "base64": "data:image/png;base64,iVBORw0...",
+        "width": 200,
+        "height": 150,
+        "altText": "示例图片"
+      }
+    ],
+    "styleName": "Heading 1"
+  }
+}
+```
+
+**响应数据**:
+
+```typescript
+interface ReplaceSelectionResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    replaced: boolean;       // 是否成功替换
+    characterCount: number;  // 替换后的字符数
+  };
+  error?: ErrorResponse;
+  timestamp: number;
 }
 ```
 
@@ -883,11 +930,10 @@ interface ReplaceSelectionRequest {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "success": true,
   "data": {
-    "replacedLength": 5,
-    "newLength": 6
+    "replaced": true,
+    "characterCount": 6
   },
-  "timestamp": 1704067200500,
-  "duration": 80
+  "timestamp": 1704067200500
 }
 ```
 
@@ -901,10 +947,17 @@ interface ReplaceSelectionRequest {
     "code": "SELECTION_EMPTY",
     "message": "Selection is empty, cannot replace"
   },
-  "timestamp": 1704067200500,
-  "duration": 10
+  "timestamp": 1704067200500
 }
 ```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 3002 | `SELECTION_EMPTY` - 选区为空 |
+| 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
 ---
 

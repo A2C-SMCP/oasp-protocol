@@ -197,11 +197,17 @@ interface DocumentStatsResult {
 
 ```typescript
 interface ReplaceContent {
-  text?: string;           // 文本内容
-  images?: ImageData[];    // 图片内容（替换为图片）
-  format?: TextFormat;     // 格式设置（仅对文本有效）
+  text?: string;           // 替换文本
+  images?: ImageData[];    // 替换图片（可插入多张）
+  format?: TextFormat;     // 文本格式（最高优先级）
+  styleName?: string;      // Word 样式名（仅在 format 未提供时使用）
 }
 ```
+
+!!! important "格式优先级"
+    - `format`（最高优先级）：包含直接格式属性和 `format.styleName`
+    - `styleName`（仅在 `format` 未提供时使用）
+    - 默认保持选区原有格式
 
 ---
 
