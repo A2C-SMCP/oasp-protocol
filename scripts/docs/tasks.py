@@ -106,23 +106,25 @@ def update_server() -> None:
 
 
 @task
-def deploy(c: Context, versions: str = "latest", sync: bool = True) -> None:
+def deploy(
+    c: Context,
+    version: str = "0.1.0",
+    alias: str = "latest",
+    sync: bool = True,
+) -> None:
     """部署文档到 GitHub Pages 并同步到文档服务器。
 
     Args:
-        versions: 逗号分隔的版本标签（默认: latest）。
-                  用于 Bug 修复需要同时更新历史版本的场景。
+        version: 版本号（默认: 0.1.0）。
+        alias: 版本别名（默认: latest）。
         sync: 是否同步到文档服务器（默认: True）。
 
     Examples:
-        inv docs.deploy                          # 部署 'latest' 并同步
-        inv docs.deploy --versions=latest        # 同上
-        inv docs.deploy --versions=0.1.0,latest  # Bug 修复：同时更新两个版本
-        inv docs.deploy --no-sync                # 仅部署到 GitHub Pages
+        inv docs.deploy                              # 部署 0.1.0 [latest] 并同步
+        inv docs.deploy --version=0.2.0              # 部署新版本 0.2.0 [latest]
+        inv docs.deploy --version=0.1.0 --no-sync    # 仅部署到 GitHub Pages
     """
-    version_list = [v.strip() for v in versions.split(",")]
-
-    print(f"🚀 部署文档 (versions={version_list})")
+    print(f"🚀 部署文档 (version={version}, alias={alias})")
 
     # 验证配置（如果需要同步到服务器）
     if sync:
@@ -137,9 +139,8 @@ def deploy(c: Context, versions: str = "latest", sync: bool = True) -> None:
     sync_gh_pages(c)
 
     # Step 1: 使用 mike 部署到 GitHub Pages
-    for version in version_list:
-        print(f"📦 部署版本 '{version}' 到 GitHub Pages...")
-        c.run(f"mike deploy --push {version}")
+    print(f"📦 部署版本 '{version}' [{alias}] 到 GitHub Pages...")
+    c.run(f"mike deploy --push --update-aliases {version} {alias}")
 
     # Step 2: 同步到文档服务器
     if sync:
