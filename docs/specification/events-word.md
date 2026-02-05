@@ -392,10 +392,20 @@ interface GetStylesRequest {
   options?: {
     includeBuiltIn?: boolean;  // 是否包含内置样式，默认 true
     includeCustom?: boolean;   // 是否包含自定义样式，默认 true
-    typeFilter?: StyleType[];  // 筛选特定类型的样式
+    includeUnused?: boolean;   // 是否包含未使用的样式，默认 false
+    detailedInfo?: boolean;    // 是否返回详细信息（description），默认 false
   };
 }
 ```
+
+**请求参数说明**:
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `includeBuiltIn` | boolean | true | 是否包含 Word 内置样式 |
+| `includeCustom` | boolean | true | 是否包含用户自定义样式 |
+| `includeUnused` | boolean | false | 是否包含文档中未使用的样式。设为 false 时仅返回 inUse=true 的样式 |
+| `detailedInfo` | boolean | false | 是否返回样式的详细描述。设为 true 时返回 description 字段（依赖 WordApi BETA，部分环境可能不可用） |
 
 **响应数据**:
 
@@ -411,7 +421,34 @@ interface GetStylesResponse {
 }
 ```
 
-**响应示例**:
+**响应示例**（默认参数，仅返回正在使用的样式）:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "styles": [
+      {
+        "name": "标题 1",
+        "type": "Paragraph",
+        "builtIn": true,
+        "inUse": true
+      },
+      {
+        "name": "正文",
+        "type": "Paragraph",
+        "builtIn": true,
+        "inUse": true
+      }
+    ]
+  },
+  "timestamp": 1704067200500,
+  "duration": 200
+}
+```
+
+**响应示例**（`detailedInfo=true` 时返回 description 字段）:
 
 ```json
 {
@@ -425,20 +462,6 @@ interface GetStylesResponse {
         "builtIn": true,
         "inUse": true,
         "description": "用于主要章节标题"
-      },
-      {
-        "name": "正文",
-        "type": "Paragraph",
-        "builtIn": true,
-        "inUse": true,
-        "description": null
-      },
-      {
-        "name": "强调",
-        "type": "Character",
-        "builtIn": true,
-        "inUse": false,
-        "description": null
       }
     ]
   },

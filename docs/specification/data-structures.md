@@ -136,9 +136,13 @@ interface StyleInfo {
   type: StyleType;         // 样式类型
   builtIn: boolean;        // 是否为内置样式
   inUse: boolean;          // 是否在文档中使用
-  description?: string;    // 样式描述（可选）
+  description?: string;    // 样式描述（仅当请求 detailedInfo=true 时返回）
 }
 ```
+
+!!! note "关于 description 字段"
+    `description` 字段仅在 `word:get:styles` 请求中设置 `detailedInfo=true` 时返回。
+    此功能依赖 WordApi BETA，在部分环境中可能不可用。
 
 ### StyleType
 

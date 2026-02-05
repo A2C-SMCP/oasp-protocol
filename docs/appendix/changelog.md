@@ -7,6 +7,29 @@
 
 ---
 
+## [0.1.2] - 2026-02-05
+
+### 变更
+
+**word:get:styles 请求参数调整**
+
+基于 Add-In 实际实现进行协议规范对齐：
+
+| 变更类型 | 参数 | 说明 |
+|----------|------|------|
+| 保留 | `includeBuiltIn` | 无变化 |
+| 保留 | `includeCustom` | 无变化 |
+| 删除 | `typeFilter` | Add-In 未实现，移除以保持一致性 |
+| 新增 | `includeUnused` | 控制是否返回文档中未使用的样式，默认 false |
+| 新增 | `detailedInfo` | 控制是否返回 description 字段，默认 false |
+
+**StyleInfo.description 字段说明**
+
+- `description` 字段现仅在请求 `detailedInfo=true` 时返回
+- 此功能依赖 WordApi BETA，在部分环境中可能不可用
+
+---
+
 ## [0.1.1] - 2026-02-02
 
 ### 变更
