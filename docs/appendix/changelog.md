@@ -7,6 +7,28 @@
 
 ---
 
+## [0.1.7] - 2026-02-05
+
+### 变更
+
+**word:get:documentStats 请求与响应结构调整**
+
+基于 Add-In 实际实现进行协议规范对齐：
+
+| 变更类型 | 字段 | 说明 |
+|----------|------|------|
+| 新增 | 请求结构 | 补充完整的请求定义（原协议缺失） |
+| 修改 | `timestamp` (请求) | 从必需改为可选 |
+| 删除 | `duration` (响应) | Add-In 未实现，移除 |
+| 修改 | `success` (响应) | 从字面量 `true` 改为 `boolean` |
+| 新增 | `error` (响应) | 添加可选错误响应字段 |
+| 修改 | `characterCount` | 明确语义为"不含空格" |
+| 新增 | `characterCountWithSpaces` | 含空格的字符数 |
+| 新增 | `pageCount` | 页数（可选） |
+| 重命名 | `DocumentStats` → `DocumentStatsResult` | 统一命名风格 |
+
+---
+
 ## [0.1.6] - 2026-02-05
 
 ### 变更

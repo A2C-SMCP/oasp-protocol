@@ -609,15 +609,33 @@ interface DocumentStructureResult {
 
 **说明**: 获取文档的字数统计。
 
+**请求数据**:
+
+```typescript
+interface GetDocumentStatsRequest {
+  requestId: string;
+  documentUri: string;
+  timestamp?: number;
+}
+```
+
 **响应数据**:
 
 ```typescript
 interface GetDocumentStatsResponse {
   requestId: string;
-  success: true;
-  data: DocumentStats;
+  success: boolean;
+  data?: DocumentStatsResult;
+  error?: ErrorResponse;
   timestamp: number;
-  duration: number;
+}
+
+interface DocumentStatsResult {
+  characterCount: number;           // 字符数（不含空格）
+  characterCountWithSpaces: number; // 字符数（含空格）
+  wordCount: number;                // 单词数
+  paragraphCount: number;           // 段落数
+  pageCount?: number;               // 页数（可选）
 }
 ```
 
@@ -628,12 +646,13 @@ interface GetDocumentStatsResponse {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "success": true,
   "data": {
+    "characterCount": 7200,
+    "characterCountWithSpaces": 8500,
     "wordCount": 1500,
-    "characterCount": 8500,
-    "paragraphCount": 25
+    "paragraphCount": 25,
+    "pageCount": 8
   },
-  "timestamp": 1704067200500,
-  "duration": 150
+  "timestamp": 1704067200500
 }
 ```
 

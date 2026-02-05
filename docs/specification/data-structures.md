@@ -173,15 +173,17 @@ interface DocumentStructureResult {
 }
 ```
 
-### DocumentStats
+### DocumentStatsResult
 
 文档字数统计。
 
 ```typescript
-interface DocumentStats {
-  wordCount: number;       // 字数
-  characterCount: number;  // 字符数（包括空格和标点）
-  paragraphCount: number;  // 段落数（包括空段落）
+interface DocumentStatsResult {
+  characterCount: number;           // 字符数（不含空格）
+  characterCountWithSpaces: number; // 字符数（含空格）
+  wordCount: number;                // 单词数
+  paragraphCount: number;           // 段落数
+  pageCount?: number;               // 页数（可选）
 }
 ```
 
