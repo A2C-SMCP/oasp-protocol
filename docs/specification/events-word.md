@@ -449,7 +449,7 @@ interface ContentControlElement {
 
 **状态**: ✅ Stable
 
-**说明**: 获取当前视口中可见的内容。
+**说明**: 获取当前视口中可见的内容，包括文本、段落、表格、图片、内容控件等元素。
 
 **请求数据**:
 
@@ -457,7 +457,21 @@ interface ContentControlElement {
 interface GetVisibleContentRequest {
   requestId: string;
   documentUri: string;
-  timestamp: number;
+  timestamp?: number;
+  options?: GetContentOptions;  // 与 word:get:selectedContent 相同
+}
+```
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/report.docx",
+  "options": {
+    "includeText": true,
+    "detailedMetadata": false
+  }
 }
 ```
 
@@ -466,16 +480,63 @@ interface GetVisibleContentRequest {
 ```typescript
 interface GetVisibleContentResponse {
   requestId: string;
-  success: true;
-  data: {
-    text: string;
-    startPosition: number;
-    endPosition: number;
-  };
+  success: boolean;
+  data?: VisibleContentInfo;
+  error?: ErrorResponse;
   timestamp: number;
-  duration: number;
+}
+
+interface VisibleContentInfo {
+  text: string;                         // 可见区域纯文本（页面间用 \n\n 分隔）
+  elements: VisibleContentElement[];    // 内容元素数组
+  metadata?: ContentMetadata;           // 统计元数据
+}
+
+interface VisibleContentElement {
+  type: "text" | "image" | "table" | "other";  // 元素类型（映射后）
+  content: ContentElement;                      // 原始元素内容
 }
 ```
+
+**元素类型映射**:
+
+| Word 原始类型 | 协议 type 值 |
+|---------------|--------------|
+| Paragraph | `"text"` |
+| InlinePicture | `"image"` |
+| Table | `"table"` |
+| ContentControl | `"other"` |
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "text": "Hello World\n\nThis is visible content.",
+    "elements": [
+      { "type": "text", "content": { "id": "para-1-0", "type": "Paragraph", "text": "Hello World" } },
+      { "type": "text", "content": { "id": "para-1-1", "type": "Paragraph", "text": "This is visible content." } }
+    ],
+    "metadata": {
+      "isEmpty": false,
+      "characterCount": 36,
+      "paragraphCount": 2
+    }
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+
+!!! note "与 word:get:selectedContent 的关系"
+    本事件与 `word:get:selectedContent` 使用相同的 `GetContentOptions` 和元素类型定义。
 
 ---
 

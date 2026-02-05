@@ -7,6 +7,28 @@
 
 ---
 
+## [0.1.5] - 2026-02-05
+
+### 变更
+
+**word:get:visibleContent 请求与响应结构调整**
+
+基于 Add-In 实际实现进行协议规范对齐：
+
+| 变更类型 | 字段 | 说明 |
+|----------|------|------|
+| 修改 | `timestamp` (请求) | 从必需改为可选 |
+| 新增 | `options` (请求) | 支持 GetContentOptions（与 selectedContent 一致） |
+| 删除 | `duration` (响应) | Add-In 未实现，移除 |
+| 删除 | `data.startPosition` | Add-In 未实现，移除 |
+| 删除 | `data.endPosition` | Add-In 未实现，移除 |
+| 新增 | `data.elements` | 内容元素数组，带类型映射 |
+| 新增 | `data.metadata` | 统计元数据 |
+
+**新增 VisibleContentElement 结构**：包含 `type`（映射后类型）和 `content`（原始元素）。
+
+---
+
 ## [0.1.4] - 2026-02-05
 
 ### 变更
