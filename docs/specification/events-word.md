@@ -160,15 +160,15 @@ interface DocumentModifiedEvent {
 
 **状态**: ✅ Stable
 
-**说明**: 获取当前选区的位置信息（轻量级）。
+**说明**: 获取当前选区的位置信息（轻量级查询，不含完整内容）。
 
 **请求数据**:
 
 ```typescript
 interface GetSelectionRequest {
-  requestId: string;     // 请求 ID (UUID)
-  documentUri: string;   // 文档 URI
-  timestamp: number;     // 请求时间戳（毫秒）
+  requestId: string;      // 请求 ID (UUID)
+  documentUri: string;    // 文档 URI
+  timestamp?: number;     // 请求时间戳（毫秒），可选
 }
 ```
 
@@ -187,14 +187,45 @@ interface GetSelectionRequest {
 ```typescript
 interface GetSelectionResponse {
   requestId: string;
-  success: true;
-  data: SelectionInfo;
+  success: boolean;
+  data?: SelectionInfo;
+  error?: ErrorResponse;
   timestamp: number;
-  duration: number;      // 操作耗时（毫秒）
+}
+
+interface SelectionInfo {
+  /** 选区是否为空（光标点） */
+  isEmpty: boolean;
+  /** 选区类型 */
+  type: "NoSelection" | "InsertionPoint" | "Normal";
+  /** 起始位置（字符偏移量），选区非空时存在 */
+  start?: number;
+  /** 结束位置（字符偏移量），选区非空时存在 */
+  end?: number;
+  /** 选区文本，选区非空时存在 */
+  text?: string;
 }
 ```
 
-**响应示例（成功）**:
+**字段说明**:
+
+| 字段 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `isEmpty` | boolean | ✅ | 选区是否为空（光标点或无选区） |
+| `type` | string | ✅ | 选区类型：`NoSelection`、`InsertionPoint`、`Normal` |
+| `start` | number | ❌ | 起始位置（字符偏移量），仅选区非空时存在 |
+| `end` | number | ❌ | 结束位置（字符偏移量），仅选区非空时存在 |
+| `text` | string | ❌ | 选区文本，仅选区非空时存在 |
+
+**选区类型说明**:
+
+| 类型 | 说明 |
+|------|------|
+| `NoSelection` | 文档中没有活动选区 |
+| `InsertionPoint` | 光标处于一个点（`start === end`） |
+| `Normal` | 有文本被选中 |
+
+**响应示例（成功 - 有选区）**:
 
 ```json
 {
@@ -207,10 +238,45 @@ interface GetSelectionResponse {
     "end": 150,
     "text": "Hello World"
   },
-  "timestamp": 1704067200500,
-  "duration": 50
+  "timestamp": 1704067200500
 }
 ```
+
+**响应示例（成功 - 光标点）**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "isEmpty": true,
+    "type": "InsertionPoint",
+    "start": 100,
+    "end": 100
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**响应示例（成功 - 无选区）**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "isEmpty": true,
+    "type": "NoSelection"
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 
 ---
 
