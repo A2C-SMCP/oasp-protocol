@@ -54,12 +54,12 @@ class DeployConfig:
             DeployConfig: 加载的配置对象
         """
         server = DocServerConfig(
-            host=os.getenv("DOCS_SERVER_HOST", ""),
-            port=int(os.getenv("DOCS_SERVER_PORT", "22")),
-            user=os.getenv("DOCS_SERVER_USER", "root"),
-            password=os.getenv("DOCS_SERVER_PASSWORD"),
-            key_filename=os.getenv("DOCS_SERVER_KEY_FILE"),
-            deploy_path=os.getenv("DOCS_DEPLOY_PATH", "/var/www/doc.turingfocus.cn/oasp"),
+            host=os.getenv("DOCS_SERVER_HOST") or "",
+            port=int(os.getenv("DOCS_SERVER_PORT") or "22"),
+            user=os.getenv("DOCS_SERVER_USER") or "root",
+            password=os.getenv("DOCS_SERVER_PASSWORD") or None,
+            key_filename=os.getenv("DOCS_SERVER_KEY_FILE") or None,
+            deploy_path=os.getenv("DOCS_DEPLOY_PATH") or "/var/www/doc.turingfocus.cn/oasp",
         )
 
         return cls(server=server)
