@@ -1130,6 +1130,64 @@
 <hr />
 <h2 id="012-2026-02-05">[0.1.2] - 2026-02-05<a class="headerlink" href="#012-2026-02-05" title="Permanent link">&para;</a></h2>
 <h3 id="_2">变更<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<p><strong>word:event:selectionChanged 事件结构调整</strong></p>
+<p>基于 Add-In 实际实现进行协议规范对齐：</p>
+<table>
+<thead>
+<tr>
+<th>变更类型</th>
+<th>字段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>新增</td>
+<td><code>eventType</code></td>
+<td>事件类型标识，固定值 <code>"selectionChanged"</code></td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>clientId</code></td>
+<td>发送事件的客户端标识</td>
+</tr>
+<tr>
+<td>修改</td>
+<td><code>selection</code> → <code>data</code></td>
+<td>字段名变更，简化结构</td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>selection.isEmpty</code></td>
+<td>实现未提供</td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>selection.type</code></td>
+<td>实现未提供</td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>selection.start</code></td>
+<td>实现未提供</td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>selection.end</code></td>
+<td>实现未提供</td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>data.text</code></td>
+<td>选中的文本内容</td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>data.length</code></td>
+<td>选中文本的字符长度</td>
+</tr>
+</tbody>
+</table>
 <p><strong>word:get:styles 请求参数调整</strong></p>
 <p>基于 Add-In 实际实现进行协议规范对齐：</p>
 <table>
