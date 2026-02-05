@@ -18,10 +18,14 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: docs-server
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -29,15 +33,33 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: |
-          pip install mkdocs mkdocs-material mike
+        run: uv sync
 
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Deploy with mike
+      - name: Deploy to GitHub Pages
         run: |
-          mike deploy --push --update-aliases 0.1.0 latest
-          mike set-default --push latest
+          uv run mike deploy --push --update-aliases 0.1.0 latest
+          uv run mike set-default --push latest
+
+      - name: Setup SSH key
+        if: env.DOCS_SERVER_SSH_KEY != ''
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DOCS_SERVER_SSH_KEY" > ~/.ssh/docs_server
+          chmod 600 ~/.ssh/docs_server
+        env:
+          DOCS_SERVER_SSH_KEY: ${{ secrets.DOCS_SERVER_SSH_KEY }}
+
+      - name: Sync to doc server
+        if: env.DOCS_SERVER_HOST != ''
+        run: uv run inv docs.update-server
+        env:
+          DOCS_SERVER_HOST: ${{ secrets.DOCS_SERVER_HOST }}
+          DOCS_SERVER_PORT: ${{ secrets.DOCS_SERVER_PORT }}
+          DOCS_SERVER_USER: ${{ secrets.DOCS_SERVER_USER }}
+          DOCS_SERVER_PASSWORD: ${{ secrets.DOCS_SERVER_PASSWORD }}
+          DOCS_SERVER_KEY_FILE: ${{ env.DOCS_SERVER_SSH_KEY != '' && '~/.ssh/docs_server' || '' }}

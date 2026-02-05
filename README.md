@@ -17,21 +17,17 @@ OASP (Office AddIn Socket Protocol) 是一个基于 Socket.IO 的通信协议，
 ### 安装依赖
 
 ```bash
-# 使用 uv 安装
 uv sync
-
-# 或使用 pip
-pip install -e ".[docs]"
 ```
 
 ### 本地预览文档
 
 ```bash
 # 启动开发服务器（热重载）
-inv docs.serve
+uv run inv docs.serve
 
 # 构建静态文档
-inv docs.build
+uv run inv docs.build
 ```
 
 ## 协议版本
