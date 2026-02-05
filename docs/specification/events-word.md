@@ -762,7 +762,7 @@ interface GetStylesResponse {
 
 **状态**: ✅ Stable
 
-**说明**: 在当前光标位置插入文本。
+**说明**: 在指定位置插入文本。
 
 !!! important "样式优先级规则"
     当同时指定直接格式（如 `bold`、`fontSize`）和 `styleName` 时，**直接格式优先级高于样式名**。
@@ -775,9 +775,20 @@ interface GetStylesResponse {
 interface InsertTextRequest {
   requestId: string;
   documentUri: string;
-  timestamp: number;
-  text: string;          // 要插入的文本
-  format?: TextFormat;   // 可选的格式设置
+  timestamp?: number;
+  text: string;                              // 要插入的文本
+  location?: "Cursor" | "Start" | "End";     // 插入位置，默认 "Cursor"
+  format?: TextFormat;                       // 可选的格式设置
+}
+
+interface TextFormat {
+  bold?: boolean;
+  italic?: boolean;
+  fontSize?: number;
+  fontName?: string;
+  color?: string;        // hex 颜色值，如 "#FF0000"
+  underline?: string;    // 下划线类型，如 "Single", "Double", "None"
+  styleName?: string;    // Word 样式名，如 "Heading 1", "Normal"
 }
 ```
 
@@ -787,8 +798,8 @@ interface InsertTextRequest {
 {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "documentUri": "file:///Users/john/Documents/report.docx",
-  "timestamp": 1704067200000,
   "text": "这是新插入的文本",
+  "location": "Cursor",
   "format": {
     "bold": true,
     "fontSize": 14,
@@ -803,12 +814,12 @@ interface InsertTextRequest {
 ```typescript
 interface InsertTextResponse {
   requestId: string;
-  success: true;
-  data: {
-    insertedLength: number;  // 插入的字符数
+  success: boolean;
+  data?: {
+    inserted: boolean;
   };
+  error?: ErrorResponse;
   timestamp: number;
-  duration: number;
 }
 ```
 
@@ -819,10 +830,9 @@ interface InsertTextResponse {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "success": true,
   "data": {
-    "insertedLength": 8
+    "inserted": true
   },
-  "timestamp": 1704067200500,
-  "duration": 100
+  "timestamp": 1704067200500
 }
 ```
 
