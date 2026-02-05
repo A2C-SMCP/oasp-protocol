@@ -27,6 +27,17 @@
 | 新增 | `data.text` | 选中的文本内容 |
 | 新增 | `data.length` | 选中文本的字符长度 |
 
+**word:event:documentModified 事件结构调整**
+
+基于 Add-In 实际实现进行协议规范对齐：
+
+| 变更类型 | 字段 | 说明 |
+|----------|------|------|
+| 新增 | `eventType` | 事件类型标识，固定值 `"documentModified"` |
+| 新增 | `clientId` | 发送事件的客户端标识 |
+| 新增 | `data` | 事件数据对象 |
+| 新增 | `data.modificationType` | 修改类型：`insert`、`delete`、`update` |
+
 **word:get:styles 请求参数调整**
 
 基于 Add-In 实际实现进行协议规范对齐：

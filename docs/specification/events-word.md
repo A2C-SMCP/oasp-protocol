@@ -112,21 +112,41 @@ interface SelectionChangedEvent {
 
 **说明**: 当文档内容被修改时触发。
 
-**请求数据**:
+**事件数据**:
 
 ```typescript
 interface DocumentModifiedEvent {
-  documentUri: string;   // 文档 URI
-  timestamp: number;     // 事件发生时间（毫秒）
+  eventType: "documentModified";  // 事件类型标识
+  clientId: string;               // 客户端标识
+  documentUri: string;            // 文档 URI
+  timestamp: number;              // 事件发生时间（毫秒）
+  data: {
+    modificationType: "insert" | "delete" | "update";  // 修改类型
+  };
 }
 ```
+
+**字段说明**:
+
+| 字段 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `eventType` | string | ✅ | 固定值 `"documentModified"`，用于事件类型识别 |
+| `clientId` | string | ✅ | 客户端唯一标识，用于区分多客户端场景 |
+| `documentUri` | string | ✅ | 文档 URI（如 `file:///path/to/doc.docx`） |
+| `timestamp` | number | ✅ | Unix 时间戳（毫秒） |
+| `data.modificationType` | string | ✅ | 修改类型：`"insert"` 插入、`"delete"` 删除、`"update"` 更新 |
 
 **示例**:
 
 ```json
 {
+  "eventType": "documentModified",
+  "clientId": "word-addin-abc123",
   "documentUri": "file:///Users/john/Documents/report.docx",
-  "timestamp": 1704067200000
+  "timestamp": 1704067200000,
+  "data": {
+    "modificationType": "insert"
+  }
 }
 ```
 
