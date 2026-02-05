@@ -1069,11 +1069,14 @@ interface SelectTextRequest {
   requestId: string;
   documentUri: string;
   timestamp?: number;
-  searchText: string;        // 要查找的文本
-  options?: {
-    selectionMode?: "select" | "start" | "end";  // 选择模式，默认 "select"
-    selectIndex?: number;    // 选择第几个匹配项，默认 0（第一个）
+  searchText: string;                              // 要查找的文本
+  searchOptions?: {
+    matchCase?: boolean;                           // 区分大小写，默认 false
+    matchWholeWord?: boolean;                      // 全词匹配，默认 false
+    matchWildcards?: boolean;                      // 通配符匹配，默认 false
   };
+  selectionMode?: "select" | "start" | "end";      // 选择模式，默认 "select"
+  selectIndex?: number;                            // 选择第几个匹配项（1-based），默认 1
 }
 ```
 
@@ -1091,12 +1094,12 @@ interface SelectTextRequest {
 {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "documentUri": "file:///Users/john/Documents/report.docx",
-  "timestamp": 1704067200000,
   "searchText": "目标文本",
-  "options": {
-    "selectionMode": "select",
-    "selectIndex": 0
-  }
+  "searchOptions": {
+    "matchCase": true
+  },
+  "selectionMode": "select",
+  "selectIndex": 1
 }
 ```
 
@@ -1107,29 +1110,57 @@ interface SelectTextResponse {
   requestId: string;
   success: boolean;
   data?: {
-    matchCount: number;      // 总匹配数
-    selectedIndex: number;   // 选中的是第几个
-    selectedText: string;    // 选中的文本
+    success: boolean;              // 是否找到并选中了文本
+    selectionInfo?: {              // 选中成功时的详细信息
+      matchCount: number;          // 总匹配数
+      selectedIndex: number;       // 选中的是第几个（1-based）
+      selectedText: string;        // 选中的文本
+    };
   };
   error?: ErrorResponse;
   timestamp: number;
 }
 ```
 
-**响应示例**:
+**响应示例（成功）**:
 
 ```json
 {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "success": true,
   "data": {
-    "matchCount": 3,
-    "selectedIndex": 0,
-    "selectedText": "目标文本"
+    "success": true,
+    "selectionInfo": {
+      "matchCount": 3,
+      "selectedIndex": 1,
+      "selectedText": "目标文本"
+    }
   },
   "timestamp": 1704067200500
 }
 ```
+
+**响应示例（未找到匹配）**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "success": false
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 4002 | `MISSING_PARAM` - 缺少必要参数 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
 ---
 
