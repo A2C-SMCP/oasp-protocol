@@ -8,19 +8,48 @@ OASP (Office AddIn Socket Protocol) is a Socket.IO-based communication protocol 
 
 ## Commands
 
+All commands must be run with `uv run` prefix (this project uses uv for dependency management).
+
 ```bash
-# Install dependencies (using uv)
+# Install dependencies
 uv sync
 
 # Serve documentation locally with hot reload
-inv docs.serve
+uv run inv docs.serve
 
 # Build static documentation
-inv docs.build
+uv run inv docs.build
 
-# Deploy documentation with versioning
-inv docs.deploy --version=latest
+# Deploy documentation (to GitHub Pages and doc server)
+uv run inv docs.deploy
 ```
+
+## Documentation Deployment Workflow
+
+When modifying documentation, follow these steps in order:
+
+1. **Build** - Verify documentation compiles without errors
+   ```bash
+   uv run mkdocs build
+   ```
+
+2. **Commit** - Stage and commit changes
+   ```bash
+   git add <modified-files>
+   git commit -m "Your commit message"
+   ```
+
+3. **Push** - Push to remote repository
+   ```bash
+   git push origin main
+   ```
+
+4. **Deploy** - Deploy to GitHub Pages and sync to doc server
+   ```bash
+   uv run inv docs.deploy
+   ```
+
+Do NOT skip steps or run deploy before push - the deploy task pulls from gh-pages branch and pushes updates.
 
 ## Architecture
 
