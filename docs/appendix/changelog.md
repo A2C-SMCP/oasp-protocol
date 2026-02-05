@@ -11,6 +11,22 @@
 
 ### 变更
 
+**word:event:selectionChanged 事件结构调整**
+
+基于 Add-In 实际实现进行协议规范对齐：
+
+| 变更类型 | 字段 | 说明 |
+|----------|------|------|
+| 新增 | `eventType` | 事件类型标识，固定值 `"selectionChanged"` |
+| 新增 | `clientId` | 发送事件的客户端标识 |
+| 修改 | `selection` → `data` | 字段名变更，简化结构 |
+| 删除 | `selection.isEmpty` | 实现未提供 |
+| 删除 | `selection.type` | 实现未提供 |
+| 删除 | `selection.start` | 实现未提供 |
+| 删除 | `selection.end` | 实现未提供 |
+| 新增 | `data.text` | 选中的文本内容 |
+| 新增 | `data.length` | 选中文本的字符长度 |
+
 **word:get:styles 请求参数调整**
 
 基于 Add-In 实际实现进行协议规范对齐：

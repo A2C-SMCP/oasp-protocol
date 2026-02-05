@@ -61,28 +61,43 @@
 
 **说明**: 当用户在 Word 中更改选区时触发。
 
-**请求数据**:
+**事件数据**:
 
 ```typescript
 interface SelectionChangedEvent {
-  documentUri: string;   // 文档 URI
-  timestamp: number;     // 事件发生时间（毫秒）
-  selection: SelectionInfo;  // 选区信息
+  eventType: "selectionChanged";  // 事件类型标识
+  clientId: string;               // 客户端标识
+  documentUri: string;            // 文档 URI
+  timestamp: number;              // 事件发生时间（毫秒）
+  data: {
+    text: string;                 // 选中的文本内容
+    length: number;               // 选中文本的长度
+  };
 }
 ```
+
+**字段说明**:
+
+| 字段 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `eventType` | string | ✅ | 固定值 `"selectionChanged"`，用于事件类型识别 |
+| `clientId` | string | ✅ | 客户端唯一标识，用于区分多客户端场景 |
+| `documentUri` | string | ✅ | 文档 URI（如 `file:///path/to/doc.docx`） |
+| `timestamp` | number | ✅ | Unix 时间戳（毫秒） |
+| `data.text` | string | ✅ | 当前选中的文本内容，无选中时为空字符串 |
+| `data.length` | number | ✅ | 选中文本的字符长度 |
 
 **示例**:
 
 ```json
 {
+  "eventType": "selectionChanged",
+  "clientId": "word-addin-abc123",
   "documentUri": "file:///Users/john/Documents/report.docx",
   "timestamp": 1704067200000,
-  "selection": {
-    "isEmpty": false,
-    "type": "Normal",
-    "start": 100,
-    "end": 150,
-    "text": "selected text here"
+  "data": {
+    "text": "Hello World",
+    "length": 11
   }
 }
 ```
