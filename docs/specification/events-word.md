@@ -975,7 +975,7 @@ interface ReplaceSelectionResponse {
 interface ReplaceTextRequest {
   requestId: string;
   documentUri: string;
-  timestamp: number;
+  timestamp?: number;
   searchText: string;        // 要查找的文本
   replaceText: string;       // 替换为的文本
   options?: {
@@ -992,7 +992,6 @@ interface ReplaceTextRequest {
 {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "documentUri": "file:///Users/john/Documents/report.docx",
-  "timestamp": 1704067200000,
   "searchText": "旧文本",
   "replaceText": "新文本",
   "options": {
@@ -1007,13 +1006,12 @@ interface ReplaceTextRequest {
 ```typescript
 interface ReplaceTextResponse {
   requestId: string;
-  success: true;
-  data: {
-    matchCount: number;      // 找到的匹配数
-    replacedCount: number;   // 实际替换的数量
+  success: boolean;
+  data?: {
+    replaceCount: number;    // 替换的数量
   };
+  error?: ErrorResponse;
   timestamp: number;
-  duration: number;
 }
 ```
 
@@ -1024,13 +1022,20 @@ interface ReplaceTextResponse {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "success": true,
   "data": {
-    "matchCount": 5,
-    "replacedCount": 5
+    "replaceCount": 5
   },
-  "timestamp": 1704067200500,
-  "duration": 150
+  "timestamp": 1704067200500
 }
 ```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 4002 | `MISSING_PARAM` - 缺少必要参数 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
 ---
 
