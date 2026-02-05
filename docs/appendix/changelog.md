@@ -7,6 +7,24 @@
 
 ---
 
+## [0.1.6] - 2026-02-05
+
+### 变更
+
+**word:get:documentStructure 请求与响应结构调整**
+
+基于 Add-In 实际实现进行协议规范对齐：
+
+| 变更类型 | 字段 | 说明 |
+|----------|------|------|
+| 修改 | `timestamp` (请求) | 从必需改为可选 |
+| 删除 | `duration` (响应) | Add-In 未实现，移除 |
+| 修改 | `success` (响应) | 从字面量 `true` 改为 `boolean` |
+| 新增 | `error` (响应) | 添加可选错误响应字段 |
+| 修改 | `data` 字段顺序 | 调整为 `sectionCount → paragraphCount → tableCount → imageCount` |
+
+---
+
 ## [0.1.5] - 2026-02-05
 
 ### 变更

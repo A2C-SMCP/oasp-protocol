@@ -166,10 +166,10 @@ type StyleType =
 
 ```typescript
 interface DocumentStructure {
+  sectionCount: number;    // 章节数量
   paragraphCount: number;  // 段落数量
   tableCount: number;      // 表格数量
   imageCount: number;      // 图片数量
-  sectionCount: number;    // 章节数量
 }
 ```
 

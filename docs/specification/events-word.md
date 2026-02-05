@@ -554,7 +554,7 @@ interface VisibleContentElement {
 interface GetDocumentStructureRequest {
   requestId: string;
   documentUri: string;
-  timestamp: number;
+  timestamp?: number;
 }
 ```
 
@@ -563,10 +563,10 @@ interface GetDocumentStructureRequest {
 ```typescript
 interface GetDocumentStructureResponse {
   requestId: string;
-  success: true;
-  data: DocumentStructure;
+  success: boolean;
+  data?: DocumentStructure;
+  error?: ErrorResponse;
   timestamp: number;
-  duration: number;
 }
 ```
 
@@ -577,15 +577,20 @@ interface GetDocumentStructureResponse {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "success": true,
   "data": {
+    "sectionCount": 4,
     "paragraphCount": 25,
     "tableCount": 3,
-    "imageCount": 5,
-    "sectionCount": 4
+    "imageCount": 5
   },
-  "timestamp": 1704067200500,
-  "duration": 120
+  "timestamp": 1704067200500
 }
 ```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 
 ---
 
