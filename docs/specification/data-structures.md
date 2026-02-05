@@ -160,12 +160,12 @@ type StyleType =
 
 ## 文档统计
 
-### DocumentStructure
+### DocumentStructureResult
 
 文档结构统计。
 
 ```typescript
-interface DocumentStructure {
+interface DocumentStructureResult {
   sectionCount: number;    // 章节数量
   paragraphCount: number;  // 段落数量
   tableCount: number;      // 表格数量

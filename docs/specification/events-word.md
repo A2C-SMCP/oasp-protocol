@@ -564,9 +564,16 @@ interface GetDocumentStructureRequest {
 interface GetDocumentStructureResponse {
   requestId: string;
   success: boolean;
-  data?: DocumentStructure;
+  data?: DocumentStructureResult;
   error?: ErrorResponse;
   timestamp: number;
+}
+
+interface DocumentStructureResult {
+  sectionCount: number;    // 章节数量
+  paragraphCount: number;  // 段落数量
+  tableCount: number;      // 表格数量
+  imageCount: number;      // 图片数量
 }
 ```
 
