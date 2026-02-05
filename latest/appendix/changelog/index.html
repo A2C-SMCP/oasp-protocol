@@ -1188,6 +1188,39 @@
 </tr>
 </tbody>
 </table>
+<p><strong>word:event:documentModified 事件结构调整</strong></p>
+<p>基于 Add-In 实际实现进行协议规范对齐：</p>
+<table>
+<thead>
+<tr>
+<th>变更类型</th>
+<th>字段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>新增</td>
+<td><code>eventType</code></td>
+<td>事件类型标识，固定值 <code>"documentModified"</code></td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>clientId</code></td>
+<td>发送事件的客户端标识</td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>data</code></td>
+<td>事件数据对象</td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>data.modificationType</code></td>
+<td>修改类型：<code>insert</code>、<code>delete</code>、<code>update</code></td>
+</tr>
+</tbody>
+</table>
 <p><strong>word:get:styles 请求参数调整</strong></p>
 <p>基于 Add-In 实际实现进行协议规范对齐：</p>
 <table>
