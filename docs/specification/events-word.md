@@ -992,6 +992,7 @@ interface ReplaceTextRequest {
 {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "documentUri": "file:///Users/john/Documents/report.docx",
+  "timestamp": 1704067200000,
   "searchText": "旧文本",
   "replaceText": "新文本",
   "options": {
@@ -1008,14 +1009,14 @@ interface ReplaceTextResponse {
   requestId: string;
   success: boolean;
   data?: {
-    replaceCount: number;    // 替换的数量
+    replaceCount: number;    // 实际替换的数量
   };
   error?: ErrorResponse;
   timestamp: number;
 }
 ```
 
-**响应示例**:
+**响应示例（成功）**:
 
 ```json
 {
@@ -1028,14 +1029,28 @@ interface ReplaceTextResponse {
 }
 ```
 
+**响应示例（失败）**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": false,
+  "error": {
+    "code": 3001,
+    "message": "Document not found"
+  },
+  "timestamp": 1704067200500
+}
+```
+
 **可能的错误**:
 
 | 错误码 | 说明 |
 |--------|------|
-| 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 4001 | `VALIDATION_ERROR` - Schema 校验失败 |
 | 4002 | `MISSING_PARAM` - 缺少必要参数 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3999 | `OFFICE_API_ERROR` - 通用 Office API 错误（兜底） |
 
 ---
 
