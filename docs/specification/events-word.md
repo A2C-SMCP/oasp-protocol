@@ -672,7 +672,7 @@ interface DocumentStatsResult {
 interface GetStylesRequest {
   requestId: string;
   documentUri: string;
-  timestamp: number;
+  timestamp?: number;
   options?: {
     includeBuiltIn?: boolean;  // 是否包含内置样式，默认 true
     includeCustom?: boolean;   // 是否包含自定义样式，默认 true
@@ -696,12 +696,12 @@ interface GetStylesRequest {
 ```typescript
 interface GetStylesResponse {
   requestId: string;
-  success: true;
-  data: {
+  success: boolean;
+  data?: {
     styles: StyleInfo[];
   };
+  error?: ErrorResponse;
   timestamp: number;
-  duration: number;
 }
 ```
 
@@ -727,8 +727,7 @@ interface GetStylesResponse {
       }
     ]
   },
-  "timestamp": 1704067200500,
-  "duration": 200
+  "timestamp": 1704067200500
 }
 ```
 
@@ -749,8 +748,7 @@ interface GetStylesResponse {
       }
     ]
   },
-  "timestamp": 1704067200500,
-  "duration": 200
+  "timestamp": 1704067200500
 }
 ```
 
