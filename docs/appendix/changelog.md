@@ -7,6 +7,30 @@
 
 ---
 
+## [0.1.4] - 2026-02-05
+
+### 变更
+
+**word:get:selectedContent 请求与响应结构调整**
+
+基于 Add-In 实际实现进行协议规范对齐：
+
+| 变更类型 | 字段 | 说明 |
+|----------|------|------|
+| 修改 | `timestamp` (请求) | 从必需改为可选 |
+| 重构 | `options` | 从 `includeFormatting` 改为 6 个独立选项 |
+| 删除 | `duration` (响应) | Add-In 未实现，移除 |
+| 删除 | `data.html` | Add-In 未实现，移除 |
+| 删除 | `data.format` | Add-In 未实现，移除 |
+| 新增 | `data.elements` | 内容元素数组（段落、表格、图片、内容控件） |
+| 新增 | `data.metadata` | 统计元数据（字符数、段落数等） |
+
+**新增 GetContentOptions**：`includeText`、`includeImages`、`includeTables`、`includeContentControls`、`detailedMetadata`、`maxTextLength`
+
+**新增内容元素类型**：`ParagraphElement`、`TableElement`、`InlinePictureElement`、`ContentControlElement`
+
+---
+
 ## [0.1.3] - 2026-02-05
 
 ### 变更

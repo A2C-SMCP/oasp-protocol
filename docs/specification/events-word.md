@@ -286,7 +286,7 @@ interface SelectionInfo {
 
 **状态**: ✅ Stable
 
-**说明**: 获取选中区域的完整内容，包括格式信息。
+**说明**: 获取选中区域的完整内容，包括文本、段落、表格、图片、内容控件等元素。
 
 **请求数据**:
 
@@ -294,10 +294,17 @@ interface SelectionInfo {
 interface GetSelectedContentRequest {
   requestId: string;
   documentUri: string;
-  timestamp: number;
-  options?: {
-    includeFormatting?: boolean;  // 是否包含格式信息，默认 true
-  };
+  timestamp?: number;
+  options?: GetContentOptions;
+}
+
+interface GetContentOptions {
+  includeText?: boolean;            // 是否包含文本，默认 true
+  includeImages?: boolean;          // 是否包含图片，默认 true
+  includeTables?: boolean;          // 是否包含表格，默认 true
+  includeContentControls?: boolean; // 是否包含内容控件，默认 true
+  detailedMetadata?: boolean;       // 是否包含详细元数据，默认 false
+  maxTextLength?: number;           // 文本最大长度，超出截断
 }
 ```
 
@@ -307,9 +314,9 @@ interface GetSelectedContentRequest {
 {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "documentUri": "file:///Users/john/Documents/report.docx",
-  "timestamp": 1704067200000,
   "options": {
-    "includeFormatting": true
+    "includeText": true,
+    "detailedMetadata": true
   }
 }
 ```
@@ -319,36 +326,120 @@ interface GetSelectedContentRequest {
 ```typescript
 interface GetSelectedContentResponse {
   requestId: string;
-  success: true;
-  data: {
-    text: string;
-    html?: string;       // HTML 格式内容
-    format?: TextFormat; // 格式信息
-  };
+  success: boolean;
+  data?: ContentInfo;
+  error?: ErrorResponse;
   timestamp: number;
-  duration: number;
+}
+
+interface ContentInfo {
+  text: string;                    // 纯文本内容
+  elements: ContentElement[];      // 内容元素数组
+  metadata?: ContentMetadata;      // 统计元数据
+}
+
+interface ContentMetadata {
+  isEmpty: boolean;
+  characterCount: number;
+  paragraphCount: number;
+  tableCount?: number;
+  imageCount?: number;
+}
+
+type ContentElement = ParagraphElement | TableElement | InlinePictureElement | ContentControlElement;
+```
+
+**元素类型定义**:
+
+```typescript
+interface ParagraphElement {
+  id: string;
+  type: "Paragraph";
+  text?: string;
+  style?: string;
+  alignment?: string;
+  // detailedMetadata=true 时返回以下字段
+  firstLineIndent?: number;
+  leftIndent?: number;
+  rightIndent?: number;
+  lineSpacing?: number;
+  spaceBefore?: number;
+  spaceAfter?: number;
+  isListItem?: boolean;
+}
+
+interface TableElement {
+  id: string;
+  type: "Table";
+  rowCount: number;
+  columnCount: number;
+  cells?: TableCellInfo[][];
+}
+
+interface InlinePictureElement {
+  id: string;
+  type: "InlinePicture";
+  width: number;
+  height: number;
+  altText?: string;
+  hyperlink?: string;
+}
+
+interface ContentControlElement {
+  id: string;
+  type: "ContentControl";
+  text?: string;
+  title?: string;
+  tag?: string;
+  controlType: string;
+  cannotDelete?: boolean;
+  cannotEdit?: boolean;
+  placeholderText?: string;
 }
 ```
 
-**响应示例**:
+**响应示例（有选区）**:
 
 ```json
 {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "success": true,
   "data": {
-    "text": "Hello World",
-    "html": "<p><b>Hello</b> World</p>",
-    "format": {
-      "bold": true,
-      "fontSize": 12,
-      "fontName": "Calibri"
+    "text": "Hello World\nThis is a paragraph.",
+    "elements": [
+      { "id": "p-0", "type": "Paragraph", "text": "Hello World", "style": "Normal" },
+      { "id": "p-1", "type": "Paragraph", "text": "This is a paragraph." }
+    ],
+    "metadata": {
+      "isEmpty": false,
+      "characterCount": 32,
+      "paragraphCount": 2
     }
   },
-  "timestamp": 1704067200500,
-  "duration": 80
+  "timestamp": 1704067200500
 }
 ```
+
+**响应示例（空选区）**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "text": "",
+    "elements": [],
+    "metadata": { "isEmpty": true, "characterCount": 0, "paragraphCount": 0 }
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 
 ---
 
