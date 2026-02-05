@@ -1068,7 +1068,7 @@ interface ReplaceTextResponse {
 interface SelectTextRequest {
   requestId: string;
   documentUri: string;
-  timestamp: number;
+  timestamp?: number;
   searchText: string;        // 要查找的文本
   options?: {
     selectionMode?: "select" | "start" | "end";  // 选择模式，默认 "select"
@@ -1105,14 +1105,14 @@ interface SelectTextRequest {
 ```typescript
 interface SelectTextResponse {
   requestId: string;
-  success: true;
-  data: {
+  success: boolean;
+  data?: {
     matchCount: number;      // 总匹配数
     selectedIndex: number;   // 选中的是第几个
     selectedText: string;    // 选中的文本
   };
+  error?: ErrorResponse;
   timestamp: number;
-  duration: number;
 }
 ```
 
@@ -1127,8 +1127,7 @@ interface SelectTextResponse {
     "selectedIndex": 0,
     "selectedText": "目标文本"
   },
-  "timestamp": 1704067200500,
-  "duration": 100
+  "timestamp": 1704067200500
 }
 ```
 
