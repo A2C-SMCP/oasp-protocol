@@ -32,22 +32,22 @@
 | [word:replace:selection](#wordreplaceselection) | ✅ Stable | 替换选中内容 |
 | [word:replace:text](#wordreplacetext) | ✅ Stable | 查找替换 |
 | [word:select:text](#wordselecttext) | ✅ Stable | 查找并选中文本 |
-| [word:append:text](#wordappendtext) | 📋 Draft | 追加文本 |
+| [word:append:text](#wordappendtext) | ✅ Stable | 追加文本 |
 
 ### 多媒体操作类（Server → AddIn，请求-响应）
 
 | 事件名 | 状态 | 说明 |
 |--------|------|------|
-| [word:insert:image](#wordinsertimage) | 📋 Draft | 插入图片 |
-| [word:insert:table](#wordinserttable) | 📋 Draft | 插入表格 |
-| [word:insert:equation](#wordinsertequation) | 📋 Draft | 插入公式 |
+| [word:insert:image](#wordinsertimage) | ✅ Stable | 插入图片 |
+| [word:insert:table](#wordinserttable) | ✅ Stable | 插入表格 |
+| [word:insert:equation](#wordinsertequation) | ✅ Stable | 插入公式 |
 
 ### 高级功能类（Server → AddIn，请求-响应）
 
 | 事件名 | 状态 | 说明 |
 |--------|------|------|
-| [word:insert:toc](#wordinserttoc) | 📋 Draft | 插入目录 |
-| [word:export:content](#wordexportcontent) | 📋 Draft | 导出内容 |
+| [word:insert:toc](#wordinserttoc) | ✅ Stable | 插入目录 |
+| [word:export:content](#wordexportcontent) | ✅ Stable | 导出内容 |
 
 ---
 
@@ -1109,16 +1109,23 @@ interface SelectTextRequest {
 interface SelectTextResponse {
   requestId: string;
   success: boolean;
-  data?: {
-    success: boolean;              // 是否找到并选中了文本
-    selectionInfo?: {              // 选中成功时的详细信息
-      matchCount: number;          // 总匹配数
-      selectedIndex: number;       // 选中的是第几个（1-based）
-      selectedText: string;        // 选中的文本
-    };
-  };
+  data?: SelectTextResult;
   error?: ErrorResponse;
   timestamp: number;
+}
+
+interface SelectTextResult {
+  success: boolean;              // 是否找到并选中了文本
+  matchCount: number;            // 总匹配数
+  selectedIndex: number;         // 选中的是第几个（1-based）
+  selectedText: string;          // 选中的文本
+  selectionInfo?: {              // 选中后的选区详细信息
+    type: "Normal" | "NoSelection" | "InsertionPoint";  // 选区类型
+    start?: number;              // 起始位置
+    end?: number;                // 结束位置
+    text?: string;               // 选区文本
+    isEmpty: boolean;            // 是否为空
+  };
 }
 ```
 
@@ -1130,10 +1137,15 @@ interface SelectTextResponse {
   "success": true,
   "data": {
     "success": true,
+    "matchCount": 3,
+    "selectedIndex": 1,
+    "selectedText": "目标文本",
     "selectionInfo": {
-      "matchCount": 3,
-      "selectedIndex": 1,
-      "selectedText": "目标文本"
+      "type": "Normal",
+      "start": 100,
+      "end": 104,
+      "text": "目标文本",
+      "isEmpty": false
     }
   },
   "timestamp": 1704067200500
@@ -1147,7 +1159,10 @@ interface SelectTextResponse {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "success": true,
   "data": {
-    "success": false
+    "success": false,
+    "matchCount": 0,
+    "selectedIndex": 0,
+    "selectedText": ""
   },
   "timestamp": 1704067200500
 }
@@ -1158,7 +1173,6 @@ interface SelectTextResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
-| 4002 | `MISSING_PARAM` - 缺少必要参数 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
@@ -1168,9 +1182,9 @@ interface SelectTextResponse {
 
 **方向**: Server → AddIn（请求-响应）
 
-**状态**: 📋 Draft
+**状态**: ✅ Stable
 
-**说明**: 在文档末尾追加文本。
+**说明**: 在文档开头或末尾追加文本。
 
 **请求数据**:
 
@@ -1178,11 +1192,64 @@ interface SelectTextResponse {
 interface AppendTextRequest {
   requestId: string;
   documentUri: string;
-  timestamp: number;
-  text: string;
-  format?: TextFormat;
+  timestamp?: number;
+  text: string;                              // 要追加的文本
+  location?: "Start" | "End";                // 追加位置，默认 "End"
+  format?: TextFormat;                       // 可选的格式设置
 }
 ```
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/report.docx",
+  "text": "这是追加的文本",
+  "location": "End",
+  "format": {
+    "bold": true,
+    "fontSize": 12
+  }
+}
+```
+
+**响应数据**:
+
+```typescript
+interface AppendTextResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    appended: boolean;    // 是否成功追加
+    length: number;       // 追加的字符数
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "appended": true,
+    "length": 7
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
 ---
 
@@ -1192,9 +1259,9 @@ interface AppendTextRequest {
 
 **方向**: Server → AddIn（请求-响应）
 
-**状态**: 📋 Draft
+**状态**: ✅ Stable
 
-**说明**: 在当前光标位置插入图片。
+**说明**: 在文档中插入图片，支持内联和浮动布局。
 
 **请求数据**:
 
@@ -1202,10 +1269,90 @@ interface AppendTextRequest {
 interface InsertImageRequest {
   requestId: string;
   documentUri: string;
-  timestamp: number;
-  image: ImageData;
+  timestamp?: number;
+  image: ImageData;                          // 图片数据
+  location?: InsertLocation;                 // 插入位置
+  wrapType?: "Inline" | "Square" | "Tight" | "Behind" | "InFront";  // 文字环绕方式
+}
+
+interface ImageData {
+  base64: string;       // Base64 编码的图片数据
+  width?: number;       // 图片宽度（磅）
+  height?: number;      // 图片高度（磅）
+  altText?: string;     // 替代文本
+}
+
+interface InsertLocation {
+  type: "Cursor" | "Start" | "End" | "BeforeBookmark" | "AfterBookmark";
+  bookmarkName?: string;  // 当 type 为 BeforeBookmark/AfterBookmark 时必需
 }
 ```
+
+**文字环绕方式说明**:
+
+| 类型 | 说明 |
+|------|------|
+| `Inline` | 嵌入型（默认），图片作为文字的一部分 |
+| `Square` | 四周型环绕 |
+| `Tight` | 紧密型环绕 |
+| `Behind` | 衬于文字下方 |
+| `InFront` | 浮于文字上方 |
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/report.docx",
+  "image": {
+    "base64": "data:image/png;base64,iVBORw0KGgoAAAANS...",
+    "width": 200,
+    "height": 150,
+    "altText": "示例图片"
+  },
+  "location": {
+    "type": "Cursor"
+  },
+  "wrapType": "Square"
+}
+```
+
+**响应数据**:
+
+```typescript
+interface InsertImageResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    inserted: boolean;   // 是否成功插入
+    imageId: string;     // 图片标识符
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "inserted": true,
+    "imageId": "shape-12345"
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
 ---
 
@@ -1213,9 +1360,9 @@ interface InsertImageRequest {
 
 **方向**: Server → AddIn（请求-响应）
 
-**状态**: 📋 Draft
+**状态**: ✅ Stable
 
-**说明**: 在当前光标位置插入表格。
+**说明**: 在文档中插入表格。
 
 **请求数据**:
 
@@ -1223,10 +1370,75 @@ interface InsertImageRequest {
 interface InsertTableRequest {
   requestId: string;
   documentUri: string;
-  timestamp: number;
+  timestamp?: number;
   options: TableInsertOptions;
 }
+
+interface TableInsertOptions {
+  rows: number;              // 行数（必需）
+  columns: number;           // 列数（必需）
+  data?: string[][];         // 表格数据（可选，按行列顺序填充）
+  style?: string;            // 表格样式名称
+}
 ```
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/report.docx",
+  "options": {
+    "rows": 3,
+    "columns": 4,
+    "data": [
+      ["姓名", "年龄", "城市", "职业"],
+      ["张三", "28", "北京", "工程师"],
+      ["李四", "32", "上海", "设计师"]
+    ],
+    "style": "Grid Table 1 Light"
+  }
+}
+```
+
+**响应数据**:
+
+```typescript
+interface InsertTableResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    tableId: string;       // 表格标识符
+    rowCount: number;      // 行数
+    columnCount: number;   // 列数
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "tableId": "table-0",
+    "rowCount": 3,
+    "columnCount": 4
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
 ---
 
@@ -1234,9 +1446,9 @@ interface InsertTableRequest {
 
 **方向**: Server → AddIn（请求-响应）
 
-**状态**: 📋 Draft
+**状态**: ✅ Stable
 
-**说明**: 在当前光标位置插入数学公式。
+**说明**: 在文档中插入数学公式（LaTeX 格式）。
 
 **请求数据**:
 
@@ -1244,10 +1456,73 @@ interface InsertTableRequest {
 interface InsertEquationRequest {
   requestId: string;
   documentUri: string;
-  timestamp: number;
-  latex: string;         // LaTeX 格式的公式
+  timestamp?: number;
+  latex: string;                 // LaTeX 格式的公式
+  options?: {
+    inline?: boolean;            // 是否内联显示，默认 false
+  };
 }
 ```
+
+**支持的 LaTeX 语法**:
+
+| 语法 | 说明 | 示例 |
+|------|------|------|
+| `^{}` | 上标 | `x^{2}` → x² |
+| `_{}` | 下标 | `x_{i}` → xᵢ |
+| `\frac{}{}` | 分数 | `\frac{a}{b}` → a/b |
+| `\sqrt{}` | 平方根 | `\sqrt{x}` → √x |
+| `\sum_{}^{}` | 求和 | `\sum_{i=1}^{n}` |
+| `\int_{}^{}` | 积分 | `\int_{0}^{1}` |
+| 希腊字母 | α, β, γ 等 | `\alpha`, `\beta` |
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/report.docx",
+  "latex": "E = mc^{2}",
+  "options": {
+    "inline": true
+  }
+}
+```
+
+**响应数据**:
+
+```typescript
+interface InsertEquationResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    equationId: string;    // 公式标识符
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "equationId": "eq-001"
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
 ---
 
@@ -1257,9 +1532,9 @@ interface InsertEquationRequest {
 
 **方向**: Server → AddIn（请求-响应）
 
-**状态**: 📋 Draft
+**状态**: ✅ Stable
 
-**说明**: 在当前光标位置插入目录。
+**说明**: 在文档中插入目录（Table of Contents）。
 
 **请求数据**:
 
@@ -1267,12 +1542,60 @@ interface InsertEquationRequest {
 interface InsertTOCRequest {
   requestId: string;
   documentUri: string;
-  timestamp: number;
+  timestamp?: number;
   options?: {
-    levels?: number;     // 包含的标题级别，默认 3
+    maxLevel?: number;     // 包含的最大标题级别（1-9），默认 3
+    styles?: string[];     // 自定义样式名称列表
   };
 }
 ```
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/report.docx",
+  "options": {
+    "maxLevel": 3
+  }
+}
+```
+
+**响应数据**:
+
+```typescript
+interface InsertTOCResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    inserted: boolean;   // 是否成功插入
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "inserted": true
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
 ---
 
@@ -1280,7 +1603,7 @@ interface InsertTOCRequest {
 
 **方向**: Server → AddIn（请求-响应）
 
-**状态**: 📋 Draft
+**状态**: ✅ Stable
 
 **说明**: 导出文档内容为指定格式。
 
@@ -1290,8 +1613,34 @@ interface InsertTOCRequest {
 interface ExportContentRequest {
   requestId: string;
   documentUri: string;
-  timestamp: number;
-  format: "text" | "html" | "markdown";
+  timestamp?: number;
+  format: "text" | "html" | "markdown";   // 导出格式
+  options?: {
+    includeImages?: boolean;              // 是否包含图片，默认 true
+    includeTables?: boolean;              // 是否包含表格，默认 true
+  };
+}
+```
+
+**导出格式说明**:
+
+| 格式 | 说明 |
+|------|------|
+| `text` | 纯文本格式 |
+| `html` | HTML 格式，保留基本格式 |
+| `markdown` | Markdown 格式 |
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/report.docx",
+  "format": "markdown",
+  "options": {
+    "includeImages": true,
+    "includeTables": true
+  }
 }
 ```
 
@@ -1300,12 +1649,34 @@ interface ExportContentRequest {
 ```typescript
 interface ExportContentResponse {
   requestId: string;
-  success: true;
-  data: {
+  success: boolean;
+  data?: {
     content: string;     // 导出的内容
     format: string;      // 导出格式
   };
+  error?: ErrorResponse;
   timestamp: number;
-  duration: number;
 }
 ```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "content": "# 标题\n\n这是文档内容...",
+    "format": "markdown"
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
