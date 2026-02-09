@@ -49,6 +49,16 @@
 | [word:insert:toc](#wordinserttoc) | ✅ Stable | 插入目录 |
 | [word:export:content](#wordexportcontent) | ✅ Stable | 导出内容 |
 
+### 批注操作类（Server → AddIn，请求-响应）
+
+| 事件名 | 状态 | 说明 |
+|--------|------|------|
+| [word:get:comments](#wordgetcomments) | ✅ Stable | 获取批注列表 |
+| [word:insert:comment](#wordinsertcomment) | ✅ Stable | 在选区上插入批注 |
+| [word:delete:comment](#worddeletecomment) | ✅ Stable | 按 ID 删除批注 |
+| [word:reply:comment](#wordreplycomment) | ✅ Stable | 回复已有批注 |
+| [word:resolve:comment](#wordresolvecomment) | ✅ Stable | 解决/取消解决批注 |
+
 ---
 
 ## 事件报告类
@@ -1680,3 +1690,441 @@ interface ExportContentResponse {
 | 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+
+---
+
+## 批注操作类
+
+### word:get:comments
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: ✅ Stable
+
+**说明**: 获取文档或当前选区中的批注列表。如果有选区，优先返回选区范围内的批注；否则返回整个文档的批注。
+
+**请求数据**:
+
+```typescript
+interface GetCommentsRequest {
+  requestId: string;      // 请求 ID (UUID)
+  documentUri: string;    // 文档 URI
+  timestamp?: number;     // 请求时间戳（毫秒），可选
+  options?: {
+    includeResolved?: boolean;       // 是否包含已解决的批注，默认 true
+    includeReplies?: boolean;        // 是否包含批注回复，默认 true
+    includeAssociatedText?: boolean; // 是否包含关联文本，默认 true
+    detailedMetadata?: boolean;      // 是否包含详细元数据（作者、日期），默认 false
+    maxTextLength?: number;          // 文本内容最大长度，超出截断
+  };
+}
+```
+
+**字段说明**:
+
+| 字段 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `requestId` | string | ✅ | 请求唯一标识（UUID） |
+| `documentUri` | string | ✅ | 文档 URI |
+| `options.includeResolved` | boolean | ❌ | 是否包含已解决的批注，默认 `true` |
+| `options.includeReplies` | boolean | ❌ | 是否包含批注回复，默认 `true` |
+| `options.includeAssociatedText` | boolean | ❌ | 是否包含关联文本，默认 `true` |
+| `options.detailedMetadata` | boolean | ❌ | 是否包含作者和日期，默认 `false` |
+| `options.maxTextLength` | number | ❌ | 文本内容最大长度，超出截断 |
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/report.docx",
+  "options": {
+    "includeResolved": false,
+    "includeReplies": true,
+    "detailedMetadata": true
+  }
+}
+```
+
+**响应数据**:
+
+```typescript
+interface GetCommentsResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    comments: CommentData[];
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+
+interface CommentData {
+  id: string;                  // 批注唯一 ID
+  content: string;             // 批注文本内容
+  authorName?: string;         // 作者名称（detailedMetadata=true 时返回）
+  authorEmail?: string;        // 作者邮箱（detailedMetadata=true 时返回）
+  creationDate?: string;       // 创建时间 ISO 8601（detailedMetadata=true 时返回）
+  resolved: boolean;           // 是否已解决
+  associatedText?: string;     // 关联文本（被批注的文本）
+  replies?: CommentReplyData[];// 回复列表
+}
+
+interface CommentReplyData {
+  id: string;                  // 回复唯一 ID
+  content: string;             // 回复文本内容
+  authorName?: string;         // 回复作者名称
+  authorEmail?: string;        // 回复作者邮箱
+  creationDate?: string;       // 回复创建时间 ISO 8601
+}
+```
+
+**响应示例（成功）**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "comments": [
+      {
+        "id": "comment-1",
+        "content": "请修改这段文字",
+        "authorName": "张三",
+        "authorEmail": "zhangsan@example.com",
+        "creationDate": "2025-01-15T10:30:00.000Z",
+        "resolved": false,
+        "associatedText": "需要修改的文字",
+        "replies": [
+          {
+            "id": "reply-1",
+            "content": "已修改",
+            "authorName": "李四",
+            "creationDate": "2025-01-15T11:00:00.000Z"
+          }
+        ]
+      }
+    ]
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4000 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+
+---
+
+### word:insert:comment
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: ✅ Stable
+
+**说明**: 在当前选区上插入一条新批注。需要有活动选区。
+
+**请求数据**:
+
+```typescript
+interface InsertCommentRequest {
+  requestId: string;      // 请求 ID (UUID)
+  documentUri: string;    // 文档 URI
+  timestamp?: number;     // 请求时间戳（毫秒），可选
+  text: string;           // 批注文本内容（不能为空）
+}
+```
+
+**字段说明**:
+
+| 字段 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `requestId` | string | ✅ | 请求唯一标识（UUID） |
+| `documentUri` | string | ✅ | 文档 URI |
+| `text` | string | ✅ | 批注文本内容，至少 1 个字符 |
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/report.docx",
+  "text": "这段文字需要修改"
+}
+```
+
+**响应数据**:
+
+```typescript
+interface InsertCommentResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    commentId: string;    // 新创建的批注 ID
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例（成功）**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "commentId": "comment-12345"
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4000 | `VALIDATION_ERROR` - 请求参数校验失败（text 为空） |
+| 3002 | `SELECTION_EMPTY` - 没有活动选区 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+
+---
+
+### word:delete:comment
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: ✅ Stable
+
+**说明**: 按 ID 删除一条批注。
+
+**请求数据**:
+
+```typescript
+interface DeleteCommentRequest {
+  requestId: string;      // 请求 ID (UUID)
+  documentUri: string;    // 文档 URI
+  timestamp?: number;     // 请求时间戳（毫秒），可选
+  commentId: string;      // 要删除的批注 ID（不能为空）
+}
+```
+
+**字段说明**:
+
+| 字段 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `requestId` | string | ✅ | 请求唯一标识（UUID） |
+| `documentUri` | string | ✅ | 文档 URI |
+| `commentId` | string | ✅ | 要删除的批注 ID |
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/report.docx",
+  "commentId": "comment-12345"
+}
+```
+
+**响应数据**:
+
+```typescript
+interface DeleteCommentResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    deleted: boolean;     // 是否删除成功
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例（成功）**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "deleted": true
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4000 | `VALIDATION_ERROR` - 请求参数校验失败（commentId 为空） |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误（批注不存在等） |
+
+---
+
+### word:reply:comment
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: ✅ Stable
+
+**说明**: 回复已有批注。
+
+**请求数据**:
+
+```typescript
+interface ReplyCommentRequest {
+  requestId: string;      // 请求 ID (UUID)
+  documentUri: string;    // 文档 URI
+  timestamp?: number;     // 请求时间戳（毫秒），可选
+  commentId: string;      // 要回复的批注 ID（不能为空）
+  text: string;           // 回复文本内容（不能为空）
+}
+```
+
+**字段说明**:
+
+| 字段 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `requestId` | string | ✅ | 请求唯一标识（UUID） |
+| `documentUri` | string | ✅ | 文档 URI |
+| `commentId` | string | ✅ | 要回复的批注 ID |
+| `text` | string | ✅ | 回复文本内容，至少 1 个字符 |
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/report.docx",
+  "commentId": "comment-12345",
+  "text": "已按照建议修改"
+}
+```
+
+**响应数据**:
+
+```typescript
+interface ReplyCommentResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    replyId: string;      // 新创建的回复 ID
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例（成功）**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "replyId": "reply-67890"
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4000 | `VALIDATION_ERROR` - 请求参数校验失败（commentId 或 text 为空） |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误（批注不存在等） |
+
+---
+
+### word:resolve:comment
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: ✅ Stable
+
+**说明**: 解决或取消解决一条批注。
+
+**请求数据**:
+
+```typescript
+interface ResolveCommentRequest {
+  requestId: string;      // 请求 ID (UUID)
+  documentUri: string;    // 文档 URI
+  timestamp?: number;     // 请求时间戳（毫秒），可选
+  commentId: string;      // 要操作的批注 ID（不能为空）
+  resolved: boolean;      // true=解决，false=取消解决
+}
+```
+
+**字段说明**:
+
+| 字段 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `requestId` | string | ✅ | 请求唯一标识（UUID） |
+| `documentUri` | string | ✅ | 文档 URI |
+| `commentId` | string | ✅ | 要操作的批注 ID |
+| `resolved` | boolean | ✅ | `true` 表示解决，`false` 表示取消解决 |
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/report.docx",
+  "commentId": "comment-12345",
+  "resolved": true
+}
+```
+
+**响应数据**:
+
+```typescript
+interface ResolveCommentResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    resolved: boolean;    // 当前解决状态
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例（成功 - 解决）**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "resolved": true
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**响应示例（成功 - 取消解决）**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "resolved": false
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4000 | `VALIDATION_ERROR` - 请求参数校验失败（commentId 为空） |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误（批注不存在等） |
