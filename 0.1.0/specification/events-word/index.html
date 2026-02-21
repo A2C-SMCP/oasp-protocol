@@ -670,6 +670,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#server-addin-_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        批注操作类（Server → AddIn，请求-响应）
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -947,6 +958,78 @@
     <span class="md-ellipsis">
       
         word:export:content
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        批注操作类
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="批注操作类">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#wordgetcomments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        word:get:comments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wordinsertcomment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        word:insert:comment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#worddeletecomment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        word:delete:comment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wordreplycomment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        word:reply:comment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wordresolvecomment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        word:resolve:comment
       
     </span>
   </a>
@@ -1343,6 +1426,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#server-addin-_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        批注操作类（Server → AddIn，请求-响应）
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1631,6 +1725,78 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        批注操作类
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="批注操作类">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#wordgetcomments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        word:get:comments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wordinsertcomment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        word:insert:comment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#worddeletecomment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        word:delete:comment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wordreplycomment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        word:reply:comment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wordresolvecomment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        word:resolve:comment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1799,6 +1965,43 @@
 <td><a href="#wordexportcontent">word:export:content</a></td>
 <td>✅ Stable</td>
 <td>导出内容</td>
+</tr>
+</tbody>
+</table>
+<h3 id="server-addin-_4">批注操作类（Server → AddIn，请求-响应）<a class="headerlink" href="#server-addin-_4" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>事件名</th>
+<th>状态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#wordgetcomments">word:get:comments</a></td>
+<td>✅ Stable</td>
+<td>获取批注列表</td>
+</tr>
+<tr>
+<td><a href="#wordinsertcomment">word:insert:comment</a></td>
+<td>✅ Stable</td>
+<td>在选区上插入批注</td>
+</tr>
+<tr>
+<td><a href="#worddeletecomment">word:delete:comment</a></td>
+<td>✅ Stable</td>
+<td>按 ID 删除批注</td>
+</tr>
+<tr>
+<td><a href="#wordreplycomment">word:reply:comment</a></td>
+<td>✅ Stable</td>
+<td>回复已有批注</td>
+</tr>
+<tr>
+<td><a href="#wordresolvecomment">word:resolve:comment</a></td>
+<td>✅ Stable</td>
+<td>解决/取消解决批注</td>
 </tr>
 </tbody>
 </table>
@@ -2765,6 +2968,11 @@
 <p><strong>方向</strong>: Server → AddIn（请求-响应）</p>
 <p><strong>状态</strong>: ✅ Stable</p>
 <p><strong>说明</strong>: 查找并替换文档中的文本。</p>
+<div class="admonition important">
+<p class="admonition-title">样式优先级规则</p>
+<p>当同时指定直接格式（如 <code>bold</code>、<code>fontSize</code>）和 <code>styleName</code> 时，<strong>直接格式优先级高于样式名</strong>。
+即：先应用 <code>styleName</code> 指定的样式，再覆盖应用直接格式属性。</p>
+</div>
 <p><strong>请求数据</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">ReplaceTextRequest</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
@@ -2777,7 +2985,8 @@
 <a id="__codelineno-40-9" name="__codelineno-40-9" href="#__codelineno-40-9"></a><span class="w">    </span><span class="nx">matchWholeWord?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w"> </span><span class="c1">// 全词匹配，默认 false</span>
 <a id="__codelineno-40-10" name="__codelineno-40-10" href="#__codelineno-40-10"></a><span class="w">    </span><span class="nx">replaceAll?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w">    </span><span class="c1">// 替换全部，默认 false</span>
 <a id="__codelineno-40-11" name="__codelineno-40-11" href="#__codelineno-40-11"></a><span class="w">  </span><span class="p">};</span>
-<a id="__codelineno-40-12" name="__codelineno-40-12" href="#__codelineno-40-12"></a><span class="p">}</span>
+<a id="__codelineno-40-12" name="__codelineno-40-12" href="#__codelineno-40-12"></a><span class="w">  </span><span class="nx">format?</span><span class="o">:</span><span class="w"> </span><span class="kt">TextFormat</span><span class="p">;</span><span class="w">       </span><span class="c1">// 可选的格式设置（定义见 word:insert:text）</span>
+<a id="__codelineno-40-13" name="__codelineno-40-13" href="#__codelineno-40-13"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong>请求示例</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a><span class="p">{</span>
@@ -2789,8 +2998,13 @@
 <a id="__codelineno-41-7" name="__codelineno-41-7" href="#__codelineno-41-7"></a><span class="w">  </span><span class="nt">&quot;options&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-41-8" name="__codelineno-41-8" href="#__codelineno-41-8"></a><span class="w">    </span><span class="nt">&quot;matchCase&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
 <a id="__codelineno-41-9" name="__codelineno-41-9" href="#__codelineno-41-9"></a><span class="w">    </span><span class="nt">&quot;replaceAll&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
-<a id="__codelineno-41-10" name="__codelineno-41-10" href="#__codelineno-41-10"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-41-11" name="__codelineno-41-11" href="#__codelineno-41-11"></a><span class="p">}</span>
+<a id="__codelineno-41-10" name="__codelineno-41-10" href="#__codelineno-41-10"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-41-11" name="__codelineno-41-11" href="#__codelineno-41-11"></a><span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-41-12" name="__codelineno-41-12" href="#__codelineno-41-12"></a><span class="w">    </span><span class="nt">&quot;bold&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-41-13" name="__codelineno-41-13" href="#__codelineno-41-13"></a><span class="w">    </span><span class="nt">&quot;fontSize&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span>
+<a id="__codelineno-41-14" name="__codelineno-41-14" href="#__codelineno-41-14"></a><span class="w">    </span><span class="nt">&quot;color&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#FF0000&quot;</span>
+<a id="__codelineno-41-15" name="__codelineno-41-15" href="#__codelineno-41-15"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-41-16" name="__codelineno-41-16" href="#__codelineno-41-16"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong>响应数据</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">ReplaceTextResponse</span><span class="w"> </span><span class="p">{</span>
@@ -3544,6 +3758,620 @@
 <tr>
 <td>3999</td>
 <td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_8">批注操作类<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
+<h3 id="wordgetcomments">word:get:comments<a class="headerlink" href="#wordgetcomments" title="Permanent link">&para;</a></h3>
+<p><strong>方向</strong>: Server → AddIn（请求-响应）</p>
+<p><strong>状态</strong>: ✅ Stable</p>
+<p><strong>说明</strong>: 获取文档或当前选区中的批注列表。如果有选区，优先返回选区范围内的批注；否则返回整个文档的批注。</p>
+<p><strong>请求数据</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-74-1" name="__codelineno-74-1" href="#__codelineno-74-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">GetCommentsRequest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-74-2" name="__codelineno-74-2" href="#__codelineno-74-2"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">      </span><span class="c1">// 请求 ID (UUID)</span>
+<a id="__codelineno-74-3" name="__codelineno-74-3" href="#__codelineno-74-3"></a><span class="w">  </span><span class="nx">documentUri</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">    </span><span class="c1">// 文档 URI</span>
+<a id="__codelineno-74-4" name="__codelineno-74-4" href="#__codelineno-74-4"></a><span class="w">  </span><span class="nx">timestamp?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">     </span><span class="c1">// 请求时间戳（毫秒），可选</span>
+<a id="__codelineno-74-5" name="__codelineno-74-5" href="#__codelineno-74-5"></a><span class="w">  </span><span class="nx">options</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-74-6" name="__codelineno-74-6" href="#__codelineno-74-6"></a><span class="w">    </span><span class="nx">includeResolved?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w">       </span><span class="c1">// 是否包含已解决的批注，默认 true</span>
+<a id="__codelineno-74-7" name="__codelineno-74-7" href="#__codelineno-74-7"></a><span class="w">    </span><span class="nx">includeReplies?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w">        </span><span class="c1">// 是否包含批注回复，默认 true</span>
+<a id="__codelineno-74-8" name="__codelineno-74-8" href="#__codelineno-74-8"></a><span class="w">    </span><span class="nx">includeAssociatedText?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w"> </span><span class="c1">// 是否包含关联文本，默认 true</span>
+<a id="__codelineno-74-9" name="__codelineno-74-9" href="#__codelineno-74-9"></a><span class="w">    </span><span class="nx">detailedMetadata?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w">      </span><span class="c1">// 是否包含详细元数据（作者、日期），默认 false</span>
+<a id="__codelineno-74-10" name="__codelineno-74-10" href="#__codelineno-74-10"></a><span class="w">    </span><span class="nx">maxTextLength?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">          </span><span class="c1">// 文本内容最大长度，超出截断</span>
+<a id="__codelineno-74-11" name="__codelineno-74-11" href="#__codelineno-74-11"></a><span class="w">  </span><span class="p">};</span>
+<a id="__codelineno-74-12" name="__codelineno-74-12" href="#__codelineno-74-12"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>字段说明</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>必需</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>requestId</code></td>
+<td>string</td>
+<td>✅</td>
+<td>请求唯一标识（UUID）</td>
+</tr>
+<tr>
+<td><code>documentUri</code></td>
+<td>string</td>
+<td>✅</td>
+<td>文档 URI</td>
+</tr>
+<tr>
+<td><code>options.includeResolved</code></td>
+<td>boolean</td>
+<td>❌</td>
+<td>是否包含已解决的批注，默认 <code>true</code></td>
+</tr>
+<tr>
+<td><code>options.includeReplies</code></td>
+<td>boolean</td>
+<td>❌</td>
+<td>是否包含批注回复，默认 <code>true</code></td>
+</tr>
+<tr>
+<td><code>options.includeAssociatedText</code></td>
+<td>boolean</td>
+<td>❌</td>
+<td>是否包含关联文本，默认 <code>true</code></td>
+</tr>
+<tr>
+<td><code>options.detailedMetadata</code></td>
+<td>boolean</td>
+<td>❌</td>
+<td>是否包含作者和日期，默认 <code>false</code></td>
+</tr>
+<tr>
+<td><code>options.maxTextLength</code></td>
+<td>number</td>
+<td>❌</td>
+<td>文本内容最大长度，超出截断</td>
+</tr>
+</tbody>
+</table>
+<p><strong>请求示例</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-75-1" name="__codelineno-75-1" href="#__codelineno-75-1"></a><span class="p">{</span>
+<a id="__codelineno-75-2" name="__codelineno-75-2" href="#__codelineno-75-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d&quot;</span><span class="p">,</span>
+<a id="__codelineno-75-3" name="__codelineno-75-3" href="#__codelineno-75-3"></a><span class="w">  </span><span class="nt">&quot;documentUri&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;file:///Users/john/Documents/report.docx&quot;</span><span class="p">,</span>
+<a id="__codelineno-75-4" name="__codelineno-75-4" href="#__codelineno-75-4"></a><span class="w">  </span><span class="nt">&quot;options&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-75-5" name="__codelineno-75-5" href="#__codelineno-75-5"></a><span class="w">    </span><span class="nt">&quot;includeResolved&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-75-6" name="__codelineno-75-6" href="#__codelineno-75-6"></a><span class="w">    </span><span class="nt">&quot;includeReplies&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-75-7" name="__codelineno-75-7" href="#__codelineno-75-7"></a><span class="w">    </span><span class="nt">&quot;detailedMetadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-75-8" name="__codelineno-75-8" href="#__codelineno-75-8"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-75-9" name="__codelineno-75-9" href="#__codelineno-75-9"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>响应数据</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-76-1" name="__codelineno-76-1" href="#__codelineno-76-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">GetCommentsResponse</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-76-2" name="__codelineno-76-2" href="#__codelineno-76-2"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-76-3" name="__codelineno-76-3" href="#__codelineno-76-3"></a><span class="w">  </span><span class="nx">success</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
+<a id="__codelineno-76-4" name="__codelineno-76-4" href="#__codelineno-76-4"></a><span class="w">  </span><span class="nx">data</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-76-5" name="__codelineno-76-5" href="#__codelineno-76-5"></a><span class="w">    </span><span class="nx">comments</span><span class="o">:</span><span class="w"> </span><span class="kt">CommentData</span><span class="p">[];</span>
+<a id="__codelineno-76-6" name="__codelineno-76-6" href="#__codelineno-76-6"></a><span class="w">  </span><span class="p">};</span>
+<a id="__codelineno-76-7" name="__codelineno-76-7" href="#__codelineno-76-7"></a><span class="w">  </span><span class="nx">error?</span><span class="o">:</span><span class="w"> </span><span class="kt">ErrorResponse</span><span class="p">;</span>
+<a id="__codelineno-76-8" name="__codelineno-76-8" href="#__codelineno-76-8"></a><span class="w">  </span><span class="nx">timestamp</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-76-9" name="__codelineno-76-9" href="#__codelineno-76-9"></a><span class="p">}</span>
+<a id="__codelineno-76-10" name="__codelineno-76-10" href="#__codelineno-76-10"></a>
+<a id="__codelineno-76-11" name="__codelineno-76-11" href="#__codelineno-76-11"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">CommentData</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-76-12" name="__codelineno-76-12" href="#__codelineno-76-12"></a><span class="w">  </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">                  </span><span class="c1">// 批注唯一 ID</span>
+<a id="__codelineno-76-13" name="__codelineno-76-13" href="#__codelineno-76-13"></a><span class="w">  </span><span class="nx">content</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">             </span><span class="c1">// 批注文本内容</span>
+<a id="__codelineno-76-14" name="__codelineno-76-14" href="#__codelineno-76-14"></a><span class="w">  </span><span class="nx">authorName?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">         </span><span class="c1">// 作者名称（detailedMetadata=true 时返回）</span>
+<a id="__codelineno-76-15" name="__codelineno-76-15" href="#__codelineno-76-15"></a><span class="w">  </span><span class="nx">authorEmail?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">        </span><span class="c1">// 作者邮箱（detailedMetadata=true 时返回）</span>
+<a id="__codelineno-76-16" name="__codelineno-76-16" href="#__codelineno-76-16"></a><span class="w">  </span><span class="nx">creationDate?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">       </span><span class="c1">// 创建时间 ISO 8601（detailedMetadata=true 时返回）</span>
+<a id="__codelineno-76-17" name="__codelineno-76-17" href="#__codelineno-76-17"></a><span class="w">  </span><span class="nx">resolved</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w">           </span><span class="c1">// 是否已解决</span>
+<a id="__codelineno-76-18" name="__codelineno-76-18" href="#__codelineno-76-18"></a><span class="w">  </span><span class="nx">associatedText?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">     </span><span class="c1">// 关联文本（被批注的文本）</span>
+<a id="__codelineno-76-19" name="__codelineno-76-19" href="#__codelineno-76-19"></a><span class="w">  </span><span class="nx">replies?</span><span class="o">:</span><span class="w"> </span><span class="kt">CommentReplyData</span><span class="p">[];</span><span class="c1">// 回复列表</span>
+<a id="__codelineno-76-20" name="__codelineno-76-20" href="#__codelineno-76-20"></a><span class="p">}</span>
+<a id="__codelineno-76-21" name="__codelineno-76-21" href="#__codelineno-76-21"></a>
+<a id="__codelineno-76-22" name="__codelineno-76-22" href="#__codelineno-76-22"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">CommentReplyData</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-76-23" name="__codelineno-76-23" href="#__codelineno-76-23"></a><span class="w">  </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">                  </span><span class="c1">// 回复唯一 ID</span>
+<a id="__codelineno-76-24" name="__codelineno-76-24" href="#__codelineno-76-24"></a><span class="w">  </span><span class="nx">content</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">             </span><span class="c1">// 回复文本内容</span>
+<a id="__codelineno-76-25" name="__codelineno-76-25" href="#__codelineno-76-25"></a><span class="w">  </span><span class="nx">authorName?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">         </span><span class="c1">// 回复作者名称</span>
+<a id="__codelineno-76-26" name="__codelineno-76-26" href="#__codelineno-76-26"></a><span class="w">  </span><span class="nx">authorEmail?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">        </span><span class="c1">// 回复作者邮箱</span>
+<a id="__codelineno-76-27" name="__codelineno-76-27" href="#__codelineno-76-27"></a><span class="w">  </span><span class="nx">creationDate?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">       </span><span class="c1">// 回复创建时间 ISO 8601</span>
+<a id="__codelineno-76-28" name="__codelineno-76-28" href="#__codelineno-76-28"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>响应示例（成功）</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-77-1" name="__codelineno-77-1" href="#__codelineno-77-1"></a><span class="p">{</span>
+<a id="__codelineno-77-2" name="__codelineno-77-2" href="#__codelineno-77-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d&quot;</span><span class="p">,</span>
+<a id="__codelineno-77-3" name="__codelineno-77-3" href="#__codelineno-77-3"></a><span class="w">  </span><span class="nt">&quot;success&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-77-4" name="__codelineno-77-4" href="#__codelineno-77-4"></a><span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-77-5" name="__codelineno-77-5" href="#__codelineno-77-5"></a><span class="w">    </span><span class="nt">&quot;comments&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-77-6" name="__codelineno-77-6" href="#__codelineno-77-6"></a><span class="w">      </span><span class="p">{</span>
+<a id="__codelineno-77-7" name="__codelineno-77-7" href="#__codelineno-77-7"></a><span class="w">        </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;comment-1&quot;</span><span class="p">,</span>
+<a id="__codelineno-77-8" name="__codelineno-77-8" href="#__codelineno-77-8"></a><span class="w">        </span><span class="nt">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;请修改这段文字&quot;</span><span class="p">,</span>
+<a id="__codelineno-77-9" name="__codelineno-77-9" href="#__codelineno-77-9"></a><span class="w">        </span><span class="nt">&quot;authorName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;张三&quot;</span><span class="p">,</span>
+<a id="__codelineno-77-10" name="__codelineno-77-10" href="#__codelineno-77-10"></a><span class="w">        </span><span class="nt">&quot;authorEmail&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;zhangsan@example.com&quot;</span><span class="p">,</span>
+<a id="__codelineno-77-11" name="__codelineno-77-11" href="#__codelineno-77-11"></a><span class="w">        </span><span class="nt">&quot;creationDate&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-01-15T10:30:00.000Z&quot;</span><span class="p">,</span>
+<a id="__codelineno-77-12" name="__codelineno-77-12" href="#__codelineno-77-12"></a><span class="w">        </span><span class="nt">&quot;resolved&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-77-13" name="__codelineno-77-13" href="#__codelineno-77-13"></a><span class="w">        </span><span class="nt">&quot;associatedText&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;需要修改的文字&quot;</span><span class="p">,</span>
+<a id="__codelineno-77-14" name="__codelineno-77-14" href="#__codelineno-77-14"></a><span class="w">        </span><span class="nt">&quot;replies&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-77-15" name="__codelineno-77-15" href="#__codelineno-77-15"></a><span class="w">          </span><span class="p">{</span>
+<a id="__codelineno-77-16" name="__codelineno-77-16" href="#__codelineno-77-16"></a><span class="w">            </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;reply-1&quot;</span><span class="p">,</span>
+<a id="__codelineno-77-17" name="__codelineno-77-17" href="#__codelineno-77-17"></a><span class="w">            </span><span class="nt">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;已修改&quot;</span><span class="p">,</span>
+<a id="__codelineno-77-18" name="__codelineno-77-18" href="#__codelineno-77-18"></a><span class="w">            </span><span class="nt">&quot;authorName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;李四&quot;</span><span class="p">,</span>
+<a id="__codelineno-77-19" name="__codelineno-77-19" href="#__codelineno-77-19"></a><span class="w">            </span><span class="nt">&quot;creationDate&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-01-15T11:00:00.000Z&quot;</span>
+<a id="__codelineno-77-20" name="__codelineno-77-20" href="#__codelineno-77-20"></a><span class="w">          </span><span class="p">}</span>
+<a id="__codelineno-77-21" name="__codelineno-77-21" href="#__codelineno-77-21"></a><span class="w">        </span><span class="p">]</span>
+<a id="__codelineno-77-22" name="__codelineno-77-22" href="#__codelineno-77-22"></a><span class="w">      </span><span class="p">}</span>
+<a id="__codelineno-77-23" name="__codelineno-77-23" href="#__codelineno-77-23"></a><span class="w">    </span><span class="p">]</span>
+<a id="__codelineno-77-24" name="__codelineno-77-24" href="#__codelineno-77-24"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-77-25" name="__codelineno-77-25" href="#__codelineno-77-25"></a><span class="w">  </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1704067200500</span>
+<a id="__codelineno-77-26" name="__codelineno-77-26" href="#__codelineno-77-26"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>可能的错误</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>错误码</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4000</td>
+<td><code>VALIDATION_ERROR</code> - 请求参数校验失败</td>
+</tr>
+<tr>
+<td>3000</td>
+<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="wordinsertcomment">word:insert:comment<a class="headerlink" href="#wordinsertcomment" title="Permanent link">&para;</a></h3>
+<p><strong>方向</strong>: Server → AddIn（请求-响应）</p>
+<p><strong>状态</strong>: ✅ Stable</p>
+<p><strong>说明</strong>: 在指定目标范围上插入一条新批注。支持在当前选区或通过搜索文本定位的范围上插入。</p>
+<p><strong>请求数据</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-78-1" name="__codelineno-78-1" href="#__codelineno-78-1"></a><span class="kr">type</span><span class="w"> </span><span class="nx">InsertCommentTarget</span><span class="w"> </span><span class="o">=</span>
+<a id="__codelineno-78-2" name="__codelineno-78-2" href="#__codelineno-78-2"></a><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;selection&quot;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-78-3" name="__codelineno-78-3" href="#__codelineno-78-3"></a><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-78-4" name="__codelineno-78-4" href="#__codelineno-78-4"></a><span class="w">      </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;searchText&quot;</span><span class="p">;</span>
+<a id="__codelineno-78-5" name="__codelineno-78-5" href="#__codelineno-78-5"></a><span class="w">      </span><span class="nx">searchText</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">          </span><span class="c1">// 要搜索的文本（1-255 字符）</span>
+<a id="__codelineno-78-6" name="__codelineno-78-6" href="#__codelineno-78-6"></a><span class="w">      </span><span class="nx">searchOptions</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-78-7" name="__codelineno-78-7" href="#__codelineno-78-7"></a><span class="w">        </span><span class="nx">matchCase?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w">       </span><span class="c1">// 区分大小写，默认 false</span>
+<a id="__codelineno-78-8" name="__codelineno-78-8" href="#__codelineno-78-8"></a><span class="w">        </span><span class="nx">matchWholeWord?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w">  </span><span class="c1">// 全字匹配，默认 false</span>
+<a id="__codelineno-78-9" name="__codelineno-78-9" href="#__codelineno-78-9"></a><span class="w">      </span><span class="p">};</span>
+<a id="__codelineno-78-10" name="__codelineno-78-10" href="#__codelineno-78-10"></a><span class="w">    </span><span class="p">};</span>
+<a id="__codelineno-78-11" name="__codelineno-78-11" href="#__codelineno-78-11"></a>
+<a id="__codelineno-78-12" name="__codelineno-78-12" href="#__codelineno-78-12"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">InsertCommentRequest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-78-13" name="__codelineno-78-13" href="#__codelineno-78-13"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">      </span><span class="c1">// 请求 ID (UUID)</span>
+<a id="__codelineno-78-14" name="__codelineno-78-14" href="#__codelineno-78-14"></a><span class="w">  </span><span class="nx">documentUri</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">    </span><span class="c1">// 文档 URI</span>
+<a id="__codelineno-78-15" name="__codelineno-78-15" href="#__codelineno-78-15"></a><span class="w">  </span><span class="nx">timestamp?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">     </span><span class="c1">// 请求时间戳（毫秒），可选</span>
+<a id="__codelineno-78-16" name="__codelineno-78-16" href="#__codelineno-78-16"></a><span class="w">  </span><span class="nx">text</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">           </span><span class="c1">// 批注文本内容（不能为空）</span>
+<a id="__codelineno-78-17" name="__codelineno-78-17" href="#__codelineno-78-17"></a><span class="w">  </span><span class="nx">target?</span><span class="o">:</span><span class="w"> </span><span class="kt">InsertCommentTarget</span><span class="p">;</span><span class="w">  </span><span class="c1">// 目标范围（默认当前选区）</span>
+<a id="__codelineno-78-18" name="__codelineno-78-18" href="#__codelineno-78-18"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>字段说明</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>必需</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>requestId</code></td>
+<td>string</td>
+<td>✅</td>
+<td>请求唯一标识（UUID）</td>
+</tr>
+<tr>
+<td><code>documentUri</code></td>
+<td>string</td>
+<td>✅</td>
+<td>文档 URI</td>
+</tr>
+<tr>
+<td><code>text</code></td>
+<td>string</td>
+<td>✅</td>
+<td>批注文本内容，至少 1 个字符</td>
+</tr>
+<tr>
+<td><code>target</code></td>
+<td>InsertCommentTarget</td>
+<td>❌</td>
+<td>目标范围，不传或 <code>type: "selection"</code> 使用当前选区；<code>type: "searchText"</code> 通过搜索文本定位</td>
+</tr>
+<tr>
+<td><code>target.searchText</code></td>
+<td>string</td>
+<td>条件</td>
+<td>搜索文本（<code>type: "searchText"</code> 时必需，1-255 字符）</td>
+</tr>
+<tr>
+<td><code>target.searchOptions</code></td>
+<td>object</td>
+<td>❌</td>
+<td>搜索选项</td>
+</tr>
+<tr>
+<td><code>target.searchOptions.matchCase</code></td>
+<td>boolean</td>
+<td>❌</td>
+<td>区分大小写，默认 <code>false</code></td>
+</tr>
+<tr>
+<td><code>target.searchOptions.matchWholeWord</code></td>
+<td>boolean</td>
+<td>❌</td>
+<td>全字匹配，默认 <code>false</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>请求示例（当前选区）</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-79-1" name="__codelineno-79-1" href="#__codelineno-79-1"></a><span class="p">{</span>
+<a id="__codelineno-79-2" name="__codelineno-79-2" href="#__codelineno-79-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d&quot;</span><span class="p">,</span>
+<a id="__codelineno-79-3" name="__codelineno-79-3" href="#__codelineno-79-3"></a><span class="w">  </span><span class="nt">&quot;documentUri&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;file:///Users/john/Documents/report.docx&quot;</span><span class="p">,</span>
+<a id="__codelineno-79-4" name="__codelineno-79-4" href="#__codelineno-79-4"></a><span class="w">  </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;这段文字需要修改&quot;</span>
+<a id="__codelineno-79-5" name="__codelineno-79-5" href="#__codelineno-79-5"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>请求示例（搜索文本）</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-80-1" name="__codelineno-80-1" href="#__codelineno-80-1"></a><span class="p">{</span>
+<a id="__codelineno-80-2" name="__codelineno-80-2" href="#__codelineno-80-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;b2c3d4e5-f6a7-5b6c-9d8e-0f1a2b3c4d5e&quot;</span><span class="p">,</span>
+<a id="__codelineno-80-3" name="__codelineno-80-3" href="#__codelineno-80-3"></a><span class="w">  </span><span class="nt">&quot;documentUri&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;file:///Users/john/Documents/report.docx&quot;</span><span class="p">,</span>
+<a id="__codelineno-80-4" name="__codelineno-80-4" href="#__codelineno-80-4"></a><span class="w">  </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;建议将此处改为更准确的表述&quot;</span><span class="p">,</span>
+<a id="__codelineno-80-5" name="__codelineno-80-5" href="#__codelineno-80-5"></a><span class="w">  </span><span class="nt">&quot;target&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-80-6" name="__codelineno-80-6" href="#__codelineno-80-6"></a><span class="w">    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;searchText&quot;</span><span class="p">,</span>
+<a id="__codelineno-80-7" name="__codelineno-80-7" href="#__codelineno-80-7"></a><span class="w">    </span><span class="nt">&quot;searchText&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;需要审核的段落&quot;</span><span class="p">,</span>
+<a id="__codelineno-80-8" name="__codelineno-80-8" href="#__codelineno-80-8"></a><span class="w">    </span><span class="nt">&quot;searchOptions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-80-9" name="__codelineno-80-9" href="#__codelineno-80-9"></a><span class="w">      </span><span class="nt">&quot;matchCase&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-80-10" name="__codelineno-80-10" href="#__codelineno-80-10"></a><span class="w">      </span><span class="nt">&quot;matchWholeWord&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-80-11" name="__codelineno-80-11" href="#__codelineno-80-11"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-80-12" name="__codelineno-80-12" href="#__codelineno-80-12"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-80-13" name="__codelineno-80-13" href="#__codelineno-80-13"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>响应数据</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-81-1" name="__codelineno-81-1" href="#__codelineno-81-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">InsertCommentResponse</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-81-2" name="__codelineno-81-2" href="#__codelineno-81-2"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-81-3" name="__codelineno-81-3" href="#__codelineno-81-3"></a><span class="w">  </span><span class="nx">success</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
+<a id="__codelineno-81-4" name="__codelineno-81-4" href="#__codelineno-81-4"></a><span class="w">  </span><span class="nx">data</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-81-5" name="__codelineno-81-5" href="#__codelineno-81-5"></a><span class="w">    </span><span class="nx">commentId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">    </span><span class="c1">// 新创建的批注 ID</span>
+<a id="__codelineno-81-6" name="__codelineno-81-6" href="#__codelineno-81-6"></a><span class="w">  </span><span class="p">};</span>
+<a id="__codelineno-81-7" name="__codelineno-81-7" href="#__codelineno-81-7"></a><span class="w">  </span><span class="nx">error?</span><span class="o">:</span><span class="w"> </span><span class="kt">ErrorResponse</span><span class="p">;</span>
+<a id="__codelineno-81-8" name="__codelineno-81-8" href="#__codelineno-81-8"></a><span class="w">  </span><span class="nx">timestamp</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-81-9" name="__codelineno-81-9" href="#__codelineno-81-9"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>响应示例（成功）</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-82-1" name="__codelineno-82-1" href="#__codelineno-82-1"></a><span class="p">{</span>
+<a id="__codelineno-82-2" name="__codelineno-82-2" href="#__codelineno-82-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d&quot;</span><span class="p">,</span>
+<a id="__codelineno-82-3" name="__codelineno-82-3" href="#__codelineno-82-3"></a><span class="w">  </span><span class="nt">&quot;success&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-82-4" name="__codelineno-82-4" href="#__codelineno-82-4"></a><span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-82-5" name="__codelineno-82-5" href="#__codelineno-82-5"></a><span class="w">    </span><span class="nt">&quot;commentId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;comment-12345&quot;</span>
+<a id="__codelineno-82-6" name="__codelineno-82-6" href="#__codelineno-82-6"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-82-7" name="__codelineno-82-7" href="#__codelineno-82-7"></a><span class="w">  </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1704067200500</span>
+<a id="__codelineno-82-8" name="__codelineno-82-8" href="#__codelineno-82-8"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>可能的错误</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>错误码</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4000</td>
+<td><code>VALIDATION_ERROR</code> - 请求参数校验失败（text 为空、searchText 超过 255 字符等）</td>
+</tr>
+<tr>
+<td>3002</td>
+<td><code>SELECTION_EMPTY</code> - 没有活动选区（<code>target</code> 为 <code>selection</code> 模式时）</td>
+</tr>
+<tr>
+<td>3000</td>
+<td><code>OFFICE_API_ERROR</code> - Office API 调用错误或搜索文本未找到匹配（<code>target</code> 为 <code>searchText</code> 模式时）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="worddeletecomment">word:delete:comment<a class="headerlink" href="#worddeletecomment" title="Permanent link">&para;</a></h3>
+<p><strong>方向</strong>: Server → AddIn（请求-响应）</p>
+<p><strong>状态</strong>: ✅ Stable</p>
+<p><strong>说明</strong>: 按 ID 删除一条批注。</p>
+<p><strong>请求数据</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-83-1" name="__codelineno-83-1" href="#__codelineno-83-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">DeleteCommentRequest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-83-2" name="__codelineno-83-2" href="#__codelineno-83-2"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">      </span><span class="c1">// 请求 ID (UUID)</span>
+<a id="__codelineno-83-3" name="__codelineno-83-3" href="#__codelineno-83-3"></a><span class="w">  </span><span class="nx">documentUri</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">    </span><span class="c1">// 文档 URI</span>
+<a id="__codelineno-83-4" name="__codelineno-83-4" href="#__codelineno-83-4"></a><span class="w">  </span><span class="nx">timestamp?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">     </span><span class="c1">// 请求时间戳（毫秒），可选</span>
+<a id="__codelineno-83-5" name="__codelineno-83-5" href="#__codelineno-83-5"></a><span class="w">  </span><span class="nx">commentId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">      </span><span class="c1">// 要删除的批注 ID（不能为空）</span>
+<a id="__codelineno-83-6" name="__codelineno-83-6" href="#__codelineno-83-6"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>字段说明</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>必需</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>requestId</code></td>
+<td>string</td>
+<td>✅</td>
+<td>请求唯一标识（UUID）</td>
+</tr>
+<tr>
+<td><code>documentUri</code></td>
+<td>string</td>
+<td>✅</td>
+<td>文档 URI</td>
+</tr>
+<tr>
+<td><code>commentId</code></td>
+<td>string</td>
+<td>✅</td>
+<td>要删除的批注 ID</td>
+</tr>
+</tbody>
+</table>
+<p><strong>请求示例</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-84-1" name="__codelineno-84-1" href="#__codelineno-84-1"></a><span class="p">{</span>
+<a id="__codelineno-84-2" name="__codelineno-84-2" href="#__codelineno-84-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d&quot;</span><span class="p">,</span>
+<a id="__codelineno-84-3" name="__codelineno-84-3" href="#__codelineno-84-3"></a><span class="w">  </span><span class="nt">&quot;documentUri&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;file:///Users/john/Documents/report.docx&quot;</span><span class="p">,</span>
+<a id="__codelineno-84-4" name="__codelineno-84-4" href="#__codelineno-84-4"></a><span class="w">  </span><span class="nt">&quot;commentId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;comment-12345&quot;</span>
+<a id="__codelineno-84-5" name="__codelineno-84-5" href="#__codelineno-84-5"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>响应数据</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-85-1" name="__codelineno-85-1" href="#__codelineno-85-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">DeleteCommentResponse</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-85-2" name="__codelineno-85-2" href="#__codelineno-85-2"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-85-3" name="__codelineno-85-3" href="#__codelineno-85-3"></a><span class="w">  </span><span class="nx">success</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
+<a id="__codelineno-85-4" name="__codelineno-85-4" href="#__codelineno-85-4"></a><span class="w">  </span><span class="nx">data</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-85-5" name="__codelineno-85-5" href="#__codelineno-85-5"></a><span class="w">    </span><span class="nx">deleted</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w">     </span><span class="c1">// 是否删除成功</span>
+<a id="__codelineno-85-6" name="__codelineno-85-6" href="#__codelineno-85-6"></a><span class="w">  </span><span class="p">};</span>
+<a id="__codelineno-85-7" name="__codelineno-85-7" href="#__codelineno-85-7"></a><span class="w">  </span><span class="nx">error?</span><span class="o">:</span><span class="w"> </span><span class="kt">ErrorResponse</span><span class="p">;</span>
+<a id="__codelineno-85-8" name="__codelineno-85-8" href="#__codelineno-85-8"></a><span class="w">  </span><span class="nx">timestamp</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-85-9" name="__codelineno-85-9" href="#__codelineno-85-9"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>响应示例（成功）</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-86-1" name="__codelineno-86-1" href="#__codelineno-86-1"></a><span class="p">{</span>
+<a id="__codelineno-86-2" name="__codelineno-86-2" href="#__codelineno-86-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d&quot;</span><span class="p">,</span>
+<a id="__codelineno-86-3" name="__codelineno-86-3" href="#__codelineno-86-3"></a><span class="w">  </span><span class="nt">&quot;success&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-86-4" name="__codelineno-86-4" href="#__codelineno-86-4"></a><span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-86-5" name="__codelineno-86-5" href="#__codelineno-86-5"></a><span class="w">    </span><span class="nt">&quot;deleted&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-86-6" name="__codelineno-86-6" href="#__codelineno-86-6"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-86-7" name="__codelineno-86-7" href="#__codelineno-86-7"></a><span class="w">  </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1704067200500</span>
+<a id="__codelineno-86-8" name="__codelineno-86-8" href="#__codelineno-86-8"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>可能的错误</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>错误码</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4000</td>
+<td><code>VALIDATION_ERROR</code> - 请求参数校验失败（commentId 为空）</td>
+</tr>
+<tr>
+<td>3000</td>
+<td><code>OFFICE_API_ERROR</code> - Office API 调用错误（批注不存在等）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="wordreplycomment">word:reply:comment<a class="headerlink" href="#wordreplycomment" title="Permanent link">&para;</a></h3>
+<p><strong>方向</strong>: Server → AddIn（请求-响应）</p>
+<p><strong>状态</strong>: ✅ Stable</p>
+<p><strong>说明</strong>: 回复已有批注。</p>
+<p><strong>请求数据</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-87-1" name="__codelineno-87-1" href="#__codelineno-87-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">ReplyCommentRequest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-87-2" name="__codelineno-87-2" href="#__codelineno-87-2"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">      </span><span class="c1">// 请求 ID (UUID)</span>
+<a id="__codelineno-87-3" name="__codelineno-87-3" href="#__codelineno-87-3"></a><span class="w">  </span><span class="nx">documentUri</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">    </span><span class="c1">// 文档 URI</span>
+<a id="__codelineno-87-4" name="__codelineno-87-4" href="#__codelineno-87-4"></a><span class="w">  </span><span class="nx">timestamp?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">     </span><span class="c1">// 请求时间戳（毫秒），可选</span>
+<a id="__codelineno-87-5" name="__codelineno-87-5" href="#__codelineno-87-5"></a><span class="w">  </span><span class="nx">commentId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">      </span><span class="c1">// 要回复的批注 ID（不能为空）</span>
+<a id="__codelineno-87-6" name="__codelineno-87-6" href="#__codelineno-87-6"></a><span class="w">  </span><span class="nx">text</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">           </span><span class="c1">// 回复文本内容（不能为空）</span>
+<a id="__codelineno-87-7" name="__codelineno-87-7" href="#__codelineno-87-7"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>字段说明</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>必需</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>requestId</code></td>
+<td>string</td>
+<td>✅</td>
+<td>请求唯一标识（UUID）</td>
+</tr>
+<tr>
+<td><code>documentUri</code></td>
+<td>string</td>
+<td>✅</td>
+<td>文档 URI</td>
+</tr>
+<tr>
+<td><code>commentId</code></td>
+<td>string</td>
+<td>✅</td>
+<td>要回复的批注 ID</td>
+</tr>
+<tr>
+<td><code>text</code></td>
+<td>string</td>
+<td>✅</td>
+<td>回复文本内容，至少 1 个字符</td>
+</tr>
+</tbody>
+</table>
+<p><strong>请求示例</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-88-1" name="__codelineno-88-1" href="#__codelineno-88-1"></a><span class="p">{</span>
+<a id="__codelineno-88-2" name="__codelineno-88-2" href="#__codelineno-88-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d&quot;</span><span class="p">,</span>
+<a id="__codelineno-88-3" name="__codelineno-88-3" href="#__codelineno-88-3"></a><span class="w">  </span><span class="nt">&quot;documentUri&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;file:///Users/john/Documents/report.docx&quot;</span><span class="p">,</span>
+<a id="__codelineno-88-4" name="__codelineno-88-4" href="#__codelineno-88-4"></a><span class="w">  </span><span class="nt">&quot;commentId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;comment-12345&quot;</span><span class="p">,</span>
+<a id="__codelineno-88-5" name="__codelineno-88-5" href="#__codelineno-88-5"></a><span class="w">  </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;已按照建议修改&quot;</span>
+<a id="__codelineno-88-6" name="__codelineno-88-6" href="#__codelineno-88-6"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>响应数据</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-89-1" name="__codelineno-89-1" href="#__codelineno-89-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">ReplyCommentResponse</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-89-2" name="__codelineno-89-2" href="#__codelineno-89-2"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-89-3" name="__codelineno-89-3" href="#__codelineno-89-3"></a><span class="w">  </span><span class="nx">success</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
+<a id="__codelineno-89-4" name="__codelineno-89-4" href="#__codelineno-89-4"></a><span class="w">  </span><span class="nx">data</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-89-5" name="__codelineno-89-5" href="#__codelineno-89-5"></a><span class="w">    </span><span class="nx">replyId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">      </span><span class="c1">// 新创建的回复 ID</span>
+<a id="__codelineno-89-6" name="__codelineno-89-6" href="#__codelineno-89-6"></a><span class="w">  </span><span class="p">};</span>
+<a id="__codelineno-89-7" name="__codelineno-89-7" href="#__codelineno-89-7"></a><span class="w">  </span><span class="nx">error?</span><span class="o">:</span><span class="w"> </span><span class="kt">ErrorResponse</span><span class="p">;</span>
+<a id="__codelineno-89-8" name="__codelineno-89-8" href="#__codelineno-89-8"></a><span class="w">  </span><span class="nx">timestamp</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-89-9" name="__codelineno-89-9" href="#__codelineno-89-9"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>响应示例（成功）</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-90-1" name="__codelineno-90-1" href="#__codelineno-90-1"></a><span class="p">{</span>
+<a id="__codelineno-90-2" name="__codelineno-90-2" href="#__codelineno-90-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d&quot;</span><span class="p">,</span>
+<a id="__codelineno-90-3" name="__codelineno-90-3" href="#__codelineno-90-3"></a><span class="w">  </span><span class="nt">&quot;success&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-90-4" name="__codelineno-90-4" href="#__codelineno-90-4"></a><span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-90-5" name="__codelineno-90-5" href="#__codelineno-90-5"></a><span class="w">    </span><span class="nt">&quot;replyId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;reply-67890&quot;</span>
+<a id="__codelineno-90-6" name="__codelineno-90-6" href="#__codelineno-90-6"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-90-7" name="__codelineno-90-7" href="#__codelineno-90-7"></a><span class="w">  </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1704067200500</span>
+<a id="__codelineno-90-8" name="__codelineno-90-8" href="#__codelineno-90-8"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>可能的错误</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>错误码</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4000</td>
+<td><code>VALIDATION_ERROR</code> - 请求参数校验失败（commentId 或 text 为空）</td>
+</tr>
+<tr>
+<td>3000</td>
+<td><code>OFFICE_API_ERROR</code> - Office API 调用错误（批注不存在等）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="wordresolvecomment">word:resolve:comment<a class="headerlink" href="#wordresolvecomment" title="Permanent link">&para;</a></h3>
+<p><strong>方向</strong>: Server → AddIn（请求-响应）</p>
+<p><strong>状态</strong>: ✅ Stable</p>
+<p><strong>说明</strong>: 解决或取消解决一条批注。</p>
+<p><strong>请求数据</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-91-1" name="__codelineno-91-1" href="#__codelineno-91-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">ResolveCommentRequest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-91-2" name="__codelineno-91-2" href="#__codelineno-91-2"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">      </span><span class="c1">// 请求 ID (UUID)</span>
+<a id="__codelineno-91-3" name="__codelineno-91-3" href="#__codelineno-91-3"></a><span class="w">  </span><span class="nx">documentUri</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">    </span><span class="c1">// 文档 URI</span>
+<a id="__codelineno-91-4" name="__codelineno-91-4" href="#__codelineno-91-4"></a><span class="w">  </span><span class="nx">timestamp?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">     </span><span class="c1">// 请求时间戳（毫秒），可选</span>
+<a id="__codelineno-91-5" name="__codelineno-91-5" href="#__codelineno-91-5"></a><span class="w">  </span><span class="nx">commentId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">      </span><span class="c1">// 要操作的批注 ID（不能为空）</span>
+<a id="__codelineno-91-6" name="__codelineno-91-6" href="#__codelineno-91-6"></a><span class="w">  </span><span class="nx">resolved</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w">      </span><span class="c1">// true=解决，false=取消解决</span>
+<a id="__codelineno-91-7" name="__codelineno-91-7" href="#__codelineno-91-7"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>字段说明</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>必需</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>requestId</code></td>
+<td>string</td>
+<td>✅</td>
+<td>请求唯一标识（UUID）</td>
+</tr>
+<tr>
+<td><code>documentUri</code></td>
+<td>string</td>
+<td>✅</td>
+<td>文档 URI</td>
+</tr>
+<tr>
+<td><code>commentId</code></td>
+<td>string</td>
+<td>✅</td>
+<td>要操作的批注 ID</td>
+</tr>
+<tr>
+<td><code>resolved</code></td>
+<td>boolean</td>
+<td>✅</td>
+<td><code>true</code> 表示解决，<code>false</code> 表示取消解决</td>
+</tr>
+</tbody>
+</table>
+<p><strong>请求示例</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-92-1" name="__codelineno-92-1" href="#__codelineno-92-1"></a><span class="p">{</span>
+<a id="__codelineno-92-2" name="__codelineno-92-2" href="#__codelineno-92-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d&quot;</span><span class="p">,</span>
+<a id="__codelineno-92-3" name="__codelineno-92-3" href="#__codelineno-92-3"></a><span class="w">  </span><span class="nt">&quot;documentUri&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;file:///Users/john/Documents/report.docx&quot;</span><span class="p">,</span>
+<a id="__codelineno-92-4" name="__codelineno-92-4" href="#__codelineno-92-4"></a><span class="w">  </span><span class="nt">&quot;commentId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;comment-12345&quot;</span><span class="p">,</span>
+<a id="__codelineno-92-5" name="__codelineno-92-5" href="#__codelineno-92-5"></a><span class="w">  </span><span class="nt">&quot;resolved&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-92-6" name="__codelineno-92-6" href="#__codelineno-92-6"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>响应数据</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-93-1" name="__codelineno-93-1" href="#__codelineno-93-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">ResolveCommentResponse</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-93-2" name="__codelineno-93-2" href="#__codelineno-93-2"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-93-3" name="__codelineno-93-3" href="#__codelineno-93-3"></a><span class="w">  </span><span class="nx">success</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
+<a id="__codelineno-93-4" name="__codelineno-93-4" href="#__codelineno-93-4"></a><span class="w">  </span><span class="nx">data</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-93-5" name="__codelineno-93-5" href="#__codelineno-93-5"></a><span class="w">    </span><span class="nx">resolved</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w">    </span><span class="c1">// 当前解决状态</span>
+<a id="__codelineno-93-6" name="__codelineno-93-6" href="#__codelineno-93-6"></a><span class="w">  </span><span class="p">};</span>
+<a id="__codelineno-93-7" name="__codelineno-93-7" href="#__codelineno-93-7"></a><span class="w">  </span><span class="nx">error?</span><span class="o">:</span><span class="w"> </span><span class="kt">ErrorResponse</span><span class="p">;</span>
+<a id="__codelineno-93-8" name="__codelineno-93-8" href="#__codelineno-93-8"></a><span class="w">  </span><span class="nx">timestamp</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-93-9" name="__codelineno-93-9" href="#__codelineno-93-9"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>响应示例（成功 - 解决）</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-94-1" name="__codelineno-94-1" href="#__codelineno-94-1"></a><span class="p">{</span>
+<a id="__codelineno-94-2" name="__codelineno-94-2" href="#__codelineno-94-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d&quot;</span><span class="p">,</span>
+<a id="__codelineno-94-3" name="__codelineno-94-3" href="#__codelineno-94-3"></a><span class="w">  </span><span class="nt">&quot;success&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-94-4" name="__codelineno-94-4" href="#__codelineno-94-4"></a><span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-94-5" name="__codelineno-94-5" href="#__codelineno-94-5"></a><span class="w">    </span><span class="nt">&quot;resolved&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-94-6" name="__codelineno-94-6" href="#__codelineno-94-6"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-94-7" name="__codelineno-94-7" href="#__codelineno-94-7"></a><span class="w">  </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1704067200500</span>
+<a id="__codelineno-94-8" name="__codelineno-94-8" href="#__codelineno-94-8"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>响应示例（成功 - 取消解决）</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-95-1" name="__codelineno-95-1" href="#__codelineno-95-1"></a><span class="p">{</span>
+<a id="__codelineno-95-2" name="__codelineno-95-2" href="#__codelineno-95-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d&quot;</span><span class="p">,</span>
+<a id="__codelineno-95-3" name="__codelineno-95-3" href="#__codelineno-95-3"></a><span class="w">  </span><span class="nt">&quot;success&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-95-4" name="__codelineno-95-4" href="#__codelineno-95-4"></a><span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-95-5" name="__codelineno-95-5" href="#__codelineno-95-5"></a><span class="w">    </span><span class="nt">&quot;resolved&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-95-6" name="__codelineno-95-6" href="#__codelineno-95-6"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-95-7" name="__codelineno-95-7" href="#__codelineno-95-7"></a><span class="w">  </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1704067200500</span>
+<a id="__codelineno-95-8" name="__codelineno-95-8" href="#__codelineno-95-8"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>可能的错误</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>错误码</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4000</td>
+<td><code>VALIDATION_ERROR</code> - 请求参数校验失败（commentId 为空）</td>
+</tr>
+<tr>
+<td>3000</td>
+<td><code>OFFICE_API_ERROR</code> - Office API 调用错误（批注不存在等）</td>
 </tr>
 </tbody>
 </table>
