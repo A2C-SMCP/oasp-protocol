@@ -22,6 +22,8 @@
 | [ppt:get:currentSlideElements](#pptgetcurrentslideelements) | 📋 Draft | 获取当前幻灯片元素 |
 | [ppt:get:slideElements](#pptgetslideelements) | 📋 Draft | 获取指定幻灯片元素 |
 | [ppt:get:slideScreenshot](#pptgetslidescreenshot) | 📋 Draft | 获取幻灯片截图 |
+| [ppt:get:slideInfo](#pptgetslideinfo) | 📋 Draft | 获取演示文稿/幻灯片基本信息 |
+| [ppt:get:slideLayouts](#pptgetslidelayouts) | 📋 Draft | 获取可用幻灯片版式列表 |
 
 ### 内容操作类（Server → AddIn，请求-响应）
 
@@ -31,7 +33,24 @@
 | [ppt:insert:shape](#pptinsertshape) | 📋 Draft | 插入形状 |
 | [ppt:insert:image](#pptinsertimage) | 📋 Draft | 插入图片 |
 | [ppt:insert:table](#pptinserttable) | 📋 Draft | 插入表格 |
-| [ppt:update:textBox](#pptupdatetextbox) | 📋 Draft | 更新文本框 |
+| [ppt:update:textBox](#pptupdatetextbox) | 📋 Draft | 更新文本框内容/样式 |
+| [ppt:delete:element](#pptdeleteelement) | 📋 Draft | 删除指定元素 |
+| [ppt:update:image](#pptupdateimage) | 📋 Draft | 替换图片内容 |
+| [ppt:update:tableCell](#pptupdatetablecell) | 📋 Draft | 更新表格单元格 |
+| [ppt:update:tableRowColumn](#pptupdatetablerowcolumn) | 📋 Draft | 更新表格行/列内容 |
+
+### 样式格式类（Server → AddIn，请求-响应）
+
+| 事件名 | 状态 | 说明 |
+|--------|------|------|
+| [ppt:update:tableFormat](#pptupdatetableformat) | 📋 Draft | 更新表格样式 |
+
+### 布局操作类（Server → AddIn，请求-响应）
+
+| 事件名 | 状态 | 说明 |
+|--------|------|------|
+| [ppt:update:element](#pptupdateelement) | 📋 Draft | 更新元素位置/尺寸 |
+| [ppt:reorder:element](#pptreorderelement) | 📋 Draft | 调整元素层叠顺序 |
 
 ### 幻灯片管理类（Server → AddIn，请求-响应）
 
@@ -41,6 +60,9 @@
 | [ppt:delete:slide](#pptdeleteslide) | 📋 Draft | 删除幻灯片 |
 | [ppt:move:slide](#pptmoveslide) | 📋 Draft | 移动幻灯片 |
 | [ppt:goto:slide](#pptgotoslide) | 📋 Draft | 跳转到幻灯片 |
+
+!!! info "关于 ppt:insert:video"
+    PowerPoint JavaScript API **不支持**插入视频/音频元素。此功能标记为 🚫 Not Feasible，不在事件列表中定义。
 
 ---
 
@@ -151,6 +173,8 @@ interface SlideElement {
   name?: string;                 // 元素名称
   text?: string;                 // 文本内容（仅文本类元素）
   placeholderType?: string;      // 占位符类型（仅占位符元素）
+  rotation?: number;             // 旋转角度（度）
+  zOrder?: number;               // 层叠顺序
 }
 ```
 
@@ -227,7 +251,7 @@ interface SlideElement {
 | 错误码 | 说明 |
 |--------|------|
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
 ---
 
@@ -330,7 +354,7 @@ interface GetSlideElementsResponse {
 |--------|------|
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
 !!! note "与 ppt:get:currentSlideElements 的关系"
     本事件与 `ppt:get:currentSlideElements` 返回相同的 `SlideElement` 结构。
@@ -419,7 +443,330 @@ interface GetSlideScreenshotResponse {
 |--------|------|
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+
+---
+
+### ppt:get:slideInfo
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: 获取演示文稿的基本信息（幻灯片总数、尺寸），或获取指定幻灯片的详细布局信息（版式、元素列表、背景等）。AI 进行布局计算时必须先知道幻灯片尺寸、总页数和元素分布。
+
+**请求数据**:
+
+```typescript
+interface GetSlideInfoRequest {
+  requestId: string;      // 请求 ID (UUID)
+  documentUri: string;    // 文档 URI
+  timestamp?: number;     // 请求时间戳（毫秒），可选
+  slideIndex?: number;    // 幻灯片索引（从 0 开始），可选。指定时返回该幻灯片详细信息
+}
+```
+
+**请求参数说明**:
+
+| 参数 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `slideIndex` | number | ❌ | 幻灯片索引（从 0 开始）。指定时响应中包含 `slideInfo` |
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/presentation.pptx",
+  "slideIndex": 0
+}
+```
+
+**响应数据**:
+
+```typescript
+interface GetSlideInfoResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    slideCount: number;          // 幻灯片总数
+    dimensions: {
+      width: number;             // 幻灯片宽度（磅）
+      height: number;            // 幻灯片高度（磅）
+      aspectRatio: string;       // 宽高比，如 "16:9", "4:3"
+      isFromAPI: boolean;        // 是否通过 Office API 获取（false 表示使用默认值降级）
+    };
+    currentSlideIndex: number;   // 当前显示的幻灯片索引
+    slideInfo?: {                // 仅当请求中指定 slideIndex 时返回
+      slideIndex: number;
+      slideId: string;
+      layout: {
+        name: string;            // 版式名称（如 "Title Slide", "Blank"）
+        type: string;            // 版式类型
+      };
+      elements: SlideElement[];  // 该幻灯片上的所有元素
+      background?: SlideBackgroundInfo;  // 幻灯片背景信息
+    };
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+
+interface SlideBackgroundInfo {
+  type: "solid" | "gradient" | "image" | "pattern" | "none" | "unknown";
+  color?: string;            // 背景颜色（仅 solid 类型）
+  imageData?: string;        // Base64 或 URL（仅 image 类型）
+}
+```
+
+!!! note "SlideElement 扩展字段"
+    当通过 `ppt:get:slideInfo` 返回时，`SlideElement` 可包含以下扩展字段（详见[元素类型说明](#slideelementelementextensions)）：
+    `relativePosition`（相对位置百分比）、`textInfo`（结构化文本信息）、`imageInfo`（图片信息）、`fillInfo`（填充信息）。
+
+**SlideElement 扩展字段说明** {#slideelementelementextensions}:
+
+```typescript
+interface SlideElement {
+  // 基础字段（所有 get 事件通用）
+  id: string;                    // 元素唯一标识
+  type: string;                  // 元素类型
+  left: number;                  // X 坐标（磅）
+  top: number;                   // Y 坐标（磅）
+  width: number;                 // 宽度（磅）
+  height: number;                // 高度（磅）
+  name?: string;                 // 元素名称
+  text?: string;                 // 文本内容（纯文本，仅文本类元素）
+  placeholderType?: string;      // 占位符类型（仅占位符元素）
+  rotation?: number;             // 旋转角度（度）
+  zOrder?: number;               // 层叠顺序
+  // 扩展字段（ppt:get:slideInfo 可返回）
+  relativePosition?: {           // 相对于幻灯片的百分比位置
+    leftPercent: number;
+    topPercent: number;
+    widthPercent: number;
+    heightPercent: number;
+  };
+  textInfo?: {                   // 结构化文本信息（比 text 字段更详细）
+    content: string;
+    fontSize?: number;
+    fontFamily?: string;
+    color?: string;
+    alignment?: string;
+  };
+  imageInfo?: {                  // 图片信息（仅图片类元素）
+    format: "picture" | "picture-placeholder" | "picture-fill";
+    data?: string;               // Base64 编码（需显式请求）
+    url?: string;                // 外部链接（如有）
+  };
+  fillInfo?: {                   // 填充信息
+    type: "solid" | "gradient" | "image" | "none" | "unknown";
+    color?: string;
+  };
+}
+```
+
+**响应示例（不指定 slideIndex）**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "slideCount": 10,
+    "dimensions": {
+      "width": 960,
+      "height": 540,
+      "aspectRatio": "16:9",
+      "isFromAPI": true
+    },
+    "currentSlideIndex": 2
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**响应示例（指定 slideIndex）**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "slideCount": 10,
+    "dimensions": {
+      "width": 960,
+      "height": 540,
+      "aspectRatio": "16:9",
+      "isFromAPI": true
+    },
+    "currentSlideIndex": 2,
+    "slideInfo": {
+      "slideIndex": 0,
+      "slideId": "slide-001",
+      "layout": { "name": "Title Slide", "type": "TitleSlide" },
+      "elements": [
+        {
+          "id": "shape-001",
+          "type": "Placeholder",
+          "left": 50,
+          "top": 30,
+          "width": 600,
+          "height": 60,
+          "name": "Title 1",
+          "text": "演示文稿标题",
+          "placeholderType": "Title",
+          "zOrder": 0,
+          "relativePosition": {
+            "leftPercent": 5.21,
+            "topPercent": 5.56,
+            "widthPercent": 62.50,
+            "heightPercent": 11.11
+          },
+          "textInfo": {
+            "content": "演示文稿标题",
+            "fontSize": 36,
+            "fontFamily": "微软雅黑"
+          }
+        },
+        {
+          "id": "shape-003",
+          "type": "Image",
+          "left": 400,
+          "top": 200,
+          "width": 200,
+          "height": 150,
+          "name": "Picture 3",
+          "zOrder": 2,
+          "relativePosition": {
+            "leftPercent": 41.67,
+            "topPercent": 37.04,
+            "widthPercent": 20.83,
+            "heightPercent": 27.78
+          },
+          "imageInfo": {
+            "format": "picture"
+          }
+        }
+      ]
+    }
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+
+---
+
+### ppt:get:slideLayouts
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: 获取当前演示文稿中所有可用的幻灯片版式（Layout）列表。AI 在调用 `ppt:add:slide` 时需要先知道有哪些可用版式。
+
+**请求数据**:
+
+```typescript
+interface GetSlideLayoutsRequest {
+  requestId: string;      // 请求 ID (UUID)
+  documentUri: string;    // 文档 URI
+  timestamp?: number;     // 请求时间戳（毫秒），可选
+  options?: {
+    includePlaceholders?: boolean;  // 是否包含占位符详细信息，默认 true
+  };
+}
+```
+
+**请求参数说明**:
+
+| 参数 | 类型 | 必需 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| `includePlaceholders` | boolean | ❌ | true | 是否返回每个版式的占位符类型信息 |
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/presentation.pptx"
+}
+```
+
+**响应数据**:
+
+```typescript
+interface GetSlideLayoutsResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    layouts: SlideLayoutTemplate[];
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+
+interface SlideLayoutTemplate {
+  id: string;                    // 版式 ID
+  name: string;                  // 版式名称（如 "Title Slide", "Blank"）
+  type: string;                  // 版式类型
+  placeholderCount: number;      // 占位符数量
+  placeholderTypes: string[];    // 占位符类型列表（如 ["title", "body"]）
+  isCustom: boolean;             // 是否为自定义版式
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "layouts": [
+      {
+        "id": "layout-001",
+        "name": "Title Slide",
+        "type": "title",
+        "placeholderCount": 2,
+        "placeholderTypes": ["title", "body"],
+        "isCustom": false
+      },
+      {
+        "id": "layout-002",
+        "name": "Blank",
+        "type": "blank",
+        "placeholderCount": 0,
+        "placeholderTypes": [],
+        "isCustom": false
+      },
+      {
+        "id": "layout-003",
+        "name": "Title and Content",
+        "type": "titleAndContent",
+        "placeholderCount": 2,
+        "placeholderTypes": ["title", "body"],
+        "isCustom": false
+      }
+    ]
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
 ---
 
@@ -501,6 +848,10 @@ interface InsertTextResponse {
   data?: {
     elementId: string;       // 创建的文本框元素 ID
     slideIndex: number;      // 插入的幻灯片索引
+    left: number;            // 实际 X 坐标（磅）
+    top: number;             // 实际 Y 坐标（磅）
+    width: number;           // 实际宽度（磅）
+    height: number;          // 实际高度（磅）
   };
   error?: ErrorResponse;
   timestamp: number;
@@ -515,7 +866,11 @@ interface InsertTextResponse {
   "success": true,
   "data": {
     "elementId": "shape-015",
-    "slideIndex": 0
+    "slideIndex": 0,
+    "left": 100,
+    "top": 200,
+    "width": 400,
+    "height": 80
   },
   "timestamp": 1704067200500
 }
@@ -528,7 +883,7 @@ interface InsertTextResponse {
 | 4001 | `MISSING_PARAM` - 缺少 text 参数 |
 | 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
 ---
 
@@ -618,6 +973,10 @@ interface InsertShapeResponse {
   data?: {
     shapeId: string;         // 创建的形状元素 ID
     slideIndex: number;      // 插入的幻灯片索引
+    left: number;            // 实际 X 坐标（磅）
+    top: number;             // 实际 Y 坐标（磅）
+    width: number;           // 实际宽度（磅）
+    height: number;          // 实际高度（磅）
   };
   error?: ErrorResponse;
   timestamp: number;
@@ -632,7 +991,11 @@ interface InsertShapeResponse {
   "success": true,
   "data": {
     "shapeId": "shape-020",
-    "slideIndex": 0
+    "slideIndex": 0,
+    "left": 200,
+    "top": 150,
+    "width": 200,
+    "height": 100
   },
   "timestamp": 1704067200500
 }
@@ -645,7 +1008,7 @@ interface InsertShapeResponse {
 | 4001 | `MISSING_PARAM` - 缺少 shapeType 参数 |
 | 4002 | `INVALID_PARAM` - shapeType 不支持或 slideIndex 超出范围 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
 ---
 
@@ -720,6 +1083,10 @@ interface InsertImageResponse {
   data?: {
     imageId: string;         // 创建的图片元素 ID
     slideIndex: number;      // 插入的幻灯片索引
+    left: number;            // 实际 X 坐标（磅）
+    top: number;             // 实际 Y 坐标（磅）
+    width: number;           // 实际宽度（磅）
+    height: number;          // 实际高度（磅）
   };
   error?: ErrorResponse;
   timestamp: number;
@@ -734,7 +1101,11 @@ interface InsertImageResponse {
   "success": true,
   "data": {
     "imageId": "shape-025",
-    "slideIndex": 0
+    "slideIndex": 0,
+    "left": 300,
+    "top": 200,
+    "width": 400,
+    "height": 300
   },
   "timestamp": 1704067200500
 }
@@ -747,7 +1118,7 @@ interface InsertImageResponse {
 | 4001 | `MISSING_PARAM` - 缺少 image.base64 参数 |
 | 4002 | `INVALID_PARAM` - Base64 数据无效或 slideIndex 超出范围 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
 ---
 
@@ -822,6 +1193,10 @@ interface InsertTableResponse {
     elementId: string;       // 创建的表格元素 ID
     rowCount: number;        // 行数
     columnCount: number;     // 列数
+    left: number;            // 实际 X 坐标（磅）
+    top: number;             // 实际 Y 坐标（磅）
+    width: number;           // 实际宽度（磅）
+    height: number;          // 实际高度（磅）
   };
   error?: ErrorResponse;
   timestamp: number;
@@ -837,7 +1212,11 @@ interface InsertTableResponse {
   "data": {
     "elementId": "shape-030",
     "rowCount": 3,
-    "columnCount": 4
+    "columnCount": 4,
+    "left": 100,
+    "top": 150,
+    "width": 520,
+    "height": 200
   },
   "timestamp": 1704067200500
 }
@@ -851,7 +1230,7 @@ interface InsertTableResponse {
 | 4001 | `MISSING_PARAM` - 缺少 rows 或 columns |
 | 4002 | `INVALID_PARAM` - rows 超过 100 或 columns 超过 50 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
 ---
 
@@ -926,6 +1305,10 @@ interface UpdateTextBoxResponse {
   success: boolean;
   data?: {
     elementId: string;       // 更新的元素 ID
+    left: number;            // 实际 X 坐标（磅）
+    top: number;             // 实际 Y 坐标（磅）
+    width: number;           // 实际宽度（磅）
+    height: number;          // 实际高度（磅）
   };
   error?: ErrorResponse;
   timestamp: number;
@@ -939,7 +1322,11 @@ interface UpdateTextBoxResponse {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "success": true,
   "data": {
-    "elementId": "shape-001"
+    "elementId": "shape-001",
+    "left": 50,
+    "top": 30,
+    "width": 600,
+    "height": 60
   },
   "timestamp": 1704067200500
 }
@@ -966,7 +1353,720 @@ interface UpdateTextBoxResponse {
 | 4001 | `MISSING_PARAM` - 缺少 elementId |
 | 3003 | `OPERATION_FAILED` - 元素未找到或元素类型不支持文本编辑 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+
+---
+
+### ppt:delete:element
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: 删除幻灯片上的指定元素。支持单个或批量删除。
+
+**请求数据**:
+
+```typescript
+interface DeleteElementRequest {
+  requestId: string;         // 请求 ID (UUID)
+  documentUri: string;       // 文档 URI
+  timestamp?: number;        // 请求时间戳（毫秒），可选
+  elementId?: string;        // 要删除的元素 ID（单个删除）
+  elementIds?: string[];     // 要删除的元素 ID 列表（批量删除）
+  slideIndex?: number;       // 幻灯片索引（从 0 开始），默认当前幻灯片
+}
+```
+
+**请求参数说明**:
+
+| 参数 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `elementId` | string | ❌ | 要删除的元素 ID，与 `elementIds` 二选一 |
+| `elementIds` | string[] | ❌ | 要批量删除的元素 ID 列表，与 `elementId` 二选一 |
+| `slideIndex` | number | ❌ | 幻灯片索引（从 0 开始），默认当前幻灯片 |
+
+!!! warning "参数约束"
+    `elementId` 和 `elementIds` 必须提供其中一个。如果都提供，`elementIds` 优先。
+
+**请求示例（单个删除）**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/presentation.pptx",
+  "elementId": "shape-015",
+  "slideIndex": 0
+}
+```
+
+**请求示例（批量删除）**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/presentation.pptx",
+  "elementIds": ["shape-015", "shape-016", "shape-017"],
+  "slideIndex": 0
+}
+```
+
+**响应数据**:
+
+```typescript
+interface DeleteElementResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    deletedCount: number;    // 成功删除的元素数量
+    slideIndex: number;      // 操作的幻灯片索引
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "deletedCount": 3,
+    "slideIndex": 0
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `MISSING_PARAM` - 缺少 elementId 或 elementIds |
+| 3003 | `OPERATION_FAILED` - 元素未找到 |
+| 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+
+---
+
+### ppt:update:image
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: 替换幻灯片中现有图片的内容。可选择保持原有尺寸或指定新尺寸。
+
+**请求数据**:
+
+```typescript
+interface UpdateImageRequest {
+  requestId: string;         // 请求 ID (UUID)
+  documentUri: string;       // 文档 URI
+  timestamp?: number;        // 请求时间戳（毫秒），可选
+  elementId: string;         // 要替换的图片元素 ID
+  image: {
+    base64: string;          // Base64 编码的新图片数据
+  };
+  options?: {
+    keepDimensions?: boolean; // 是否保持原有尺寸，默认 true
+    width?: number;          // 新宽度（磅），仅 keepDimensions=false 时生效
+    height?: number;         // 新高度（磅），仅 keepDimensions=false 时生效
+  };
+}
+```
+
+**请求参数说明**:
+
+| 参数 | 类型 | 必需 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| `elementId` | string | ✅ | - | 要替换的图片元素 ID |
+| `image.base64` | string | ✅ | - | Base64 编码的新图片数据 |
+| `keepDimensions` | boolean | ❌ | true | 是否保持原有尺寸 |
+| `width` | number | ❌ | - | 新宽度（磅），仅 keepDimensions=false 时生效 |
+| `height` | number | ❌ | - | 新高度（磅），仅 keepDimensions=false 时生效 |
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/presentation.pptx",
+  "elementId": "shape-025",
+  "image": {
+    "base64": "iVBORw0KGgoAAAANSUhEUgAA..."
+  },
+  "options": {
+    "keepDimensions": true
+  }
+}
+```
+
+**响应数据**:
+
+```typescript
+interface UpdateImageResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    elementId: string;       // 更新的图片元素 ID
+    slideIndex: number;      // 所在幻灯片索引
+    left: number;            // 实际 X 坐标（磅）
+    top: number;             // 实际 Y 坐标（磅）
+    width: number;           // 实际宽度（磅）
+    height: number;          // 实际高度（磅）
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "elementId": "shape-025",
+    "slideIndex": 0,
+    "left": 300,
+    "top": 200,
+    "width": 400,
+    "height": 300
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `MISSING_PARAM` - 缺少 elementId 或 image.base64 |
+| 3003 | `OPERATION_FAILED` - 元素未找到或不是图片类型 |
+| 4002 | `INVALID_PARAM` - Base64 数据无效 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+
+---
+
+### ppt:update:tableCell
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: 更新表格中指定单元格的文本内容，支持批量更新多个单元格。
+
+**请求数据**:
+
+```typescript
+interface UpdateTableCellRequest {
+  requestId: string;         // 请求 ID (UUID)
+  documentUri: string;       // 文档 URI
+  timestamp?: number;        // 请求时间戳（毫秒），可选
+  elementId: string;         // 表格元素 ID
+  cells: Array<{
+    rowIndex: number;        // 行索引（从 0 开始）
+    columnIndex: number;     // 列索引（从 0 开始）
+    text: string;            // 新文本内容
+  }>;
+}
+```
+
+**请求参数说明**:
+
+| 参数 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `elementId` | string | ✅ | 表格元素 ID（可通过 `ppt:get:slideElements` 获取） |
+| `cells` | Array | ✅ | 要更新的单元格列表 |
+| `cells[].rowIndex` | number | ✅ | 行索引（从 0 开始） |
+| `cells[].columnIndex` | number | ✅ | 列索引（从 0 开始） |
+| `cells[].text` | string | ✅ | 新文本内容 |
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/presentation.pptx",
+  "elementId": "shape-030",
+  "cells": [
+    { "rowIndex": 0, "columnIndex": 0, "text": "姓名" },
+    { "rowIndex": 0, "columnIndex": 1, "text": "年龄" },
+    { "rowIndex": 1, "columnIndex": 0, "text": "张三" },
+    { "rowIndex": 1, "columnIndex": 1, "text": "28" }
+  ]
+}
+```
+
+**响应数据**:
+
+```typescript
+interface UpdateTableCellResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    elementId: string;       // 表格元素 ID
+    cellsUpdated: number;    // 成功更新的单元格数量
+    rowCount: number;        // 表格总行数
+    columnCount: number;     // 表格总列数
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "elementId": "shape-030",
+    "cellsUpdated": 4,
+    "rowCount": 3,
+    "columnCount": 4
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `MISSING_PARAM` - 缺少 elementId 或 cells |
+| 3003 | `OPERATION_FAILED` - 元素未找到或不是表格类型 |
+| 4002 | `INVALID_PARAM` - rowIndex 或 columnIndex 超出范围 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+
+---
+
+### ppt:update:tableRowColumn
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: 按行或按列批量更新表格内容。适用于一次性填充整行或整列数据。
+
+**请求数据**:
+
+```typescript
+interface UpdateTableRowColumnRequest {
+  requestId: string;         // 请求 ID (UUID)
+  documentUri: string;       // 文档 URI
+  timestamp?: number;        // 请求时间戳（毫秒），可选
+  elementId: string;         // 表格元素 ID
+  rows?: Array<{
+    rowIndex: number;        // 行索引（从 0 开始）
+    values: string[];        // 该行各列的值，按列顺序排列
+  }>;
+  columns?: Array<{
+    columnIndex: number;     // 列索引（从 0 开始）
+    values: string[];        // 该列各行的值，按行顺序排列
+  }>;
+}
+```
+
+**请求参数说明**:
+
+| 参数 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `elementId` | string | ✅ | 表格元素 ID |
+| `rows` | Array | ❌ | 按行更新，与 `columns` 至少提供一个 |
+| `rows[].rowIndex` | number | ✅ | 行索引（从 0 开始） |
+| `rows[].values` | string[] | ✅ | 该行各列的值 |
+| `columns` | Array | ❌ | 按列更新，与 `rows` 至少提供一个 |
+| `columns[].columnIndex` | number | ✅ | 列索引（从 0 开始） |
+| `columns[].values` | string[] | ✅ | 该列各行的值 |
+
+!!! note "行列同时提供"
+    当 `rows` 和 `columns` 同时提供时，先处理 `rows` 再处理 `columns`，后者可能覆盖前者对相同单元格的修改。
+
+**请求示例（按行更新）**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/presentation.pptx",
+  "elementId": "shape-030",
+  "rows": [
+    { "rowIndex": 0, "values": ["姓名", "年龄", "城市", "职业"] },
+    { "rowIndex": 1, "values": ["张三", "28", "北京", "工程师"] }
+  ]
+}
+```
+
+**响应数据**:
+
+```typescript
+interface UpdateTableRowColumnResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    elementId: string;       // 表格元素 ID
+    cellsUpdated: number;    // 成功更新的单元格总数
+    rowCount: number;        // 表格总行数
+    columnCount: number;     // 表格总列数
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "elementId": "shape-030",
+    "cellsUpdated": 8,
+    "rowCount": 3,
+    "columnCount": 4
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `MISSING_PARAM` - 缺少 elementId，或 rows 和 columns 均未提供 |
+| 3003 | `OPERATION_FAILED` - 元素未找到或不是表格类型 |
+| 4002 | `INVALID_PARAM` - rowIndex/columnIndex 超出范围，或 values 长度不匹配 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+
+---
+
+## 样式格式类
+
+### ppt:update:tableFormat
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: 更新表格的样式格式，支持按单元格、按行、按列设置格式。
+
+**请求数据**:
+
+```typescript
+interface UpdateTableFormatRequest {
+  requestId: string;         // 请求 ID (UUID)
+  documentUri: string;       // 文档 URI
+  timestamp?: number;        // 请求时间戳（毫秒），可选
+  elementId: string;         // 表格元素 ID
+  cellFormats?: Array<{
+    rowIndex: number;        // 行索引（从 0 开始）
+    columnIndex: number;     // 列索引（从 0 开始）
+    backgroundColor?: string;    // 背景颜色（十六进制）
+    fontSize?: number;           // 字号
+    fontColor?: string;          // 字体颜色（十六进制）
+    bold?: boolean;              // 粗体
+    italic?: boolean;            // 斜体
+    horizontalAlignment?: string; // 水平对齐（"Left" | "Center" | "Right"）
+    verticalAlignment?: string;   // 垂直对齐（"Top" | "Middle" | "Bottom"）
+  }>;
+  rowFormats?: Array<{
+    rowIndex: number;        // 行索引（从 0 开始）
+    height?: number;         // 行高（磅）
+    backgroundColor?: string;    // 背景颜色（十六进制）
+    fontSize?: number;           // 字号
+  }>;
+  columnFormats?: Array<{
+    columnIndex: number;     // 列索引（从 0 开始）
+    width?: number;          // 列宽（磅）
+    backgroundColor?: string;    // 背景颜色（十六进制）
+    fontSize?: number;           // 字号
+  }>;
+}
+```
+
+**请求参数说明**:
+
+| 参数 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `elementId` | string | ✅ | 表格元素 ID |
+| `cellFormats` | Array | ❌ | 按单元格设置格式 |
+| `rowFormats` | Array | ❌ | 按行设置格式（应用到整行所有单元格） |
+| `columnFormats` | Array | ❌ | 按列设置格式（应用到整列所有单元格） |
+
+!!! note "优先级"
+    当多种格式同时应用到同一单元格时，优先级为：`cellFormats` > `columnFormats` > `rowFormats`。
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/presentation.pptx",
+  "elementId": "shape-030",
+  "rowFormats": [
+    { "rowIndex": 0, "backgroundColor": "#4472C4", "fontSize": 14 }
+  ],
+  "cellFormats": [
+    { "rowIndex": 1, "columnIndex": 0, "bold": true, "fontColor": "#333333" }
+  ]
+}
+```
+
+**响应数据**:
+
+```typescript
+interface UpdateTableFormatResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    elementId: string;       // 表格元素 ID
+    cellsFormatted: number;  // 受影响的单元格数量
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "elementId": "shape-030",
+    "cellsFormatted": 5
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `MISSING_PARAM` - 缺少 elementId |
+| 3003 | `OPERATION_FAILED` - 元素未找到或不是表格类型 |
+| 4002 | `INVALID_PARAM` - rowIndex/columnIndex 超出范围 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+
+---
+
+## 布局操作类
+
+### ppt:update:element
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: 更新元素的位置、尺寸或旋转角度。这是布局优化的核心操作，用于移动和缩放元素。
+
+!!! note "与 ppt:update:textBox 的关系"
+    `ppt:update:textBox` 用于更新文本**内容和样式**（text, fontSize, bold 等），
+    `ppt:update:element` 用于更新**几何属性**（left, top, width, height, rotation）。
+    两者互补，分别处理不同维度的更新。
+
+**请求数据**:
+
+```typescript
+interface UpdateElementRequest {
+  requestId: string;         // 请求 ID (UUID)
+  documentUri: string;       // 文档 URI
+  timestamp?: number;        // 请求时间戳（毫秒），可选
+  elementId: string;         // 要更新的元素 ID
+  slideIndex?: number;       // 幻灯片索引（从 0 开始），默认当前幻灯片
+  updates: {
+    left?: number;           // 新 X 坐标（磅）
+    top?: number;            // 新 Y 坐标（磅）
+    width?: number;          // 新宽度（磅）
+    height?: number;         // 新高度（磅）
+    rotation?: number;       // 新旋转角度（度，0-360）
+  };
+}
+```
+
+**请求参数说明**:
+
+| 参数 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `elementId` | string | ✅ | 要更新的元素 ID |
+| `slideIndex` | number | ❌ | 幻灯片索引（从 0 开始），默认当前幻灯片 |
+| `updates.left` | number | ❌ | 新 X 坐标（磅） |
+| `updates.top` | number | ❌ | 新 Y 坐标（磅） |
+| `updates.width` | number | ❌ | 新宽度（磅） |
+| `updates.height` | number | ❌ | 新高度（磅） |
+| `updates.rotation` | number | ❌ | 新旋转角度（度，0-360） |
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/presentation.pptx",
+  "elementId": "shape-015",
+  "slideIndex": 0,
+  "updates": {
+    "left": 200,
+    "top": 150,
+    "width": 300,
+    "height": 200
+  }
+}
+```
+
+**响应数据**:
+
+```typescript
+interface UpdateElementResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    elementId: string;       // 更新的元素 ID
+    slideIndex: number;      // 所在幻灯片索引
+    left: number;            // 实际 X 坐标（磅）
+    top: number;             // 实际 Y 坐标（磅）
+    width: number;           // 实际宽度（磅）
+    height: number;          // 实际高度（磅）
+    rotation: number;        // 实际旋转角度（度）
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "elementId": "shape-015",
+    "slideIndex": 0,
+    "left": 200,
+    "top": 150,
+    "width": 300,
+    "height": 200,
+    "rotation": 0
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `MISSING_PARAM` - 缺少 elementId 或 updates |
+| 3003 | `OPERATION_FAILED` - 元素未找到 |
+| 4002 | `INVALID_PARAM` - slideIndex 超出范围或尺寸值无效 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+
+---
+
+### ppt:reorder:element
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: 调整元素的层叠顺序（Z 轴顺序），支持移至最前、最后、上移一层、下移一层。
+
+**请求数据**:
+
+```typescript
+interface ReorderElementRequest {
+  requestId: string;         // 请求 ID (UUID)
+  documentUri: string;       // 文档 URI
+  timestamp?: number;        // 请求时间戳（毫秒），可选
+  elementId: string;         // 要调整的元素 ID
+  slideIndex?: number;       // 幻灯片索引（从 0 开始），默认当前幻灯片
+  action: "bringToFront" | "sendToBack" | "bringForward" | "sendBackward";
+}
+```
+
+**请求参数说明**:
+
+| 参数 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `elementId` | string | ✅ | 要调整的元素 ID |
+| `slideIndex` | number | ❌ | 幻灯片索引（从 0 开始），默认当前幻灯片 |
+| `action` | string | ✅ | 调整动作 |
+
+**动作说明**:
+
+| 动作 | 说明 |
+|------|------|
+| `bringToFront` | 移至最前（置于顶层） |
+| `sendToBack` | 移至最后（置于底层） |
+| `bringForward` | 上移一层 |
+| `sendBackward` | 下移一层 |
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/presentation.pptx",
+  "elementId": "shape-015",
+  "slideIndex": 0,
+  "action": "bringToFront"
+}
+```
+
+**响应数据**:
+
+```typescript
+interface ReorderElementResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    elementId: string;       // 调整的元素 ID
+    slideIndex: number;      // 所在幻灯片索引
+    zOrder: number;          // 调整后的层叠顺序值
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "elementId": "shape-015",
+    "slideIndex": 0,
+    "zOrder": 5
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `MISSING_PARAM` - 缺少 elementId 或 action |
+| 3003 | `OPERATION_FAILED` - 元素未找到 |
+| 4002 | `INVALID_PARAM` - action 值无效或 slideIndex 超出范围 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
 ---
 
@@ -1052,7 +2152,7 @@ interface AddSlideResponse {
 |--------|------|
 | 4002 | `INVALID_PARAM` - insertIndex 超出范围或 layout 不存在 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
 ---
 
@@ -1144,7 +2244,7 @@ interface DeleteSlideResponse {
 | 4001 | `MISSING_PARAM` - 缺少 slideIndex |
 | 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
 ---
 
@@ -1245,7 +2345,7 @@ interface MoveSlideResponse {
 | 4001 | `MISSING_PARAM` - 缺少 fromIndex 或 toIndex |
 | 4002 | `INVALID_PARAM` - 索引超出范围或 fromIndex === toIndex |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
 ---
 
@@ -1321,4 +2421,4 @@ interface GotoSlideResponse {
 | 4001 | `MISSING_PARAM` - 缺少 slideIndex |
 | 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |

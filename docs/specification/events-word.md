@@ -979,6 +979,10 @@ interface ReplaceSelectionResponse {
 
 **说明**: 查找并替换文档中的文本。
 
+!!! important "样式优先级规则"
+    当同时指定直接格式（如 `bold`、`fontSize`）和 `styleName` 时，**直接格式优先级高于样式名**。
+    即：先应用 `styleName` 指定的样式，再覆盖应用直接格式属性。
+
 **请求数据**:
 
 ```typescript
@@ -993,6 +997,7 @@ interface ReplaceTextRequest {
     matchWholeWord?: boolean; // 全词匹配，默认 false
     replaceAll?: boolean;    // 替换全部，默认 false
   };
+  format?: TextFormat;       // 可选的格式设置（定义见 word:insert:text）
 }
 ```
 
@@ -1008,6 +1013,11 @@ interface ReplaceTextRequest {
   "options": {
     "matchCase": true,
     "replaceAll": true
+  },
+  "format": {
+    "bold": true,
+    "fontSize": 14,
+    "color": "#FF0000"
   }
 }
 ```
@@ -1825,16 +1835,28 @@ interface CommentReplyData {
 
 **状态**: ✅ Stable
 
-**说明**: 在当前选区上插入一条新批注。需要有活动选区。
+**说明**: 在指定目标范围上插入一条新批注。支持在当前选区或通过搜索文本定位的范围上插入。
 
 **请求数据**:
 
 ```typescript
+type InsertCommentTarget =
+  | { type: "selection" }
+  | {
+      type: "searchText";
+      searchText: string;          // 要搜索的文本（1-255 字符）
+      searchOptions?: {
+        matchCase?: boolean;       // 区分大小写，默认 false
+        matchWholeWord?: boolean;  // 全字匹配，默认 false
+      };
+    };
+
 interface InsertCommentRequest {
   requestId: string;      // 请求 ID (UUID)
   documentUri: string;    // 文档 URI
   timestamp?: number;     // 请求时间戳（毫秒），可选
   text: string;           // 批注文本内容（不能为空）
+  target?: InsertCommentTarget;  // 目标范围（默认当前选区）
 }
 ```
 
@@ -1845,14 +1867,37 @@ interface InsertCommentRequest {
 | `requestId` | string | ✅ | 请求唯一标识（UUID） |
 | `documentUri` | string | ✅ | 文档 URI |
 | `text` | string | ✅ | 批注文本内容，至少 1 个字符 |
+| `target` | InsertCommentTarget | ❌ | 目标范围，不传或 `type: "selection"` 使用当前选区；`type: "searchText"` 通过搜索文本定位 |
+| `target.searchText` | string | 条件 | 搜索文本（`type: "searchText"` 时必需，1-255 字符） |
+| `target.searchOptions` | object | ❌ | 搜索选项 |
+| `target.searchOptions.matchCase` | boolean | ❌ | 区分大小写，默认 `false` |
+| `target.searchOptions.matchWholeWord` | boolean | ❌ | 全字匹配，默认 `false` |
 
-**请求示例**:
+**请求示例（当前选区）**:
 
 ```json
 {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "documentUri": "file:///Users/john/Documents/report.docx",
   "text": "这段文字需要修改"
+}
+```
+
+**请求示例（搜索文本）**:
+
+```json
+{
+  "requestId": "b2c3d4e5-f6a7-5b6c-9d8e-0f1a2b3c4d5e",
+  "documentUri": "file:///Users/john/Documents/report.docx",
+  "text": "建议将此处改为更准确的表述",
+  "target": {
+    "type": "searchText",
+    "searchText": "需要审核的段落",
+    "searchOptions": {
+      "matchCase": false,
+      "matchWholeWord": false
+    }
+  }
 }
 ```
 
@@ -1887,9 +1932,9 @@ interface InsertCommentResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 4000 | `VALIDATION_ERROR` - 请求参数校验失败（text 为空） |
-| 3002 | `SELECTION_EMPTY` - 没有活动选区 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 4000 | `VALIDATION_ERROR` - 请求参数校验失败（text 为空、searchText 超过 255 字符等） |
+| 3002 | `SELECTION_EMPTY` - 没有活动选区（`target` 为 `selection` 模式时） |
+| 3000 | `OFFICE_API_ERROR` - Office API 调用错误或搜索文本未找到匹配（`target` 为 `searchText` 模式时） |
 
 ---
 
