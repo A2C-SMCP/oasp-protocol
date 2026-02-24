@@ -2973,13 +2973,45 @@
 <p>当同时指定直接格式（如 <code>bold</code>、<code>fontSize</code>）和 <code>styleName</code> 时，<strong>直接格式优先级高于样式名</strong>。
 即：先应用 <code>styleName</code> 指定的样式，再覆盖应用直接格式属性。</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">特殊字符搜索</p>
+<p><code>searchText</code> 和 <code>replaceText</code> 支持 Word 特殊字符记号来匹配不可见字符。<strong>不要使用 <code>\n</code> 等转义字符</strong>，而应使用下表中的 Word 记号：</p>
+<table>
+<thead>
+<tr>
+<th>要查找/替换</th>
+<th>记号</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>段落标记 (Enter)</td>
+<td><code>^p</code></td>
+<td>跨段落搜索时使用</td>
+</tr>
+<tr>
+<td>手动换行 (Shift+Enter)</td>
+<td><code>^l</code></td>
+<td>段内软换行</td>
+</tr>
+<tr>
+<td>制表符</td>
+<td><code>^t</code></td>
+<td>Tab 字符</td>
+</tr>
+</tbody>
+</table>
+<p>示例：搜索跨两个段落的文本 <code>"line1^pline2"</code>，替换为 <code>"new^pcontent"</code>。
+完整特殊字符列表参见 <a href="https://learn.microsoft.com/en-us/office/dev/add-ins/word/search-option-guidance">Word Search Options Guidance</a>。</p>
+</div>
 <p><strong>请求数据</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">ReplaceTextRequest</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
 <a id="__codelineno-40-3" name="__codelineno-40-3" href="#__codelineno-40-3"></a><span class="w">  </span><span class="nx">documentUri</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
 <a id="__codelineno-40-4" name="__codelineno-40-4" href="#__codelineno-40-4"></a><span class="w">  </span><span class="nx">timestamp?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
-<a id="__codelineno-40-5" name="__codelineno-40-5" href="#__codelineno-40-5"></a><span class="w">  </span><span class="nx">searchText</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">        </span><span class="c1">// 要查找的文本</span>
-<a id="__codelineno-40-6" name="__codelineno-40-6" href="#__codelineno-40-6"></a><span class="w">  </span><span class="nx">replaceText</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">       </span><span class="c1">// 替换为的文本</span>
+<a id="__codelineno-40-5" name="__codelineno-40-5" href="#__codelineno-40-5"></a><span class="w">  </span><span class="nx">searchText</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">        </span><span class="c1">// 要查找的文本（支持 ^p ^l ^t 等特殊字符记号）</span>
+<a id="__codelineno-40-6" name="__codelineno-40-6" href="#__codelineno-40-6"></a><span class="w">  </span><span class="nx">replaceText</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">       </span><span class="c1">// 替换为的文本（同样支持特殊字符记号）</span>
 <a id="__codelineno-40-7" name="__codelineno-40-7" href="#__codelineno-40-7"></a><span class="w">  </span><span class="nx">options</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-40-8" name="__codelineno-40-8" href="#__codelineno-40-8"></a><span class="w">    </span><span class="nx">matchCase?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w">     </span><span class="c1">// 区分大小写，默认 false</span>
 <a id="__codelineno-40-9" name="__codelineno-40-9" href="#__codelineno-40-9"></a><span class="w">    </span><span class="nx">matchWholeWord?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w"> </span><span class="c1">// 全词匹配，默认 false</span>
@@ -3070,12 +3102,16 @@
 <p><strong>方向</strong>: Server → AddIn（请求-响应）</p>
 <p><strong>状态</strong>: ✅ Stable</p>
 <p><strong>说明</strong>: 查找并选中文档中的文本。</p>
+<div class="admonition note">
+<p class="admonition-title">特殊字符搜索</p>
+<p><code>searchText</code> 支持 Word 特殊字符记号（如 <code>^p</code> 段落标记、<code>^l</code> 手动换行、<code>^t</code> 制表符）来匹配不可见字符。<strong>不要使用 <code>\n</code> 等转义字符</strong>。详见 <a href="#wordreplacetext">word:replace:text</a> 的特殊字符说明。</p>
+</div>
 <p><strong>请求数据</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">SelectTextRequest</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
 <a id="__codelineno-45-3" name="__codelineno-45-3" href="#__codelineno-45-3"></a><span class="w">  </span><span class="nx">documentUri</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
 <a id="__codelineno-45-4" name="__codelineno-45-4" href="#__codelineno-45-4"></a><span class="w">  </span><span class="nx">timestamp?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
-<a id="__codelineno-45-5" name="__codelineno-45-5" href="#__codelineno-45-5"></a><span class="w">  </span><span class="nx">searchText</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">                              </span><span class="c1">// 要查找的文本</span>
+<a id="__codelineno-45-5" name="__codelineno-45-5" href="#__codelineno-45-5"></a><span class="w">  </span><span class="nx">searchText</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">                              </span><span class="c1">// 要查找的文本（支持 ^p ^l ^t 等特殊字符记号）</span>
 <a id="__codelineno-45-6" name="__codelineno-45-6" href="#__codelineno-45-6"></a><span class="w">  </span><span class="nx">searchOptions</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-45-7" name="__codelineno-45-7" href="#__codelineno-45-7"></a><span class="w">    </span><span class="nx">matchCase?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w">                           </span><span class="c1">// 区分大小写，默认 false</span>
 <a id="__codelineno-45-8" name="__codelineno-45-8" href="#__codelineno-45-8"></a><span class="w">    </span><span class="nx">matchWholeWord?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w">                      </span><span class="c1">// 全词匹配，默认 false</span>
