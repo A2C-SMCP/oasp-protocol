@@ -983,6 +983,18 @@ interface ReplaceSelectionResponse {
     当同时指定直接格式（如 `bold`、`fontSize`）和 `styleName` 时，**直接格式优先级高于样式名**。
     即：先应用 `styleName` 指定的样式，再覆盖应用直接格式属性。
 
+!!! note "特殊字符搜索"
+    `searchText` 和 `replaceText` 支持 Word 特殊字符记号来匹配不可见字符。**不要使用 `\n` 等转义字符**，而应使用下表中的 Word 记号：
+
+    | 要查找/替换 | 记号 | 说明 |
+    |------------|------|------|
+    | 段落标记 (Enter) | `^p` | 跨段落搜索时使用 |
+    | 手动换行 (Shift+Enter) | `^l` | 段内软换行 |
+    | 制表符 | `^t` | Tab 字符 |
+
+    示例：搜索跨两个段落的文本 `"line1^pline2"`，替换为 `"new^pcontent"`。
+    完整特殊字符列表参见 [Word Search Options Guidance](https://learn.microsoft.com/en-us/office/dev/add-ins/word/search-option-guidance)。
+
 **请求数据**:
 
 ```typescript
@@ -990,8 +1002,8 @@ interface ReplaceTextRequest {
   requestId: string;
   documentUri: string;
   timestamp?: number;
-  searchText: string;        // 要查找的文本
-  replaceText: string;       // 替换为的文本
+  searchText: string;        // 要查找的文本（支持 ^p ^l ^t 等特殊字符记号）
+  replaceText: string;       // 替换为的文本（同样支持特殊字符记号）
   options?: {
     matchCase?: boolean;     // 区分大小写，默认 false
     matchWholeWord?: boolean; // 全词匹配，默认 false
@@ -1082,6 +1094,9 @@ interface ReplaceTextResponse {
 
 **说明**: 查找并选中文档中的文本。
 
+!!! note "特殊字符搜索"
+    `searchText` 支持 Word 特殊字符记号（如 `^p` 段落标记、`^l` 手动换行、`^t` 制表符）来匹配不可见字符。**不要使用 `\n` 等转义字符**。详见 [word:replace:text](#wordreplacetext) 的特殊字符说明。
+
 **请求数据**:
 
 ```typescript
@@ -1089,7 +1104,7 @@ interface SelectTextRequest {
   requestId: string;
   documentUri: string;
   timestamp?: number;
-  searchText: string;                              // 要查找的文本
+  searchText: string;                              // 要查找的文本（支持 ^p ^l ^t 等特殊字符记号）
   searchOptions?: {
     matchCase?: boolean;                           // 区分大小写，默认 false
     matchWholeWord?: boolean;                      // 全词匹配，默认 false
