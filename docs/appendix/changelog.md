@@ -7,6 +7,23 @@
 
 ---
 
+## [0.1.9] - 2026-04-17
+
+### 新增
+
+**word:insert:table 新增 `insertLocation` 字段**
+
+| 变更类型 | 字段 | 说明 |
+|----------|------|------|
+| 新增 | `TableInsertOptions.insertLocation` | 可选枚举字段，取值 `Start` / `End` / `Before` / `After` / `Replace`，未传时默认 `"End"`（向后兼容） |
+| 新增 | `TableInsertLocation` 类型定义 | 表格插入位置枚举类型 |
+
+**动机**: Add-In 内部 `insertTable` 函数已支持五种插入位置，但此前协议层仅定义 `rows` / `columns` / `data` / `style`，导致 AI 无法指定表格插入位置，所有表格默认插入文档末尾。此次变更为协议层能力补齐，不影响现有客户端。
+
+**相关工单**: [OF4AI-9](https://turingfocus.atlassian.net/browse/OF4AI-9)
+
+---
+
 ## [0.1.8] - 2026-02-05
 
 ### 变更

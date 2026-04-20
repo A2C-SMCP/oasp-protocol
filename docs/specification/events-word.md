@@ -1414,8 +1414,28 @@ interface TableInsertOptions {
   columns: number;           // 列数（必需）
   data?: string[][];         // 表格数据（可选，按行列顺序填充）
   style?: string;            // 表格样式名称
+  insertLocation?: TableInsertLocation;  // 插入位置，默认 "End"
 }
+
+type TableInsertLocation =
+  | "Start"    // 文档开头
+  | "End"      // 文档末尾（默认）
+  | "Before"   // 当前选区/光标之前
+  | "After"    // 当前选区/光标之后
+  | "Replace"; // 替换当前选区
 ```
+
+**插入位置语义**:
+
+| 值 | 语义 |
+|----|------|
+| `Start` | 插入到文档起始位置 |
+| `End` | 插入到文档末尾（默认，兼容旧客户端未传此字段的行为）|
+| `Before` | 插入到当前选区/光标所在段落之前 |
+| `After` | 插入到当前选区/光标所在段落之后 |
+| `Replace` | 以新表格替换当前选区内容 |
+
+未传 `insertLocation` 时，Add-In 必须回退至 `"End"`（向后兼容）。
 
 **请求示例**:
 
@@ -1431,7 +1451,8 @@ interface TableInsertOptions {
       ["张三", "28", "北京", "工程师"],
       ["李四", "32", "上海", "设计师"]
     ],
-    "style": "Grid Table 1 Light"
+    "style": "Grid Table 1 Light",
+    "insertLocation": "After"
   }
 }
 ```

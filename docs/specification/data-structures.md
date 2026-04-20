@@ -241,7 +241,15 @@ interface TableInsertOptions {
   columns: number;         // 列数（>= 1）
   data?: string[][];       // 初始数据（二维数组）
   style?: string;          // 表格样式名称
+  insertLocation?: TableInsertLocation;  // 插入位置，默认 "End"
 }
+
+type TableInsertLocation =
+  | "Start"    // 文档开头
+  | "End"      // 文档末尾（默认）
+  | "Before"   // 当前选区/光标之前
+  | "After"    // 当前选区/光标之后
+  | "Replace"; // 替换当前选区
 ```
 
 ---
