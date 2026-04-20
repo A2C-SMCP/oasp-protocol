@@ -1,0 +1,2181 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Office AddIn 与后端服务之间的实时通信协议规范">
+      
+      
+        <meta name="author" content="JQQ">
+      
+      
+      
+        <link rel="prev" href="../glossary/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>变更日志 - OASP - Office AddIn Socket Protocol</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#_1" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="OASP - Office AddIn Socket Protocol" class="md-header__button md-logo" aria-label="OASP - Office AddIn Socket Protocol" data-md-component="logo">
+      
+  <img src="../../assets/logo-white.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            OASP - Office AddIn Socket Protocol
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              变更日志
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换至深色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换至深色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换至浅色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换至浅色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  首页
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../specification/" class="md-tabs__link">
+          
+  
+  
+  协议规范
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../glossary/" class="md-tabs__link">
+          
+  
+  
+  附录
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="OASP - Office AddIn Socket Protocol" class="md-nav__button md-logo" aria-label="OASP - Office AddIn Socket Protocol" data-md-component="logo">
+      
+  <img src="../../assets/logo-white.svg" alt="logo">
+
+    </a>
+    OASP - Office AddIn Socket Protocol
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    协议规范
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    协议规范
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    概述
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    架构设计
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/connection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    连接与握手
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    事件定义
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    事件定义
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/events-word/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Word 事件
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/events-ppt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PPT 事件 [Draft]
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/events-excel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Excel 事件 [Draft]
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/data-structures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    数据结构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    错误处理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    通用约定
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    附录
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    附录
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    术语表
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更日志
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    变更日志
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#019-2026-04-17" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.9] - 2026-04-17
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.9] - 2026-04-17">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        新增
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#018-2026-02-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.8] - 2026-02-05
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.8] - 2026-02-05">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        变更
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#017-2026-02-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.7] - 2026-02-05
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.7] - 2026-02-05">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        变更
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#016-2026-02-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.6] - 2026-02-05
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.6] - 2026-02-05">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        变更
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#015-2026-02-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.5] - 2026-02-05
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.5] - 2026-02-05">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        变更
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#014-2026-02-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.4] - 2026-02-05
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.4] - 2026-02-05">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        变更
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#013-2026-02-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.3] - 2026-02-05
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.3] - 2026-02-05">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        变更
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#012-2026-02-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.2] - 2026-02-05
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.2] - 2026-02-05">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        变更
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#011-2026-02-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.1] - 2026-02-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.1] - 2026-02-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        变更
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        新增
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#010-2026-02-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.0] - 2026-02-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.0] - 2026-02-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        新增
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        版本号说明
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#019-2026-04-17" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.9] - 2026-04-17
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.9] - 2026-04-17">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        新增
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#018-2026-02-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.8] - 2026-02-05
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.8] - 2026-02-05">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        变更
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#017-2026-02-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.7] - 2026-02-05
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.7] - 2026-02-05">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        变更
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#016-2026-02-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.6] - 2026-02-05
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.6] - 2026-02-05">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        变更
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#015-2026-02-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.5] - 2026-02-05
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.5] - 2026-02-05">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        变更
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#014-2026-02-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.4] - 2026-02-05
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.4] - 2026-02-05">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        变更
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#013-2026-02-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.3] - 2026-02-05
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.3] - 2026-02-05">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        变更
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#012-2026-02-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.2] - 2026-02-05
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.2] - 2026-02-05">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        变更
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#011-2026-02-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.1] - 2026-02-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.1] - 2026-02-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        变更
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        新增
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#010-2026-02-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.0] - 2026-02-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.0] - 2026-02-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        新增
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        版本号说明
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="_1">变更日志<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<p>本文档记录 OASP 协议的所有重要变更。</p>
+<p>格式基于 <a href="https://keepachangelog.com/zh-CN/1.0.0/">Keep a Changelog</a>，
+版本号遵循 <a href="https://semver.org/lang/zh-CN/">语义化版本</a>。</p>
+<hr />
+<h2 id="019-2026-04-17">[0.1.9] - 2026-04-17<a class="headerlink" href="#019-2026-04-17" title="Permanent link">&para;</a></h2>
+<h3 id="_2">新增<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<p><strong>word:insert:table 新增 <code>insertLocation</code> 字段</strong></p>
+<table>
+<thead>
+<tr>
+<th>变更类型</th>
+<th>字段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>新增</td>
+<td><code>TableInsertOptions.insertLocation</code></td>
+<td>可选枚举字段，取值 <code>Start</code> / <code>End</code> / <code>Before</code> / <code>After</code> / <code>Replace</code>，未传时默认 <code>"End"</code>（向后兼容）</td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>TableInsertLocation</code> 类型定义</td>
+<td>表格插入位置枚举类型</td>
+</tr>
+</tbody>
+</table>
+<p><strong>动机</strong>: Add-In 内部 <code>insertTable</code> 函数已支持五种插入位置，但此前协议层仅定义 <code>rows</code> / <code>columns</code> / <code>data</code> / <code>style</code>，导致 AI 无法指定表格插入位置，所有表格默认插入文档末尾。此次变更为协议层能力补齐，不影响现有客户端。</p>
+<p><strong>相关工单</strong>: <a href="https://turingfocus.atlassian.net/browse/OF4AI-9">OF4AI-9</a></p>
+<hr />
+<h2 id="018-2026-02-05">[0.1.8] - 2026-02-05<a class="headerlink" href="#018-2026-02-05" title="Permanent link">&para;</a></h2>
+<h3 id="_3">变更<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<p><strong>word:get:styles 响应结构调整</strong></p>
+<p>基于 Add-In 实际实现进行协议规范对齐：</p>
+<table>
+<thead>
+<tr>
+<th>变更类型</th>
+<th>字段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>修改</td>
+<td><code>timestamp</code> (请求)</td>
+<td>从必需改为可选</td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>duration</code> (响应)</td>
+<td>Add-In 未实现，移除</td>
+</tr>
+<tr>
+<td>修改</td>
+<td><code>success</code> (响应)</td>
+<td>从字面量 <code>true</code> 改为 <code>boolean</code></td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>error</code> (响应)</td>
+<td>添加可选错误响应字段</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="017-2026-02-05">[0.1.7] - 2026-02-05<a class="headerlink" href="#017-2026-02-05" title="Permanent link">&para;</a></h2>
+<h3 id="_4">变更<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<p><strong>word:get:documentStats 请求与响应结构调整</strong></p>
+<p>基于 Add-In 实际实现进行协议规范对齐：</p>
+<table>
+<thead>
+<tr>
+<th>变更类型</th>
+<th>字段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>新增</td>
+<td>请求结构</td>
+<td>补充完整的请求定义（原协议缺失）</td>
+</tr>
+<tr>
+<td>修改</td>
+<td><code>timestamp</code> (请求)</td>
+<td>从必需改为可选</td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>duration</code> (响应)</td>
+<td>Add-In 未实现，移除</td>
+</tr>
+<tr>
+<td>修改</td>
+<td><code>success</code> (响应)</td>
+<td>从字面量 <code>true</code> 改为 <code>boolean</code></td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>error</code> (响应)</td>
+<td>添加可选错误响应字段</td>
+</tr>
+<tr>
+<td>修改</td>
+<td><code>characterCount</code></td>
+<td>明确语义为"不含空格"</td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>characterCountWithSpaces</code></td>
+<td>含空格的字符数</td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>pageCount</code></td>
+<td>页数（可选）</td>
+</tr>
+<tr>
+<td>重命名</td>
+<td><code>DocumentStats</code> → <code>DocumentStatsResult</code></td>
+<td>统一命名风格</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="016-2026-02-05">[0.1.6] - 2026-02-05<a class="headerlink" href="#016-2026-02-05" title="Permanent link">&para;</a></h2>
+<h3 id="_5">变更<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<p><strong>word:get:documentStructure 请求与响应结构调整</strong></p>
+<p>基于 Add-In 实际实现进行协议规范对齐：</p>
+<table>
+<thead>
+<tr>
+<th>变更类型</th>
+<th>字段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>修改</td>
+<td><code>timestamp</code> (请求)</td>
+<td>从必需改为可选</td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>duration</code> (响应)</td>
+<td>Add-In 未实现，移除</td>
+</tr>
+<tr>
+<td>修改</td>
+<td><code>success</code> (响应)</td>
+<td>从字面量 <code>true</code> 改为 <code>boolean</code></td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>error</code> (响应)</td>
+<td>添加可选错误响应字段</td>
+</tr>
+<tr>
+<td>修改</td>
+<td><code>data</code> 字段顺序</td>
+<td>调整为 <code>sectionCount → paragraphCount → tableCount → imageCount</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="015-2026-02-05">[0.1.5] - 2026-02-05<a class="headerlink" href="#015-2026-02-05" title="Permanent link">&para;</a></h2>
+<h3 id="_6">变更<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
+<p><strong>word:get:visibleContent 请求与响应结构调整</strong></p>
+<p>基于 Add-In 实际实现进行协议规范对齐：</p>
+<table>
+<thead>
+<tr>
+<th>变更类型</th>
+<th>字段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>修改</td>
+<td><code>timestamp</code> (请求)</td>
+<td>从必需改为可选</td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>options</code> (请求)</td>
+<td>支持 GetContentOptions（与 selectedContent 一致）</td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>duration</code> (响应)</td>
+<td>Add-In 未实现，移除</td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>data.startPosition</code></td>
+<td>Add-In 未实现，移除</td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>data.endPosition</code></td>
+<td>Add-In 未实现，移除</td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>data.elements</code></td>
+<td>内容元素数组，带类型映射</td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>data.metadata</code></td>
+<td>统计元数据</td>
+</tr>
+</tbody>
+</table>
+<p><strong>新增 VisibleContentElement 结构</strong>：包含 <code>type</code>（映射后类型）和 <code>content</code>（原始元素）。</p>
+<hr />
+<h2 id="014-2026-02-05">[0.1.4] - 2026-02-05<a class="headerlink" href="#014-2026-02-05" title="Permanent link">&para;</a></h2>
+<h3 id="_7">变更<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
+<p><strong>word:get:selectedContent 请求与响应结构调整</strong></p>
+<p>基于 Add-In 实际实现进行协议规范对齐：</p>
+<table>
+<thead>
+<tr>
+<th>变更类型</th>
+<th>字段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>修改</td>
+<td><code>timestamp</code> (请求)</td>
+<td>从必需改为可选</td>
+</tr>
+<tr>
+<td>重构</td>
+<td><code>options</code></td>
+<td>从 <code>includeFormatting</code> 改为 6 个独立选项</td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>duration</code> (响应)</td>
+<td>Add-In 未实现，移除</td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>data.html</code></td>
+<td>Add-In 未实现，移除</td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>data.format</code></td>
+<td>Add-In 未实现，移除</td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>data.elements</code></td>
+<td>内容元素数组（段落、表格、图片、内容控件）</td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>data.metadata</code></td>
+<td>统计元数据（字符数、段落数等）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>新增 GetContentOptions</strong>：<code>includeText</code>、<code>includeImages</code>、<code>includeTables</code>、<code>includeContentControls</code>、<code>detailedMetadata</code>、<code>maxTextLength</code></p>
+<p><strong>新增内容元素类型</strong>：<code>ParagraphElement</code>、<code>TableElement</code>、<code>InlinePictureElement</code>、<code>ContentControlElement</code></p>
+<hr />
+<h2 id="013-2026-02-05">[0.1.3] - 2026-02-05<a class="headerlink" href="#013-2026-02-05" title="Permanent link">&para;</a></h2>
+<h3 id="_8">变更<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h3>
+<p><strong>word:get:selection 请求与响应结构调整</strong></p>
+<p>基于 Add-In 实际实现进行协议规范对齐：</p>
+<table>
+<thead>
+<tr>
+<th>变更类型</th>
+<th>字段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>修改</td>
+<td><code>timestamp</code> (请求)</td>
+<td>从必需改为可选</td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>duration</code> (响应)</td>
+<td>Add-In 未实现，移除</td>
+</tr>
+<tr>
+<td>完善</td>
+<td><code>data.type</code></td>
+<td>补充完整枚举值：<code>NoSelection</code>、<code>InsertionPoint</code>、<code>Normal</code></td>
+</tr>
+<tr>
+<td>修改</td>
+<td><code>data.start</code></td>
+<td>从必需改为可选（仅选区非空时存在）</td>
+</tr>
+<tr>
+<td>修改</td>
+<td><code>data.end</code></td>
+<td>从必需改为可选（仅选区非空时存在）</td>
+</tr>
+<tr>
+<td>修改</td>
+<td><code>data.text</code></td>
+<td>从必需改为可选（仅选区非空时存在）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>新增响应示例</strong>：覆盖"有选区"、"光标点"、"无选区"三种场景。</p>
+<hr />
+<h2 id="012-2026-02-05">[0.1.2] - 2026-02-05<a class="headerlink" href="#012-2026-02-05" title="Permanent link">&para;</a></h2>
+<h3 id="_9">变更<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h3>
+<p><strong>word:event:selectionChanged 事件结构调整</strong></p>
+<p>基于 Add-In 实际实现进行协议规范对齐：</p>
+<table>
+<thead>
+<tr>
+<th>变更类型</th>
+<th>字段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>新增</td>
+<td><code>eventType</code></td>
+<td>事件类型标识，固定值 <code>"selectionChanged"</code></td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>clientId</code></td>
+<td>发送事件的客户端标识</td>
+</tr>
+<tr>
+<td>修改</td>
+<td><code>selection</code> → <code>data</code></td>
+<td>字段名变更，简化结构</td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>selection.isEmpty</code></td>
+<td>实现未提供</td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>selection.type</code></td>
+<td>实现未提供</td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>selection.start</code></td>
+<td>实现未提供</td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>selection.end</code></td>
+<td>实现未提供</td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>data.text</code></td>
+<td>选中的文本内容</td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>data.length</code></td>
+<td>选中文本的字符长度</td>
+</tr>
+</tbody>
+</table>
+<p><strong>word:event:documentModified 事件结构调整</strong></p>
+<p>基于 Add-In 实际实现进行协议规范对齐：</p>
+<table>
+<thead>
+<tr>
+<th>变更类型</th>
+<th>字段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>新增</td>
+<td><code>eventType</code></td>
+<td>事件类型标识，固定值 <code>"documentModified"</code></td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>clientId</code></td>
+<td>发送事件的客户端标识</td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>data</code></td>
+<td>事件数据对象</td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>data.modificationType</code></td>
+<td>修改类型：<code>insert</code>、<code>delete</code>、<code>update</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>word:get:styles 请求参数调整</strong></p>
+<p>基于 Add-In 实际实现进行协议规范对齐：</p>
+<table>
+<thead>
+<tr>
+<th>变更类型</th>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>保留</td>
+<td><code>includeBuiltIn</code></td>
+<td>无变化</td>
+</tr>
+<tr>
+<td>保留</td>
+<td><code>includeCustom</code></td>
+<td>无变化</td>
+</tr>
+<tr>
+<td>删除</td>
+<td><code>typeFilter</code></td>
+<td>Add-In 未实现，移除以保持一致性</td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>includeUnused</code></td>
+<td>控制是否返回文档中未使用的样式，默认 false</td>
+</tr>
+<tr>
+<td>新增</td>
+<td><code>detailedInfo</code></td>
+<td>控制是否返回 description 字段，默认 false</td>
+</tr>
+</tbody>
+</table>
+<p><strong>StyleInfo.description 字段说明</strong></p>
+<ul>
+<li><code>description</code> 字段现仅在请求 <code>detailedInfo=true</code> 时返回</li>
+<li>此功能依赖 WordApi BETA，在部分环境中可能不可用</li>
+</ul>
+<hr />
+<h2 id="011-2026-02-02">[0.1.1] - 2026-02-02<a class="headerlink" href="#011-2026-02-02" title="Permanent link">&para;</a></h2>
+<h3 id="_10">变更<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h3>
+<p><strong>事件命名规范化</strong></p>
+<p>为保持命名一致性，统一采用 <code>{namespace}:{action}:{target}</code> 格式：</p>
+<ul>
+<li>PPT 事件:</li>
+<li><code>ppt:slide:add</code> → <code>ppt:add:slide</code></li>
+<li><code>ppt:slide:delete</code> → <code>ppt:delete:slide</code></li>
+<li><code>ppt:slide:move</code> → <code>ppt:move:slide</code></li>
+<li>
+<p><code>ppt:slide:goto</code> → <code>ppt:goto:slide</code></p>
+</li>
+<li>
+<p>Excel 事件:</p>
+</li>
+<li><code>excel:get:rangeValues</code> → <code>excel:get:range</code></li>
+<li><code>excel:set:rangeValues</code> → <code>excel:set:range</code></li>
+<li><code>excel:sheet:add</code> → <code>excel:add:sheet</code></li>
+<li><code>excel:sheet:delete</code> → <code>excel:delete:sheet</code></li>
+<li><code>excel:sheet:rename</code> → <code>excel:rename:sheet</code></li>
+<li><code>excel:sheet:activate</code> → <code>excel:activate:sheet</code></li>
+</ul>
+<p><strong>错误码调整</strong></p>
+<ul>
+<li><code>2002</code> 从 <code>CONNECTION_LOST</code> 改为 <code>INVALID_TOKEN</code>（令牌无效）</li>
+<li>新增 <code>2005 CONNECTION_LOST</code>（连接丢失）</li>
+</ul>
+<p><strong>数据类型简化</strong></p>
+<ul>
+<li><code>ChartType</code>: 简化为 Column, Bar, Line, Pie, Area, Scatter, Doughnut</li>
+<li><code>ShapeType</code>: 合并两端实现，现包含 Rectangle, RoundedRectangle, Circle, Oval, Triangle, Diamond, Pentagon, Hexagon, Line, Arrow, Star, TextBox</li>
+</ul>
+<h3 id="_11">新增<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h3>
+<p><strong>PPT 事件</strong></p>
+<ul>
+<li><code>ppt:insert:table</code> - 在幻灯片中插入表格</li>
+<li><code>ppt:update:textBox</code> - 更新幻灯片中的文本框</li>
+</ul>
+<hr />
+<h2 id="010-2026-02-02">[0.1.0] - 2026-02-02<a class="headerlink" href="#010-2026-02-02" title="Permanent link">&para;</a></h2>
+<h3 id="_12">新增<a class="headerlink" href="#_12" title="Permanent link">&para;</a></h3>
+<p><strong>核心协议</strong></p>
+<ul>
+<li>定义了协议名称: OASP (Office AddIn Socket Protocol)</li>
+<li>定义了两角色通信模型 (Server ↔ AddIn)</li>
+<li>定义了三个命名空间: <code>/word</code>, <code>/ppt</code>, <code>/excel</code></li>
+<li>定义了事件命名规范: <code>{namespace}:{action}:{target}</code></li>
+<li>定义了请求-响应模式和事件报告模式</li>
+</ul>
+<p><strong>连接与握手</strong></p>
+<ul>
+<li>定义了握手参数: <code>clientId</code>, <code>documentUri</code></li>
+<li>定义了连接确认事件: <code>connection:established</code></li>
+<li>定义了断开连接和重连机制</li>
+</ul>
+<p><strong>Word 事件 (✅ Stable)</strong></p>
+<ul>
+<li><code>word:event:selectionChanged</code> - 选区变化通知</li>
+<li><code>word:event:documentModified</code> - 文档修改通知</li>
+<li><code>word:get:selection</code> - 获取选区位置信息</li>
+<li><code>word:get:selectedContent</code> - 获取选中内容</li>
+<li><code>word:get:visibleContent</code> - 获取可见内容</li>
+<li><code>word:get:documentStructure</code> - 获取文档结构</li>
+<li><code>word:get:documentStats</code> - 获取文档统计</li>
+<li><code>word:get:styles</code> - 获取文档样式列表</li>
+<li><code>word:insert:text</code> - 插入文本</li>
+<li><code>word:replace:selection</code> - 替换选中内容</li>
+<li><code>word:replace:text</code> - 查找替换</li>
+<li><code>word:select:text</code> - 查找并选中文本</li>
+</ul>
+<p><strong>Word 事件 (📋 Draft)</strong></p>
+<ul>
+<li><code>word:append:text</code> - 追加文本</li>
+<li><code>word:insert:image</code> - 插入图片</li>
+<li><code>word:insert:table</code> - 插入表格</li>
+<li><code>word:insert:equation</code> - 插入公式</li>
+<li><code>word:insert:toc</code> - 插入目录</li>
+<li><code>word:export:content</code> - 导出内容</li>
+</ul>
+<p><strong>PPT 事件 (📋 Draft)</strong></p>
+<ul>
+<li><code>ppt:get:currentSlideElements</code> - 获取当前幻灯片元素</li>
+<li><code>ppt:get:slideElements</code> - 获取指定幻灯片元素</li>
+<li><code>ppt:get:slideScreenshot</code> - 获取幻灯片截图</li>
+<li><code>ppt:insert:text</code> - 插入文本</li>
+<li><code>ppt:insert:shape</code> - 插入形状</li>
+<li><code>ppt:insert:image</code> - 插入图片</li>
+<li><code>ppt:slide:add</code> - 添加幻灯片</li>
+<li><code>ppt:slide:delete</code> - 删除幻灯片</li>
+<li><code>ppt:slide:move</code> - 移动幻灯片</li>
+<li><code>ppt:slide:goto</code> - 跳转到幻灯片</li>
+</ul>
+<p><strong>Excel 事件 (📋 Draft)</strong></p>
+<ul>
+<li><code>excel:get:selectedRange</code> - 获取选中范围</li>
+<li><code>excel:get:usedRange</code> - 获取已使用范围</li>
+<li><code>excel:get:cellValue</code> - 获取单元格值</li>
+<li><code>excel:get:rangeValues</code> - 获取范围内的值</li>
+<li><code>excel:set:cellValue</code> - 设置单元格值</li>
+<li><code>excel:set:rangeValues</code> - 设置范围内的值</li>
+<li><code>excel:insert:table</code> - 插入表格</li>
+<li><code>excel:insert:chart</code> - 插入图表</li>
+<li><code>excel:sheet:add</code> - 添加工作表</li>
+<li><code>excel:sheet:delete</code> - 删除工作表</li>
+<li><code>excel:sheet:rename</code> - 重命名工作表</li>
+<li><code>excel:sheet:activate</code> - 激活工作表</li>
+</ul>
+<p><strong>数据结构</strong></p>
+<ul>
+<li>定义了基础请求/响应结构</li>
+<li>定义了 <code>SelectionInfo</code>, <code>TextFormat</code>, <code>StyleInfo</code> 等核心类型</li>
+<li>定义了 PPT 和 Excel 相关类型</li>
+</ul>
+<p><strong>错误处理</strong></p>
+<ul>
+<li>定义了错误码分类 (1xxx-4xxx)</li>
+<li>定义了通用错误码 (1xxx)</li>
+<li>定义了连接错误码 (2xxx)</li>
+<li>定义了文档操作错误码 (3xxx)</li>
+<li>定义了参数验证错误码 (4xxx)</li>
+</ul>
+<p><strong>通用约定</strong></p>
+<ul>
+<li>定义了时间戳格式 (Unix 毫秒)</li>
+<li>定义了字段命名规范 (camelCase)</li>
+<li>定义了颜色值格式 (#RRGGBB)</li>
+<li>定义了单位规范 (磅、像素)</li>
+</ul>
+<p><strong>文档</strong></p>
+<ul>
+<li>创建了完整的协议文档结构</li>
+<li>创建了术语表</li>
+<li>创建了变更日志</li>
+</ul>
+<hr />
+<h2 id="_13">版本号说明<a class="headerlink" href="#_13" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>主版本号 (Major)</strong>: 不兼容的 API 变更</li>
+<li><strong>次版本号 (Minor)</strong>: 向后兼容的功能新增</li>
+<li><strong>修订号 (Patch)</strong>: 向后兼容的问题修复</li>
+</ul>
+<p>当前版本 <code>0.1.0</code> 表示协议处于初始开发阶段，API 可能随时变更。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
