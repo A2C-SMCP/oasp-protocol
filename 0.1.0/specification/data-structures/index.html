@@ -1948,7 +1948,15 @@
 <a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span><span class="nx">columns</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">         </span><span class="c1">// 列数（&gt;= 1）</span>
 <a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span><span class="nx">data?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[][];</span><span class="w">       </span><span class="c1">// 初始数据（二维数组）</span>
 <a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">  </span><span class="nx">style?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">          </span><span class="c1">// 表格样式名称</span>
-<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="p">}</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">  </span><span class="nx">insertLocation?</span><span class="o">:</span><span class="w"> </span><span class="kt">TableInsertLocation</span><span class="p">;</span><span class="w">  </span><span class="c1">// 插入位置，默认 &quot;End&quot;</span>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="p">}</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="kr">type</span><span class="w"> </span><span class="nx">TableInsertLocation</span><span class="w"> </span><span class="o">=</span>
+<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Start&quot;</span><span class="w">    </span><span class="c1">// 文档开头</span>
+<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;End&quot;</span><span class="w">      </span><span class="c1">// 文档末尾（默认）</span>
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Before&quot;</span><span class="w">   </span><span class="c1">// 当前选区/光标之前</span>
+<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;After&quot;</span><span class="w">    </span><span class="c1">// 当前选区/光标之后</span>
+<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Replace&quot;</span><span class="p">;</span><span class="w"> </span><span class="c1">// 替换当前选区</span>
 </code></pre></div>
 <hr />
 <h2 id="ppt">PPT 相关<a class="headerlink" href="#ppt" title="Permanent link">&para;</a></h2>

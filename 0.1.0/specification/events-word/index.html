@@ -3447,8 +3447,48 @@
 <a id="__codelineno-58-10" name="__codelineno-58-10" href="#__codelineno-58-10"></a><span class="w">  </span><span class="nx">columns</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">           </span><span class="c1">// 列数（必需）</span>
 <a id="__codelineno-58-11" name="__codelineno-58-11" href="#__codelineno-58-11"></a><span class="w">  </span><span class="nx">data?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[][];</span><span class="w">         </span><span class="c1">// 表格数据（可选，按行列顺序填充）</span>
 <a id="__codelineno-58-12" name="__codelineno-58-12" href="#__codelineno-58-12"></a><span class="w">  </span><span class="nx">style?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">            </span><span class="c1">// 表格样式名称</span>
-<a id="__codelineno-58-13" name="__codelineno-58-13" href="#__codelineno-58-13"></a><span class="p">}</span>
+<a id="__codelineno-58-13" name="__codelineno-58-13" href="#__codelineno-58-13"></a><span class="w">  </span><span class="nx">insertLocation?</span><span class="o">:</span><span class="w"> </span><span class="kt">TableInsertLocation</span><span class="p">;</span><span class="w">  </span><span class="c1">// 插入位置，默认 &quot;End&quot;</span>
+<a id="__codelineno-58-14" name="__codelineno-58-14" href="#__codelineno-58-14"></a><span class="p">}</span>
+<a id="__codelineno-58-15" name="__codelineno-58-15" href="#__codelineno-58-15"></a>
+<a id="__codelineno-58-16" name="__codelineno-58-16" href="#__codelineno-58-16"></a><span class="kr">type</span><span class="w"> </span><span class="nx">TableInsertLocation</span><span class="w"> </span><span class="o">=</span>
+<a id="__codelineno-58-17" name="__codelineno-58-17" href="#__codelineno-58-17"></a><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Start&quot;</span><span class="w">    </span><span class="c1">// 文档开头</span>
+<a id="__codelineno-58-18" name="__codelineno-58-18" href="#__codelineno-58-18"></a><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;End&quot;</span><span class="w">      </span><span class="c1">// 文档末尾（默认）</span>
+<a id="__codelineno-58-19" name="__codelineno-58-19" href="#__codelineno-58-19"></a><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Before&quot;</span><span class="w">   </span><span class="c1">// 当前选区/光标之前</span>
+<a id="__codelineno-58-20" name="__codelineno-58-20" href="#__codelineno-58-20"></a><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;After&quot;</span><span class="w">    </span><span class="c1">// 当前选区/光标之后</span>
+<a id="__codelineno-58-21" name="__codelineno-58-21" href="#__codelineno-58-21"></a><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Replace&quot;</span><span class="p">;</span><span class="w"> </span><span class="c1">// 替换当前选区</span>
 </code></pre></div>
+<p><strong>插入位置语义</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>值</th>
+<th>语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Start</code></td>
+<td>插入到文档起始位置</td>
+</tr>
+<tr>
+<td><code>End</code></td>
+<td>插入到文档末尾（默认，兼容旧客户端未传此字段的行为）</td>
+</tr>
+<tr>
+<td><code>Before</code></td>
+<td>插入到当前选区/光标所在段落之前</td>
+</tr>
+<tr>
+<td><code>After</code></td>
+<td>插入到当前选区/光标所在段落之后</td>
+</tr>
+<tr>
+<td><code>Replace</code></td>
+<td>以新表格替换当前选区内容</td>
+</tr>
+</tbody>
+</table>
+<p>未传 <code>insertLocation</code> 时，Add-In 必须回退至 <code>"End"</code>（向后兼容）。</p>
 <p><strong>请求示例</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-59-1" name="__codelineno-59-1" href="#__codelineno-59-1"></a><span class="p">{</span>
 <a id="__codelineno-59-2" name="__codelineno-59-2" href="#__codelineno-59-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d&quot;</span><span class="p">,</span>
@@ -3461,9 +3501,10 @@
 <a id="__codelineno-59-9" name="__codelineno-59-9" href="#__codelineno-59-9"></a><span class="w">      </span><span class="p">[</span><span class="s2">&quot;张三&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;28&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;北京&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;工程师&quot;</span><span class="p">],</span>
 <a id="__codelineno-59-10" name="__codelineno-59-10" href="#__codelineno-59-10"></a><span class="w">      </span><span class="p">[</span><span class="s2">&quot;李四&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;32&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;上海&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;设计师&quot;</span><span class="p">]</span>
 <a id="__codelineno-59-11" name="__codelineno-59-11" href="#__codelineno-59-11"></a><span class="w">    </span><span class="p">],</span>
-<a id="__codelineno-59-12" name="__codelineno-59-12" href="#__codelineno-59-12"></a><span class="w">    </span><span class="nt">&quot;style&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Grid Table 1 Light&quot;</span>
-<a id="__codelineno-59-13" name="__codelineno-59-13" href="#__codelineno-59-13"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-59-14" name="__codelineno-59-14" href="#__codelineno-59-14"></a><span class="p">}</span>
+<a id="__codelineno-59-12" name="__codelineno-59-12" href="#__codelineno-59-12"></a><span class="w">    </span><span class="nt">&quot;style&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Grid Table 1 Light&quot;</span><span class="p">,</span>
+<a id="__codelineno-59-13" name="__codelineno-59-13" href="#__codelineno-59-13"></a><span class="w">    </span><span class="nt">&quot;insertLocation&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;After&quot;</span>
+<a id="__codelineno-59-14" name="__codelineno-59-14" href="#__codelineno-59-14"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-59-15" name="__codelineno-59-15" href="#__codelineno-59-15"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong>响应数据</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-60-1" name="__codelineno-60-1" href="#__codelineno-60-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">InsertTableResponse</span><span class="w"> </span><span class="p">{</span>
