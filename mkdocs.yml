@@ -33,6 +33,10 @@ theme:
 
 plugins:
   - search
+  - macros:
+      module_name: scripts/docs/macros
+      render_by_default: false
+      on_error_fail: true
 
 markdown_extensions:
   - admonition

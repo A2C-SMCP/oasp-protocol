@@ -1,3 +1,7 @@
+---
+render_macros: true
+---
+
 # OASP - Office AddIn Socket Protocol
 
 > Office AddIn 与后端服务之间的实时通信协议规范
@@ -40,6 +44,6 @@ OASP (Office AddIn Socket Protocol) 是一个基于 Socket.IO 的通信协议，
 
 ## 版本
 
-当前协议版本: **0.1.9**
+当前协议版本: **{{ protocol_version }}**
 
 查看[变更日志](appendix/changelog.md)了解版本历史。
