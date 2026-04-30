@@ -97,6 +97,7 @@ interface ErrorResponse {
 | `3012` | `SEARCH_NO_MATCH` | 搜索无匹配结果 |
 | `3013` | `NO_TABLE_AT_CURSOR` | 缺省 `tableId` 时光标未落在任何表格内 |
 | `3014` | `ALREADY_MERGED` | 目标合并区域内已存在合并冲突，无法再次合并 |
+| `3015` | `INVALID_CHART_DATA` | 图表数据维度不一致（series.values 长度与 categories 不匹配） |
 
 ### 4xxx - 参数验证错误
 

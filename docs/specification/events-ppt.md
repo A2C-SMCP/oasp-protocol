@@ -33,11 +33,14 @@
 | [ppt:insert:shape](#pptinsertshape) | 📋 Draft | 插入形状 |
 | [ppt:insert:image](#pptinsertimage) | 📋 Draft | 插入图片 |
 | [ppt:insert:table](#pptinserttable) | 📋 Draft | 插入表格 |
+| [ppt:insert:chart](#pptinsertchart) | 📋 Draft | 插入图表（Server OOXML 离线处理） |
 | [ppt:update:textBox](#pptupdatetextbox) | 📋 Draft | 更新文本框内容/样式 |
-| [ppt:delete:element](#pptdeleteelement) | 📋 Draft | 删除指定元素 |
+| [ppt:delete:element](#pptdeleteelement) | 📋 Draft | 删除指定元素（亦适用于图表删除） |
 | [ppt:update:image](#pptupdateimage) | 📋 Draft | 替换图片内容 |
 | [ppt:update:tableCell](#pptupdatetablecell) | 📋 Draft | 更新表格单元格 |
 | [ppt:update:tableRowColumn](#pptupdatetablerowcolumn) | 📋 Draft | 更新表格行/列内容 |
+| [ppt:get:chart](#pptgetchart) | 📋 Draft | 读取图表数据（Server OOXML 离线处理） |
+| [ppt:update:chart](#pptupdatechart) | 📋 Draft | 更新图表数据/类型/标题（Server OOXML 离线处理） |
 
 ### 样式格式类（Server → AddIn，请求-响应）
 
@@ -1234,6 +1237,206 @@ interface InsertTableResponse {
 
 ---
 
+### ppt:insert:chart
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: 在指定幻灯片插入图表（柱形/折线/饼图等），含数据系列与基础展示选项。
+
+!!! warning "Server 端 OOXML 离线处理（适用于 ppt:insert:chart / ppt:get:chart / ppt:update:chart）"
+    PowerPoint JavaScript API 当前不暴露图表创建与数据更新接口（参见 [office-js#5463](https://github.com/OfficeDev/office-js/issues/5463)）。本节 chart 类事件**不经 Add-In Office.js 路径**，由 OASP Server 端使用 OOXML 离线工具（如 `python-pptx`）直接修改 .pptx 文件后再通知 Add-In 重新加载文档。
+
+    **副作用与约束**：
+
+    - 预期延迟 >1s（取决于文档大小与磁盘 I/O）
+    - 调用前 Add-In 应已 `save()`，否则未保存的本地修改会被覆盖
+    - 完成后 Add-In 需重新打开/刷新文档以呈现新图表
+    - 同一文档的并发 chart 调用应串行化，避免 OOXML 写入冲突
+    - 相关数据结构（`ChartData` / `ChartType` / `ChartSeries`）定义见 [data-structures.md#ChartType](data-structures.md#charttype)
+
+**请求数据**:
+
+```typescript
+interface InsertChartRequest {
+  requestId: string;            // 请求 ID (UUID)
+  documentUri: string;          // 文档 URI
+  timestamp?: number;           // 请求时间戳（毫秒），可选
+  chart: ChartData;             // 图表逻辑数据
+  options?: ChartInsertOptions; // 几何与目标位置（可选）
+}
+
+interface ChartInsertOptions {
+  slideIndex?: number;          // 目标幻灯片索引（从 0 开始），默认当前幻灯片
+  left?: number;                // X 坐标（磅），默认居中
+  top?: number;                 // Y 坐标（磅），默认居中
+  width?: number;               // 宽度（磅），默认 480
+  height?: number;              // 高度（磅），默认 320
+}
+```
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/q1-report.pptx",
+  "chart": {
+    "chartType": "ColumnClustered",
+    "categories": ["Jan", "Feb", "Mar"],
+    "series": [
+      { "name": "Revenue", "values": [120, 135, 158] },
+      { "name": "Cost",    "values": [80,  90,  102] }
+    ],
+    "title": "Q1 业绩",
+    "showLegend": true
+  },
+  "options": { "slideIndex": 1, "width": 520, "height": 340 }
+}
+```
+
+**响应数据**:
+
+```typescript
+interface InsertChartResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    elementId: string;          // 创建的图表元素 ID
+    slideIndex: number;         // 实际插入的幻灯片索引
+    chartType: ChartType;
+    seriesCount: number;
+    categoryCount: number;
+    left: number;               // 实际 X 坐标（磅）
+    top: number;                // 实际 Y 坐标（磅）
+    width: number;              // 实际宽度（磅）
+    height: number;             // 实际高度（磅）
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `MISSING_PARAM` - 缺少 chart.chartType / categories / series |
+| 4002 | `INVALID_PARAM` - chartType 取值不在 ChartType 枚举内 |
+| 3015 | `INVALID_CHART_DATA` - series.values 长度与 categories 不一致 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3003 | `DOCUMENT_READ_ONLY` - 文档为只读模式 |
+| 3004 | `OPERATION_FAILED` - OOXML 写入失败 |
+
+---
+
+### ppt:get:chart
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: 读取指定 `elementId` 图表的当前数据（类型、分类、系列、标题、展示选项）。
+
+> Server-handled OOXML 路径与并发约束见 [`ppt:insert:chart` 顶部 admonition](#pptinsertchart)。
+
+**请求数据**:
+
+```typescript
+interface GetChartRequest {
+  requestId: string;
+  documentUri: string;
+  timestamp?: number;
+  elementId: string;            // 图表元素 ID（必需）
+  slideIndex?: number;          // 可选，仅作为加速定位提示；不一致以 elementId 为准
+}
+```
+
+**响应数据**:
+
+```typescript
+interface GetChartResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    elementId: string;
+    slideIndex: number;
+    chart: ChartData;           // 完整图表数据（与 insert 请求镜像）
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `MISSING_PARAM` - 缺少 elementId |
+| 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在或不是图表元素 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+
+---
+
+### ppt:update:chart
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: 更新已存在图表的数据、类型、标题或展示选项。所有字段可选；提供哪个字段就只更新哪个。
+
+> Server-handled OOXML 路径与并发约束见 [`ppt:insert:chart` 顶部 admonition](#pptinsertchart)。
+
+**请求数据**:
+
+```typescript
+interface UpdateChartRequest {
+  requestId: string;
+  documentUri: string;
+  timestamp?: number;
+  elementId: string;            // 图表元素 ID（必需）
+  chart: Partial<ChartData>;    // 部分更新；categories/series 一旦提供即整体替换
+}
+```
+
+!!! warning "categories 与 series 同步替换"
+    若同时提供 `categories` 与 `series`，两者必须一致（每个 `ChartSeries.values.length === categories.length`）。仅替换其中一方时，未提供的一方保持原值，但 Server 会重新校验匹配关系，不一致时返回 `3015`。
+
+**响应数据**:
+
+```typescript
+interface UpdateChartResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    elementId: string;
+    updatedFields: string[];    // 实际生效的字段列表（如 ["title","series"]）
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `MISSING_PARAM` - 缺少 elementId |
+| 4002 | `INVALID_PARAM` - chartType 取值不在 ChartType 枚举内 |
+| 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在或不是图表元素 |
+| 3015 | `INVALID_CHART_DATA` - 替换后 series.values 长度与 categories 不一致 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3003 | `DOCUMENT_READ_ONLY` - 文档为只读模式 |
+| 3004 | `OPERATION_FAILED` - OOXML 写入失败 |
+
+---
+
 ### ppt:update:textBox
 
 **方向**: Server → AddIn（请求-响应）
@@ -1364,6 +1567,9 @@ interface UpdateTextBoxResponse {
 **状态**: 📋 Draft
 
 **说明**: 删除幻灯片上的指定元素。支持单个或批量删除。
+
+!!! info "亦适用于图表（Chart）元素删除"
+    无独立的 `ppt:delete:chart` 事件。删除图表元素请直接传入 chart 对应的 `elementId`（可由 `ppt:get:slideElements` / `ppt:insert:chart` 响应获取）。
 
 **请求数据**:
 
