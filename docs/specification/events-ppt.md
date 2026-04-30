@@ -1243,7 +1243,7 @@ interface InsertTableResponse {
 
 **状态**: 📋 Draft
 
-**说明**: 在指定幻灯片插入图表（柱形/折线/饼图等），含数据系列与基础展示选项。
+**说明**: 在指定幻灯片插入图表（柱形/折线/饼/散点等），含数据系列与基础展示选项。
 
 !!! warning "Server 端 OOXML 离线处理（适用于 ppt:insert:chart / ppt:get:chart / ppt:update:chart）"
     PowerPoint JavaScript API 当前不暴露图表创建与数据更新接口（参见 [office-js#5463](https://github.com/OfficeDev/office-js/issues/5463)）。本节 chart 类事件**不经 Add-In Office.js 路径**，由 OASP Server 端使用 OOXML 离线工具（如 `python-pptx`）直接修改 .pptx 文件后再通知 Add-In 重新加载文档。
@@ -1254,7 +1254,7 @@ interface InsertTableResponse {
     - 调用前 Add-In 应已 `save()`，否则未保存的本地修改会被覆盖
     - 完成后 Add-In 需重新打开/刷新文档以呈现新图表
     - 同一文档的并发 chart 调用应串行化，避免 OOXML 写入冲突
-    - 相关数据结构（`ChartData` / `ChartType` / `ChartSeries`）定义见 [data-structures.md#ChartType](data-structures.md#charttype)
+    - 相关数据结构（`ChartData` discriminated union / `ChartType` / `CategoricalSeries` / `ScatterSeries`）定义见 [data-structures.md#ChartType](data-structures.md#charttype)
 
 **请求数据**:
 
@@ -1263,7 +1263,7 @@ interface InsertChartRequest {
   requestId: string;            // 请求 ID (UUID)
   documentUri: string;          // 文档 URI
   timestamp?: number;           // 请求时间戳（毫秒），可选
-  chart: ChartData;             // 图表逻辑数据
+  chart: ChartData;             // discriminated union: CategoricalChartData | ScatterChartData
   options?: ChartInsertOptions; // 几何与目标位置（可选）
 }
 
@@ -1276,7 +1276,15 @@ interface ChartInsertOptions {
 }
 ```
 
-**请求示例**:
+!!! info "schema 形状由 chartType 决定"
+    `chart.chartType` 是 discriminator：
+    
+    - `chartType ∈ CategoricalChartType`（9 个分类型）→ `chart` 形状为 `CategoricalChartData`，需 `categories: string[]` + `series: CategoricalSeries[]`（每条 `series.values` 长度必须等于 `categories.length`）
+    - `chartType === "Scatter"` → `chart` 形状为 `ScatterChartData`，需 `series: ScatterSeries[]`（每条 series 自带 `points: { x, y }[]`，**不传 `categories`**）
+    
+    JSON Schema 应使用 `oneOf` + `discriminator: { propertyName: "chartType" }` 表达，让消费方（LLM）一选定 `chartType` 就能看到对应的必填字段。
+
+**请求示例 — 分类型图表（柱形图）**:
 
 ```json
 {
@@ -1296,6 +1304,32 @@ interface ChartInsertOptions {
 }
 ```
 
+**请求示例 — 散点图**:
+
+```json
+{
+  "requestId": "b2c3d4e5-f6a7-4b6c-9d8e-0f1a2b3c4d5e",
+  "documentUri": "file:///Users/john/Documents/ads-analysis.pptx",
+  "chart": {
+    "chartType": "Scatter",
+    "series": [
+      {
+        "name": "Ads vs Sales",
+        "points": [
+          { "x": 1000, "y": 50  },
+          { "x": 1500, "y": 80  },
+          { "x": 3000, "y": 200 },
+          { "x": 5000, "y": 350 },
+          { "x": 8000, "y": 600 }
+        ]
+      }
+    ],
+    "title": "广告投入 vs 销售额"
+  },
+  "options": { "slideIndex": 2 }
+}
+```
+
 **响应数据**:
 
 ```typescript
@@ -1305,9 +1339,8 @@ interface InsertChartResponse {
   data?: {
     elementId: string;          // 创建的图表元素 ID
     slideIndex: number;         // 实际插入的幻灯片索引
-    chartType: ChartType;
-    seriesCount: number;
-    categoryCount: number;
+    chartType: ChartType;       // 实际写入的图表类型
+    seriesCount: number;        // 系列数
     left: number;               // 实际 X 坐标（磅）
     top: number;                // 实际 Y 坐标（磅）
     width: number;              // 实际宽度（磅）
@@ -1318,13 +1351,15 @@ interface InsertChartResponse {
 }
 ```
 
+> 详细的 categories / points 内容如需读回，请调用 `ppt:get:chart`。
+
 **可能的错误**:
 
 | 错误码 | 说明 |
 |--------|------|
-| 4001 | `MISSING_PARAM` - 缺少 chart.chartType / categories / series |
-| 4002 | `INVALID_PARAM` - chartType 取值不在 ChartType 枚举内 |
-| 3015 | `INVALID_CHART_DATA` - series.values 长度与 categories 不一致 |
+| 4001 | `MISSING_PARAM` - 缺少 `chart.chartType`，或所选 variant 缺必填字段（categorical 缺 `categories`/`series`，scatter 缺 `series`） |
+| 4002 | `INVALID_PARAM` - `chartType` 不在枚举内，或字段形状与 `chartType` 所选 variant 不匹配（例如 `chartType: "Scatter"` 却传了 `categories`） |
+| 3015 | `INVALID_CHART_DATA` - categorical: `series[].values.length !== categories.length`；scatter: `points` 为空 / 含 NaN / Infinity |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3003 | `DOCUMENT_READ_ONLY` - 文档为只读模式 |
 | 3004 | `OPERATION_FAILED` - OOXML 写入失败 |
@@ -1337,7 +1372,7 @@ interface InsertChartResponse {
 
 **状态**: 📋 Draft
 
-**说明**: 读取指定 `elementId` 图表的当前数据（类型、分类、系列、标题、展示选项）。
+**说明**: 读取指定 `elementId` 图表的当前数据（类型、分类/数据点、系列、标题、展示选项）。
 
 > Server-handled OOXML 路径与并发约束见 [`ppt:insert:chart` 顶部 admonition](#pptinsertchart)。
 
@@ -1362,7 +1397,7 @@ interface GetChartResponse {
   data?: {
     elementId: string;
     slideIndex: number;
-    chart: ChartData;           // 完整图表数据（与 insert 请求镜像）
+    chart: ChartData;           // discriminated union；形状由其中的 chartType 字段决定
     left: number;
     top: number;
     width: number;
@@ -1372,6 +1407,8 @@ interface GetChartResponse {
   timestamp: number;
 }
 ```
+
+> 调用方在读取 `chart` 时应先看 `chart.chartType`：若属于 `CategoricalChartType`，存在 `categories` 与 `series[].values`；若为 `"Scatter"`，无 `categories`，数据在 `series[].points[]`。
 
 **可能的错误**:
 
@@ -1389,7 +1426,7 @@ interface GetChartResponse {
 
 **状态**: 📋 Draft
 
-**说明**: 更新已存在图表的数据、类型、标题或展示选项。所有字段可选；提供哪个字段就只更新哪个。
+**说明**: 更新已存在图表的数据、类型、标题或展示选项。除 `chartType`（discriminator，必需）外，其它字段均可选 — 只更新提供的字段。
 
 > Server-handled OOXML 路径与并发约束见 [`ppt:insert:chart` 顶部 admonition](#pptinsertchart)。
 
@@ -1401,12 +1438,73 @@ interface UpdateChartRequest {
   documentUri: string;
   timestamp?: number;
   elementId: string;            // 图表元素 ID（必需）
-  chart: Partial<ChartData>;    // 部分更新；categories/series 一旦提供即整体替换
+  chart: ChartUpdate;           // discriminated union
+}
+
+type ChartUpdate = CategoricalChartUpdate | ScatterChartUpdate;
+
+interface CategoricalChartUpdate {
+  chartType: CategoricalChartType;     // 必需，作为 discriminator
+  categories?: string[];               // 整体替换 X 轴标签（提供即覆盖）
+  series?: CategoricalSeries[];        // 整体替换数据系列（提供即覆盖）
+  title?: string | null;               // null 表示删除标题
+  showLegend?: boolean;
+  showDataLabels?: boolean;
+}
+
+interface ScatterChartUpdate {
+  chartType: "Scatter";                // 必需，作为 discriminator
+  series?: ScatterSeries[];            // 整体替换数据系列
+  title?: string | null;
+  showLegend?: boolean;
+  showDataLabels?: boolean;
 }
 ```
 
-!!! warning "categories 与 series 同步替换"
-    若同时提供 `categories` 与 `series`，两者必须一致（每个 `ChartSeries.values.length === categories.length`）。仅替换其中一方时，未提供的一方保持原值，但 Server 会重新校验匹配关系，不一致时返回 `3015`。
+!!! warning "chartType 必须显式提供"
+    AI 调用前应先用 `ppt:get:chart` 读取当前 `chartType` 并照原值回填。这样 schema 层就能选中正确的 variant、限定可更新字段，避免「以为在改 categorical 实际图表是 scatter」的乌龙。
+
+!!! warning "跨 variant 切换需补齐数据"
+    - 同 variant 内换 chartType（如 `Pie → ColumnClustered`，皆为 categorical）：可不传 `categories`/`series`，沿用原值
+    - 跨 variant 换 chartType（如 `Pie → Scatter`，或 `Scatter → Line`）：原数据形状不再适用，**必须同时传新 variant 的 `series`**（scatter 需 `series[].points`，categorical 需 `series[].values`），否则返回 `3015 INVALID_CHART_DATA`
+    - 同一 variant 内同时替换 `categories` + `series` 时，每条 `series.values.length` 必须等于新的 `categories.length`
+
+**请求示例 — 仅改标题**:
+
+```json
+{
+  "requestId": "c3d4e5f6-a7b8-4c7d-9e8f-1a2b3c4d5e6f",
+  "documentUri": "file:///Users/john/Documents/q1-report.pptx",
+  "elementId": "chart-001",
+  "chart": {
+    "chartType": "ColumnClustered",
+    "title": "Q1 业绩（修订版）"
+  }
+}
+```
+
+**请求示例 — 跨 variant 切换（Column → Scatter，必须补 points）**:
+
+```json
+{
+  "requestId": "d4e5f6a7-b8c9-4d8e-9f0a-2b3c4d5e6f7a",
+  "documentUri": "file:///Users/john/Documents/q1-report.pptx",
+  "elementId": "chart-001",
+  "chart": {
+    "chartType": "Scatter",
+    "series": [
+      {
+        "name": "Cost vs Revenue",
+        "points": [
+          { "x": 80, "y": 120 },
+          { "x": 90, "y": 135 },
+          { "x": 102, "y": 158 }
+        ]
+      }
+    ]
+  }
+}
+```
 
 **响应数据**:
 
@@ -1416,6 +1514,7 @@ interface UpdateChartResponse {
   success: boolean;
   data?: {
     elementId: string;
+    chartType: ChartType;       // 更新后的 chartType
     updatedFields: string[];    // 实际生效的字段列表（如 ["title","series"]）
   };
   error?: ErrorResponse;
@@ -1427,10 +1526,10 @@ interface UpdateChartResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 4001 | `MISSING_PARAM` - 缺少 elementId |
-| 4002 | `INVALID_PARAM` - chartType 取值不在 ChartType 枚举内 |
+| 4001 | `MISSING_PARAM` - 缺少 `elementId` 或 `chart.chartType` |
+| 4002 | `INVALID_PARAM` - `chartType` 不在枚举内，或字段形状与所选 variant 不匹配 |
 | 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在或不是图表元素 |
-| 3015 | `INVALID_CHART_DATA` - 替换后 series.values 长度与 categories 不一致 |
+| 3015 | `INVALID_CHART_DATA` - 跨 variant 切换未补齐 `series`；或更新后 categorical 维度不一致 / scatter `points` 含非法值 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3003 | `DOCUMENT_READ_ONLY` - 文档为只读模式 |
 | 3004 | `OPERATION_FAILED` - OOXML 写入失败 |

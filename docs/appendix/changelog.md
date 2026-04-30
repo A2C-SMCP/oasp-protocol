@@ -15,13 +15,13 @@
 
 | 变更类型 | 事件 / 类型 | 说明 |
 |----------|-------------|------|
-| 新增 | `ppt:insert:chart` | 📋 Draft，按 ChartData 在指定幻灯片插入图表 |
-| 新增 | `ppt:get:chart` | 📋 Draft，按 elementId 读取图表完整数据 |
-| 新增 | `ppt:update:chart` | 📋 Draft，按 elementId 更新图表数据/类型/标题/展示选项（部分更新） |
-| 提升为跨命名空间 | `ChartType` | 从 `data-structures.md` 的 `Excel 相关` 段移至新建的 `图表相关` 段，并扩展为 10 个 Office.js `Excel.ChartType` 对齐值（新增 `ColumnClustered` / `ColumnStacked` / `BarClustered` / `LineMarkers` / `Radar`，原 `Column` / `Bar` 高层值移除以避免歧义）。破坏性变更，但 Excel 命名空间整体仍处 📋 Draft 阶段，影响面可控 |
-| 新增 | `ChartSeries` | 数据结构，承载图表单条数据系列（name / values / color） |
-| 新增 | `ChartData` | 数据结构，承载图表逻辑数据（chartType / categories / series / title / showLegend / showDataLabels），供 PPT/Excel 共用 |
-| 新增 | 错误码 `3015 INVALID_CHART_DATA` | series.values 长度与 categories 不一致专用错误码 |
+| 新增 | `ppt:insert:chart` | 📋 Draft，按 `ChartData` discriminated union 在指定幻灯片插入图表 |
+| 新增 | `ppt:get:chart` | 📋 Draft，按 elementId 读取图表完整数据，响应 `chart` 字段为同一 union |
+| 新增 | `ppt:update:chart` | 📋 Draft，按 elementId 更新图表数据/类型/标题/展示选项；`chart.chartType` 为必需 discriminator |
+| 提升为跨命名空间 | `ChartType` | 从 `data-structures.md` 的 `Excel 相关` 段移至新建的 `图表相关` 段，并扩展为 10 个 Office.js `Excel.ChartType` 对齐值（新增 `ColumnClustered` / `ColumnStacked` / `BarClustered` / `LineMarkers` / `Radar`，原 `Column` / `Bar` 高层值移除以避免歧义）。`ChartType` 进一步细分为 `CategoricalChartType`（9 个）+ `ScatterChartType`（"Scatter"）。破坏性变更，但 Excel 命名空间整体仍处 📋 Draft 阶段，影响面可控 |
+| 新增 | `CategoricalSeries` / `ScatterSeries` / `ScatterPoint` | 数据结构，分别承载分类型图表的数据系列（name / values / color）与散点型图表的数据系列（name / points / color）。取代原始 `ChartSeries` 单一定义 |
+| 新增 | `ChartData` discriminated union | `ChartData = CategoricalChartData \| ScatterChartData`，由 `chartType` 字段判别。Categorical 含 `categories: string[]` + `series: CategoricalSeries[]`；Scatter 不含 `categories`，X 由 `series[].points[].x` 提供。供 PPT / Excel 共用 |
+| 新增 | 错误码 `3015 INVALID_CHART_DATA` | 多用途：categorical 维度不一致 / scatter `points` 为空或含非法值 / 跨 variant 切换未补齐 `series` |
 | 新增（说明） | `ppt:delete:element` 描述 | 追加 `亦适用于图表（Chart）元素删除` admonition；不新增独立 `ppt:delete:chart`，复用通用删除入口 |
 
 **动机**: PPT 是图表高频使用场景（业绩报告、产品方案）。当前 OASP `/ppt` 命名空间已能插入文本框、形状、图片、表格，**唯独不能插入图表**——`Chart` 仅在 `SlideElementType` 中作为枚举出现并可被 `ppt:get:slideElements.includeCharts` 过滤，但没有任何对图表本身的增改查事件。AI 体验上只能让用户手动插入图表后再让 AI 改文字，断裂明显。
@@ -29,21 +29,25 @@
 **设计取舍**:
 
 - **Server-handled OOXML 路径**：PowerPoint Office.js 当前不暴露图表创建与数据更新接口（参见 [office-js#5463](https://github.com/OfficeDev/office-js/issues/5463)），本批 chart 类事件由 OASP Server 端通过 OOXML 离线工具（如 `python-pptx`）直接修改 .pptx 文件后再让 Add-In 重新加载文档。事件文档顶部 admonition 明确标注延迟 >1s、要求 Add-In 调用前 `save()`、并发需串行化等副作用约束
+- **`ChartData` 采用 discriminated union（`chartType` 为 discriminator）**：`Scatter` 与分类型图表的数据形状本质不同（X 是连续数值 vs 离散标签）。如果硬塞同一 schema（让 `categories` 在 Scatter 时存数字字符串），LLM 在 MCP 工具的 JSON Schema 里看不到这个隐式约束，调用错误率高。Discriminated union 让 LLM 一选定 `chartType`，schema 就限定可填字段；JSON Schema 用 `oneOf` + `discriminator: { propertyName: "chartType" }` 落地，Pydantic / FastMCP 用 `Annotated[Union[...], Field(discriminator="chartType")]`
+- **`update:chart` 强制要求 `chartType`**：让 schema 层能选中正确 variant；AI 调用前先 `get:chart` 读取并回填，比让 schema 层放任所有字段都 optional 更可靠
 - **复用 `ppt:delete:element`**：删除统一走通用入口，避免新增 `ppt:delete:chart` 造成 API 表面冗余
 - **`ChartType` 与 Office.js 对齐**：枚举值与 `Excel.ChartType` 完全一致（如 `ColumnClustered` / `LineMarkers`），消费方可直接 `cast`，无需维护额外映射表
-- **`ChartType` 跨命名空间提升**：未来 Excel `excel:insert:chart` 可直接复用同一枚举与 `ChartData` / `ChartSeries`，避免双套语义
+- **`ChartType` 跨命名空间提升**：未来 Excel `excel:insert:chart` 可直接复用同一枚举与 `ChartData` 联合，避免双套语义
 - **不新增 `update:element` 字段塞图表**：`ppt:update:element` 仅承担几何属性，图表的「数据/类型/标题」是图表特有语义，独立 `update:chart` 边界更清晰、错误恢复粒度更细
 
 **兼容性**:
 
 - 新增事件 + 新增可选字段，不影响 `/word` 等其它命名空间
 - `ChartType` 枚举值变更属破坏性变更，但 Excel 侧 `excel:insert:chart` 尚未定义、PPT 侧本就无 chart 事件，实际无在用消费方
+- discriminated union 形态在本 [Unreleased] 周期内确定（含中途 PR #4 → PR #5 的 schema 重构），无对外发版的旧 shape 残留
 - 新事件初始标记 📋 Draft，待消费方（office4ai）落地稳定后再统一转 ✅ Stable
 
 **相关 Issue / 工单**:
 
 - 协议侧：[oasp-protocol#2](https://github.com/A2C-SMCP/oasp-protocol/issues/2)（Milestone: PPT Chart Capabilities）
-- 消费方实现：office4ai（Server 端 python-pptx OOXML 拦截，待 issue 跟进）
+- 协议 PR：[#4](https://github.com/A2C-SMCP/oasp-protocol/pull/4)（首版 categorical-only schema）→ [#5](https://github.com/A2C-SMCP/oasp-protocol/pull/5)（重构为 discriminated union，提升 LLM 可发现性）
+- 消费方实现：[office4ai#9](https://github.com/JIAQIA/office4ai/issues/9)（Server 端 python-pptx OOXML 拦截）
 
 ---
 

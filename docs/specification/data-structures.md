@@ -389,10 +389,11 @@ type CellValueType =
 
 ### ChartType
 
-图表类型枚举，命名与 [`Excel.ChartType`](https://learn.microsoft.com/en-us/javascript/api/excel/excel.charttype) 保持一致，便于消费方直接 cast。
+图表类型总枚举，命名与 [`Excel.ChartType`](https://learn.microsoft.com/en-us/javascript/api/excel/excel.charttype) 保持一致，便于消费方直接 cast。`ChartType` 在数据形状上分两类，`ChartData` 据此采用 discriminated union 表达。
 
 ```typescript
-type ChartType =
+// 分类型图表：X 轴是离散标签，Y 是数值
+type CategoricalChartType =
   | "ColumnClustered"      // 簇状柱形图
   | "ColumnStacked"        // 堆积柱形图
   | "BarClustered"         // 簇状条形图
@@ -401,39 +402,76 @@ type ChartType =
   | "Pie"                  // 饼图
   | "Doughnut"             // 圆环图
   | "Area"                 // 面积图
-  | "Scatter"              // 散点图
   | "Radar";               // 雷达图
+
+// 散点型图表：每个数据点自带 (x, y) 数对
+type ScatterChartType = "Scatter";
+
+type ChartType = CategoricalChartType | ScatterChartType;
 ```
 
-### ChartSeries
+### CategoricalSeries
 
-图表的单条数据系列。
+分类型图表的单条数据系列（柱形/折线/饼图等使用）。
 
 ```typescript
-interface ChartSeries {
+interface CategoricalSeries {
   name: string;            // 系列名称（图例显示）
-  values: number[];        // 数值数组，长度需 = ChartData.categories.length
+  values: number[];        // Y 数值数组，长度需 = CategoricalChartData.categories.length
   color?: string;          // 系列颜色（hex，如 "#4472C4"），缺省使用主题色
+}
+```
+
+### ScatterSeries
+
+散点型图表的单条数据系列。
+
+```typescript
+interface ScatterSeries {
+  name: string;            // 系列名称
+  points: ScatterPoint[];  // 数据点数组（≥1）
+  color?: string;          // 系列颜色（hex），缺省使用主题色
+}
+
+interface ScatterPoint {
+  x: number;               // X 坐标（连续数值轴）
+  y: number;               // Y 坐标
 }
 ```
 
 ### ChartData
 
-图表的逻辑数据与展示选项（不含几何位置）。
+图表的逻辑数据与展示选项（不含几何位置）。`ChartData` 是 discriminated union，由 `chartType` 字段决定具体形状：
 
 ```typescript
-interface ChartData {
-  chartType: ChartType;    // 图表类型
-  categories: string[];    // X 轴/分类轴标签
-  series: ChartSeries[];   // 数据系列（≥1）
-  title?: string;          // 图表标题
-  showLegend?: boolean;    // 是否显示图例，默认 true
-  showDataLabels?: boolean;// 是否显示数据标签，默认 false
+type ChartData = CategoricalChartData | ScatterChartData;
+
+interface CategoricalChartData {
+  chartType: CategoricalChartType;     // 9 个分类型枚举之一（不含 "Scatter"）
+  categories: string[];                // X 轴离散标签（如 ["Jan","Feb","Mar"]）
+  series: CategoricalSeries[];         // 数据系列（≥1）
+  title?: string;                      // 图表标题
+  showLegend?: boolean;                // 是否显示图例，默认 true
+  showDataLabels?: boolean;            // 是否显示数据标签，默认 false
+}
+
+interface ScatterChartData {
+  chartType: "Scatter";                // 字面量
+  series: ScatterSeries[];             // 数据系列（≥1）；X 由 series[].points[].x 提供，无 categories
+  title?: string;
+  showLegend?: boolean;
+  showDataLabels?: boolean;
 }
 ```
 
+!!! info "为什么用 discriminated union"
+    `ChartType` 在数据形状上不一致：分类型图表用 `categories + series.values`（X 是离散标签），散点图用 `series.points`（X 是连续数值，每个点自带 (x,y)）。把它们硬塞进同一个 schema（如让 `categories` 在 Scatter 时存数字字符串）会让 LLM 在 MCP 工具 schema 里看不到这个隐式约束。Discriminated union 让 LLM 一选定 `chartType`，schema 就自动限定可填字段。
+
+    JSON Schema 落地建议使用 `oneOf` + `discriminator: { propertyName: "chartType" }`；Pydantic / FastMCP 使用 `Annotated[Union[...], Field(discriminator="chartType")]`。
+
 !!! warning "数据维度校验"
-    每个 `ChartSeries.values` 长度必须等于 `categories.length`，否则返回 `3015 INVALID_CHART_DATA`。
+    - `CategoricalChartData`：每个 `CategoricalSeries.values` 长度必须等于 `categories.length`，否则返回 `3015 INVALID_CHART_DATA`
+    - `ScatterChartData`：每个 `ScatterSeries.points` 长度 ≥ 1，`x`/`y` 必须为有限数（非 `NaN` / `Infinity`），否则返回 `3015 INVALID_CHART_DATA`
 
 ---
 
