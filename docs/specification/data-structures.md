@@ -381,20 +381,59 @@ type CellValueType =
   | "Empty";               // 空值
 ```
 
+---
+
+## 图表相关
+
+> 跨命名空间通用图表数据结构。供 PPT (`ppt:insert:chart` / `ppt:get:chart` / `ppt:update:chart`) 与未来 Excel (`excel:insert:chart` 等) 共用。
+
 ### ChartType
 
-图表类型（常用）。
+图表类型枚举，命名与 [`Excel.ChartType`](https://learn.microsoft.com/en-us/javascript/api/excel/excel.charttype) 保持一致，便于消费方直接 cast。
 
 ```typescript
 type ChartType =
-  | "Column"               // 柱形图
-  | "Bar"                  // 条形图
+  | "ColumnClustered"      // 簇状柱形图
+  | "ColumnStacked"        // 堆积柱形图
+  | "BarClustered"         // 簇状条形图
   | "Line"                 // 折线图
+  | "LineMarkers"          // 带标记折线图
   | "Pie"                  // 饼图
+  | "Doughnut"             // 圆环图
   | "Area"                 // 面积图
   | "Scatter"              // 散点图
-  | "Doughnut";            // 圆环图
+  | "Radar";               // 雷达图
 ```
+
+### ChartSeries
+
+图表的单条数据系列。
+
+```typescript
+interface ChartSeries {
+  name: string;            // 系列名称（图例显示）
+  values: number[];        // 数值数组，长度需 = ChartData.categories.length
+  color?: string;          // 系列颜色（hex，如 "#4472C4"），缺省使用主题色
+}
+```
+
+### ChartData
+
+图表的逻辑数据与展示选项（不含几何位置）。
+
+```typescript
+interface ChartData {
+  chartType: ChartType;    // 图表类型
+  categories: string[];    // X 轴/分类轴标签
+  series: ChartSeries[];   // 数据系列（≥1）
+  title?: string;          // 图表标题
+  showLegend?: boolean;    // 是否显示图例，默认 true
+  showDataLabels?: boolean;// 是否显示数据标签，默认 false
+}
+```
+
+!!! warning "数据维度校验"
+    每个 `ChartSeries.values` 长度必须等于 `categories.length`，否则返回 `3015 INVALID_CHART_DATA`。
 
 ---
 
