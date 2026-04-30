@@ -1,6 +1,6 @@
 [project]
 name = "oasp-protocol"
-version = "0.1.0"
+version = "0.2.0"
 description = "Office AddIn Socket Protocol - Office AddIn 与后端服务之间的实时通信协议规范"
 authors = [
     { name = "JQQ", email = "jqq1716@gmail.com" }
