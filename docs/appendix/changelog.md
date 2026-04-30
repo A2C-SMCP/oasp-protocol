@@ -7,6 +7,31 @@
 
 ---
 
+## [Unreleased]
+
+### 新增
+
+**`/word` 命名空间补齐表格操作能力（4 个 Draft 事件）**
+
+| 变更类型 | 事件 / 类型 | 说明 |
+|----------|-------------|------|
+| 新增 | `word:merge:cells` | 📋 Draft，合并表格中任意矩形单元格区域 |
+| 新增 | `word:update:tableCell` | 📋 Draft，批量更新单元格文本与格式 |
+| 新增 | `word:update:tableRowColumn` | 📋 Draft，按行/列批量更新单元格内容 |
+| 新增 | `word:update:tableFormat` | 📋 Draft，更新整表样式、边框、列宽、对齐 |
+| 新增 | `CellFormat` 数据结构 | 定义于 `data-structures.md`，承载单元格对齐/字体/底色等格式属性，供 `word:update:tableCell` 等事件复用 |
+
+**动机**: Add-In 内部 `word-tools/table.ts` 已实现合并单元格、单元格内容/格式更新、整表样式/边框/列宽更新等能力，协议层此前仅暴露 `word:insert:table`，导致 AI 无法调用细粒度表格操作（如生成"蓝底居中表头 + 灰底加粗标签"等常见合同/报告美化效果，或合并表头横跨多列）。本批新增事件按"协议先行"原则补齐该能力面，统一以 `tableId`（与 `word:insert:table` 响应一致）作为定位标识；缺省 `tableId` 时取当前光标所在表格。
+
+**兼容性**: 全部为新增事件，不影响现有 Stable 事件；`/word` 命名空间稳定性整体保持。新事件初始标记 📋 Draft，待消费方双端落地稳定后再统一转 ✅ Stable。
+
+**相关 Issue / 工单**:
+
+- 协议侧：[oasp-protocol#1](https://github.com/A2C-SMCP/oasp-protocol/issues/1)（Milestone: Word Table Capabilities）
+- 消费方：[OF4AI-10](https://turingfocus.atlassian.net/browse/OF4AI-10)（mergeCells）、[OF4AI-11](https://turingfocus.atlassian.net/browse/OF4AI-11)（updateCell / updateTable）
+
+---
+
 ## [0.1.9] - 2026-04-17
 
 ### 新增

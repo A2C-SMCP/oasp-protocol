@@ -42,6 +42,15 @@
 | [word:insert:table](#wordinserttable) | ✅ Stable | 插入表格 |
 | [word:insert:equation](#wordinsertequation) | ✅ Stable | 插入公式 |
 
+### 表格操作类（Server → AddIn，请求-响应）
+
+| 事件名 | 状态 | 说明 |
+|--------|------|------|
+| [word:merge:cells](#wordmergecells) | 📋 Draft | 合并表格中任意矩形单元格区域 |
+| [word:update:tableCell](#wordupdatetablecell) | 📋 Draft | 批量更新单元格文本与格式 |
+| [word:update:tableRowColumn](#wordupdatetablerowcolumn) | 📋 Draft | 按行/列批量更新单元格内容 |
+| [word:update:tableFormat](#wordupdatetableformat) | 📋 Draft | 更新整表样式、边框、列宽、对齐 |
+
 ### 高级功能类（Server → AddIn，请求-响应）
 
 | 事件名 | 状态 | 说明 |
@@ -1577,6 +1586,387 @@ interface InsertEquationResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+
+---
+
+## 表格操作类
+
+本节定义在 [`word:insert:table`](#wordinserttable) 已创建表格之上的精细操作能力，覆盖合并单元格、单元格内容/格式批量更新、整表样式调整等场景。
+
+**通用约定**：
+
+- `tableId` 与 [`word:insert:table`](#wordinserttable) 响应中的 `tableId`（如 `"table-0"`）一致；缺省时表示当前光标所在表格。
+- 行列索引均从 `0` 开始。
+- `CellFormat` 数据结构定义见 [data-structures.md#cellformat](data-structures.md#cellformat)。
+
+### word:merge:cells
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: 将表格中由 `[startRowIndex, startColumnIndex]` 与 `[endRowIndex, endColumnIndex]` 圈定的矩形区域合并为单个单元格。
+
+**请求数据**:
+
+```typescript
+interface MergeCellsRequest {
+  requestId: string;
+  documentUri: string;
+  timestamp?: number;
+  tableId?: string;          // 表格标识符；缺省时取当前光标所在表格
+  startRowIndex: number;     // 矩形区域起始行（含）
+  startColumnIndex: number;  // 矩形区域起始列（含）
+  endRowIndex: number;       // 矩形区域结束行（含）
+  endColumnIndex: number;    // 矩形区域结束列（含）
+}
+```
+
+!!! note "矩形区域要求"
+    起止索引必须满足 `start <= end`，且整个矩形必须落在表格范围内。合并后由原区域左上角单元格承载所有内容，其它原单元格内容会被丢弃。
+
+**请求示例**（合并首行 4 列形成横跨表头）:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/contract.docx",
+  "tableId": "table-0",
+  "startRowIndex": 0,
+  "startColumnIndex": 0,
+  "endRowIndex": 0,
+  "endColumnIndex": 3
+}
+```
+
+**响应数据**:
+
+```typescript
+interface MergeCellsResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    tableId: string;
+    mergedCells: number;     // 实际被合并到一起的原单元格总数
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "tableId": "table-0",
+    "mergedCells": 4
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `VALIDATION_ERROR` - 缺少必需字段或矩形区域非法 |
+| 4002 | `INVALID_PARAM` - 行/列索引超出表格范围 |
+| 3003 | `OPERATION_FAILED` - 表格未找到或合并失败 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+
+---
+
+### word:update:tableCell
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: 批量更新指定单元格的文本与/或格式。`text` 与 `format` 至少传一个；都不传的条目视为参数错误。
+
+**请求数据**:
+
+```typescript
+interface UpdateTableCellRequest {
+  requestId: string;
+  documentUri: string;
+  timestamp?: number;
+  tableId?: string;          // 缺省时取当前光标所在表格
+  cells: Array<{
+    rowIndex: number;
+    columnIndex: number;
+    text?: string;           // 新文本内容（可选）
+    format?: CellFormat;     // 单元格格式（可选）
+  }>;
+}
+```
+
+`CellFormat` 详见 [data-structures.md#cellformat](data-structures.md#cellformat)。
+
+**请求示例**（首行表头：蓝底白字居中）:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/contract.docx",
+  "tableId": "table-0",
+  "cells": [
+    {
+      "rowIndex": 0,
+      "columnIndex": 0,
+      "text": "甲方信息",
+      "format": {
+        "horizontalAlignment": "Center",
+        "backgroundColor": "#4472C4",
+        "fontColor": "#FFFFFF",
+        "bold": true
+      }
+    }
+  ]
+}
+```
+
+**响应数据**:
+
+```typescript
+interface UpdateTableCellResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    tableId: string;
+    cellsUpdated: number;    // 成功更新的单元格数量
+    rowCount: number;        // 表格总行数
+    columnCount: number;     // 表格总列数
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "tableId": "table-0",
+    "cellsUpdated": 1,
+    "rowCount": 5,
+    "columnCount": 4
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `VALIDATION_ERROR` - 缺少 cells，或某条目 text 与 format 均未提供 |
+| 4002 | `INVALID_PARAM` - rowIndex/columnIndex 超出范围或值不合法 |
+| 3003 | `OPERATION_FAILED` - 表格未找到 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+
+---
+
+### word:update:tableRowColumn
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: 按行或按列批量写入文本，适用于一次性填充整行或整列的数据。`rows` 与 `columns` 至少提供一个。
+
+**请求数据**:
+
+```typescript
+interface UpdateTableRowColumnRequest {
+  requestId: string;
+  documentUri: string;
+  timestamp?: number;
+  tableId?: string;          // 缺省时取当前光标所在表格
+  rows?: Array<{
+    rowIndex: number;
+    values: string[];        // 该行各列的文本值，按列顺序排列
+  }>;
+  columns?: Array<{
+    columnIndex: number;
+    values: string[];        // 该列各行的文本值，按行顺序排列
+  }>;
+}
+```
+
+!!! note "行列同时提供"
+    当 `rows` 与 `columns` 同时提供时，先处理 `rows`，再处理 `columns`；后者会覆盖前者对相同单元格的写入。
+
+!!! note "values 长度"
+    `values` 长度应等于目标行/列的列/行数；过短则只覆盖前缀单元格，过长则触发 `INVALID_PARAM`。
+
+**请求示例**（覆盖前两行）:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/contract.docx",
+  "tableId": "table-0",
+  "rows": [
+    { "rowIndex": 0, "values": ["姓名", "年龄", "城市", "职业"] },
+    { "rowIndex": 1, "values": ["张三", "28", "北京", "工程师"] }
+  ]
+}
+```
+
+**响应数据**:
+
+```typescript
+interface UpdateTableRowColumnResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    tableId: string;
+    cellsUpdated: number;    // 成功更新的单元格总数
+    rowCount: number;
+    columnCount: number;
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "tableId": "table-0",
+    "cellsUpdated": 8,
+    "rowCount": 5,
+    "columnCount": 4
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `VALIDATION_ERROR` - rows 与 columns 均未提供 |
+| 4002 | `INVALID_PARAM` - rowIndex/columnIndex 超范围或 values 长度超过表格列/行数 |
+| 3003 | `OPERATION_FAILED` - 表格未找到 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+
+---
+
+### word:update:tableFormat
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: 更新整表样式（内置/自定义样式名）、边框、列宽、整体对齐等表级属性。所有字段均为可选，按需传递。
+
+**请求数据**:
+
+```typescript
+interface UpdateTableFormatRequest {
+  requestId: string;
+  documentUri: string;
+  timestamp?: number;
+  tableId?: string;            // 缺省时取当前光标所在表格
+  styleOptions?: {
+    styleType?: string;        // 内置或自定义表格样式名（如 "Grid Table 1 Light"）
+    firstColumn?: boolean;     // 突出首列
+    lastColumn?: boolean;      // 突出末列
+    totalRow?: boolean;        // 启用汇总行
+    bandedRows?: boolean;      // 行间隔条带
+    bandedColumns?: boolean;   // 列间隔条带
+  };
+  borderOptions?: {
+    style?: "Single" | "Double" | "Dashed" | "Dotted" | "None";
+    width?: number;            // 边框宽度（磅）
+    color?: string;            // 边框颜色（十六进制）
+  };
+  columnWidths?: number[];     // 每列宽度（磅）；长度需等于表格列数
+  alignment?: "Left" | "Center" | "Right";  // 表格在页面中的水平对齐
+  data?: string[][];           // 整表内容覆写（可选；行数与列数需匹配现有表格）
+}
+```
+
+!!! note "data 字段语义"
+    `data` 用于一次性覆写整表文本内容，等价于按行调用 `word:update:tableRowColumn`。仅在需要"换皮+刷数据"的批量场景使用；纯样式调整请勿传递。
+
+**请求示例**（首行作表头并设置统一列宽）:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/contract.docx",
+  "tableId": "table-0",
+  "styleOptions": {
+    "styleType": "Grid Table 1 Light",
+    "totalRow": false,
+    "bandedRows": true
+  },
+  "borderOptions": {
+    "style": "Single",
+    "width": 0.75,
+    "color": "#888888"
+  },
+  "columnWidths": [120, 100, 120, 120],
+  "alignment": "Center"
+}
+```
+
+**响应数据**:
+
+```typescript
+interface UpdateTableFormatResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    tableId: string;
+    rowCount: number;
+    columnCount: number;
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "tableId": "table-0",
+    "rowCount": 5,
+    "columnCount": 4
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `VALIDATION_ERROR` - 至少需要传递一个可更新字段 |
+| 4002 | `INVALID_PARAM` - columnWidths 长度与表格列数不一致，或 data 行/列数不匹配 |
+| 3003 | `OPERATION_FAILED` - 表格未找到或样式名不存在 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
 

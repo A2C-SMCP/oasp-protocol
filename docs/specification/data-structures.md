@@ -252,6 +252,26 @@ type TableInsertLocation =
   | "Replace"; // 替换当前选区
 ```
 
+### CellFormat
+
+表格单元格格式属性。可由 `word:update:tableCell` 等事件复用，承载单元格的对齐、字体与底色等可视样式。所有字段均为可选——未传字段保持原状，便于增量更新。
+
+```typescript
+interface CellFormat {
+  horizontalAlignment?: "Left" | "Center" | "Right" | "Justify";  // 水平对齐
+  verticalAlignment?: "Top" | "Middle" | "Bottom";                // 垂直对齐
+  backgroundColor?: string;       // 背景颜色（十六进制，如 "#4472C4"）
+  fontName?: string;              // 字体名称
+  fontSize?: number;              // 字号（磅）
+  fontColor?: string;             // 字体颜色（十六进制，如 "#333333"）
+  bold?: boolean;                 // 粗体
+  italic?: boolean;               // 斜体
+  cellPadding?: number;           // 单元格内边距（磅，应用四边）
+}
+```
+
+> 该结构当前仅 `/word` 命名空间引用；`/ppt` 已有的 `ppt:update:tableFormat` 后续如需统一字段命名，可平滑迁移到本结构。
+
 ---
 
 ## PPT 相关
