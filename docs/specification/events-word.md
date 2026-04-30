@@ -593,8 +593,14 @@ interface DocumentStructureResult {
   paragraphCount: number;  // 段落数量
   tableCount: number;      // 表格数量
   imageCount: number;      // 图片数量
+  tables?: TableSummary[]; // 表格清单（可选，用于"重新发现"现有表格）
 }
 ```
+
+`TableSummary` 详见 [data-structures.md#documentstructureresult](data-structures.md#documentstructureresult)。
+
+!!! note "tables 字段"
+    可选字段。若 Add-In 提供，则按文档中表格出现顺序返回；调用方可基于 `precedingHeading` 启发式找到目标表格，再以显式 `tableId` 调用 [`word:update:tableCell`](#wordupdatetablecell) 等表格操作事件，避免依赖 `tableId` 临时索引的脆弱性。
 
 **响应示例**:
 
@@ -606,7 +612,12 @@ interface DocumentStructureResult {
     "sectionCount": 4,
     "paragraphCount": 25,
     "tableCount": 3,
-    "imageCount": 5
+    "imageCount": 5,
+    "tables": [
+      { "tableId": "table-0", "rowCount": 3, "columnCount": 4, "precedingHeading": "甲方信息" },
+      { "tableId": "table-1", "rowCount": 5, "columnCount": 3, "precedingHeading": "车辆信息" },
+      { "tableId": "table-2", "rowCount": 2, "columnCount": 2 }
+    ]
   },
   "timestamp": 1704067200500
 }
@@ -1473,7 +1484,7 @@ interface InsertTableResponse {
   requestId: string;
   success: boolean;
   data?: {
-    tableId: string;       // 表格标识符
+    tableId: string;       // 表格标识符（详见下方 tableId 稳定性说明）
     rowCount: number;      // 行数
     columnCount: number;   // 列数
   };
@@ -1481,6 +1492,9 @@ interface InsertTableResponse {
   timestamp: number;
 }
 ```
+
+!!! warning "tableId 稳定性"
+    当前 `tableId`（如 `"table-0"`）为**临时索引**，按文档中表格的当前顺序生成。其稳定性依赖文档表格顺序不变——如果在它之前插入或删除其它表格，旧的 `tableId` 会失效或指向错误对象。**跨会话或经过结构变更的场景，调用方应在使用前通过 [`word:get:documentStructure`](#wordgetdocumentstructure) 重新发现表格列表。**协议未来计划提供基于 `Content Control` 的稳定 ID 方案，届时会在不破坏现有响应结构的前提下追加新字段。
 
 **响应示例**:
 
@@ -1649,12 +1663,18 @@ interface MergeCellsResponse {
   success: boolean;
   data?: {
     tableId: string;
-    mergedCells: number;     // 实际被合并到一起的原单元格总数
+    requestedRange: {
+      rowCount: number;       // 矩形行跨度 = endRowIndex - startRowIndex + 1
+      columnCount: number;    // 矩形列跨度 = endColumnIndex - startColumnIndex + 1
+    };
   };
   error?: ErrorResponse;
   timestamp: number;
 }
 ```
+
+!!! note "为何返回 requestedRange 而非"实际被合并的原子单元格数""
+    Word.js 不暴露"被合并掉的原始单元格总数"——若区域内已存在跨多列/多行的合并单元格，按 `rowCount × columnCount` 朴素相乘会失真。返回请求矩形的尺寸语义清晰、可验证，不强迫 Add-In 做无意义的扫描。
 
 **响应示例**:
 
@@ -1664,7 +1684,7 @@ interface MergeCellsResponse {
   "success": true,
   "data": {
     "tableId": "table-0",
-    "mergedCells": 4
+    "requestedRange": { "rowCount": 1, "columnCount": 4 }
   },
   "timestamp": 1704067200500
 }
@@ -1674,9 +1694,11 @@ interface MergeCellsResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 4001 | `VALIDATION_ERROR` - 缺少必需字段或矩形区域非法 |
-| 4002 | `INVALID_PARAM` - 行/列索引超出表格范围 |
-| 3003 | `OPERATION_FAILED` - 表格未找到或合并失败 |
+| 4001 | `MISSING_PARAM` - 缺少必需字段 |
+| 4002 | `INVALID_PARAM` - 行/列索引超出表格范围或矩形非法（`start > end`） |
+| 3010 | `ELEMENT_NOT_FOUND` - 指定的 `tableId` 在文档中未找到 |
+| 3013 | `NO_TABLE_AT_CURSOR` - 缺省 `tableId` 时光标未在任何表格内 |
+| 3014 | `ALREADY_MERGED` - 目标矩形与现有合并单元格冲突 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
@@ -1722,7 +1744,7 @@ interface UpdateTableCellRequest {
       "columnIndex": 0,
       "text": "甲方信息",
       "format": {
-        "horizontalAlignment": "Center",
+        "horizontalAlignment": "Centered",
         "backgroundColor": "#4472C4",
         "fontColor": "#FFFFFF",
         "bold": true
@@ -1769,9 +1791,10 @@ interface UpdateTableCellResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 4001 | `VALIDATION_ERROR` - 缺少 cells，或某条目 text 与 format 均未提供 |
-| 4002 | `INVALID_PARAM` - rowIndex/columnIndex 超出范围或值不合法 |
-| 3003 | `OPERATION_FAILED` - 表格未找到 |
+| 4001 | `MISSING_PARAM` - 缺少 `cells`，或某条目 `text` 与 `format` 均未提供 |
+| 4002 | `INVALID_PARAM` - `rowIndex` / `columnIndex` 超出范围或 `format` 字段值不合法 |
+| 3010 | `ELEMENT_NOT_FOUND` - 指定的 `tableId` 在文档中未找到 |
+| 3013 | `NO_TABLE_AT_CURSOR` - 缺省 `tableId` 时光标未在任何表格内 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
@@ -1861,9 +1884,10 @@ interface UpdateTableRowColumnResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 4001 | `VALIDATION_ERROR` - rows 与 columns 均未提供 |
-| 4002 | `INVALID_PARAM` - rowIndex/columnIndex 超范围或 values 长度超过表格列/行数 |
-| 3003 | `OPERATION_FAILED` - 表格未找到 |
+| 4001 | `MISSING_PARAM` - `rows` 与 `columns` 均未提供 |
+| 4002 | `INVALID_PARAM` - `rowIndex` / `columnIndex` 超出范围，或 `values` 长度超过表格列/行数 |
+| 3010 | `ELEMENT_NOT_FOUND` - 指定的 `tableId` 在文档中未找到 |
+| 3013 | `NO_TABLE_AT_CURSOR` - 缺省 `tableId` 时光标未在任何表格内 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
@@ -1892,22 +1916,40 @@ interface UpdateTableFormatRequest {
     totalRow?: boolean;        // 启用汇总行
     bandedRows?: boolean;      // 行间隔条带
     bandedColumns?: boolean;   // 列间隔条带
+    cellPadding?: {            // 表级单元格内边距（磅，对应 Word.Table.setCellPadding）
+      top?: number;
+      bottom?: number;
+      left?: number;
+      right?: number;
+    };
   };
   borderOptions?: {
+    location?: "all" | "inside" | "outside";  // 应用范围，默认 "all"
     style?: "Single" | "Double" | "Dashed" | "Dotted" | "None";
-    width?: number;            // 边框宽度（磅）
+    width?: number;            // 边框宽度（磅，建议 0.25–6）
     color?: string;            // 边框颜色（十六进制）
   };
-  columnWidths?: number[];     // 每列宽度（磅）；长度需等于表格列数
-  alignment?: "Left" | "Center" | "Right";  // 表格在页面中的水平对齐
-  data?: string[][];           // 整表内容覆写（可选；行数与列数需匹配现有表格）
+  columnWidths?: number[];     // 每列宽度（磅）；长度建议等于表格列数（以未合并状态计）
+  alignment?: "Left" | "Centered" | "Right";  // 表格在页面中的水平对齐（对应 Word.Alignment）
 }
 ```
 
-!!! note "data 字段语义"
-    `data` 用于一次性覆写整表文本内容，等价于按行调用 `word:update:tableRowColumn`。仅在需要"换皮+刷数据"的批量场景使用；纯样式调整请勿传递。
+!!! note "cellPadding 为表级"
+    Word JavaScript API 仅提供表级 `Word.Table.setCellPadding`，不支持逐单元格设置。如需差异化单元格内边距，目前无法通过协议表达。
 
-**请求示例**（首行作表头并设置统一列宽）:
+!!! note "borderOptions.location"
+    - `"all"`（默认）：刷新所有边框（外框 + 内部分隔线）
+    - `"outside"`：仅刷新外框，保留内部分隔线
+    - `"inside"`：仅刷新内部分隔线，保留外框
+    映射到 Office.js 的 `Word.BorderLocation.all` / `outside` / `inside`。
+
+!!! note "columnWidths 长度策略"
+    `columnWidths` 长度应不大于表格列数；过短时只覆盖前缀列（其它列保持原宽），过长时抛 `INVALID_PARAM`。"列数"以表格未合并状态计，等同于 `word:get:documentStructure` 中 `tables[].columnCount`。
+
+!!! note "数据写入分离"
+    本事件不接受表内容覆写——如需写入文本，请单独调用 [`word:update:tableRowColumn`](#wordupdatetablerowcolumn) 或 [`word:update:tableCell`](#wordupdatetablecell)。这样可以保证错误恢复粒度更细，且事件职责清晰内聚。
+
+**请求示例**（首行作表头并设置统一列宽 + 内细外粗）:
 
 ```json
 {
@@ -1917,15 +1959,17 @@ interface UpdateTableFormatRequest {
   "styleOptions": {
     "styleType": "Grid Table 1 Light",
     "totalRow": false,
-    "bandedRows": true
+    "bandedRows": true,
+    "cellPadding": { "top": 4, "bottom": 4, "left": 6, "right": 6 }
   },
   "borderOptions": {
+    "location": "outside",
     "style": "Single",
-    "width": 0.75,
-    "color": "#888888"
+    "width": 1.5,
+    "color": "#000000"
   },
   "columnWidths": [120, 100, 120, 120],
-  "alignment": "Center"
+  "alignment": "Centered"
 }
 ```
 
@@ -1964,9 +2008,11 @@ interface UpdateTableFormatResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 4001 | `VALIDATION_ERROR` - 至少需要传递一个可更新字段 |
-| 4002 | `INVALID_PARAM` - columnWidths 长度与表格列数不一致，或 data 行/列数不匹配 |
-| 3003 | `OPERATION_FAILED` - 表格未找到或样式名不存在 |
+| 4001 | `MISSING_PARAM` - 至少需要传递一个可更新字段 |
+| 4002 | `INVALID_PARAM` - `columnWidths` 长度大于表格列数，或 `borderOptions.width` 等值非法 |
+| 3010 | `ELEMENT_NOT_FOUND` - 指定的 `tableId` 在文档中未找到 |
+| 3011 | `STYLE_NOT_FOUND` - `styleOptions.styleType` 在文档中不存在 |
+| 3013 | `NO_TABLE_AT_CURSOR` - 缺省 `tableId` 时光标未在任何表格内 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
 

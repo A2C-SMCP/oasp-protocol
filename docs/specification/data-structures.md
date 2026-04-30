@@ -170,8 +170,19 @@ interface DocumentStructureResult {
   paragraphCount: number;  // 段落数量
   tableCount: number;      // 表格数量
   imageCount: number;      // 图片数量
+  tables?: TableSummary[]; // 表格清单（可选，用于"重新发现"现有表格）
+}
+
+interface TableSummary {
+  tableId: string;            // 临时索引（详见 word:insert:table 稳定性说明）
+  rowCount: number;           // 表格行数（未合并状态）
+  columnCount: number;        // 表格列数（未合并状态）
+  precedingHeading?: string;  // 表格前最近的标题文本，便于 AI 通过启发式定位
 }
 ```
+
+!!! note "tables 字段为可选"
+    旧 Add-In 版本可能不返回 `tables`；调用方应做存在性判断。如缺省，可退化为按 `tableCount` 配合 `tableId = "table-{i}"` 推断（仅在文档结构未变更时可靠）。
 
 ### DocumentStatsResult
 
@@ -258,17 +269,25 @@ type TableInsertLocation =
 
 ```typescript
 interface CellFormat {
-  horizontalAlignment?: "Left" | "Center" | "Right" | "Justify";  // 水平对齐
-  verticalAlignment?: "Top" | "Middle" | "Bottom";                // 垂直对齐
-  backgroundColor?: string;       // 背景颜色（十六进制，如 "#4472C4"）
-  fontName?: string;              // 字体名称
+  horizontalAlignment?: "Left" | "Centered" | "Right" | "Justified";  // 对应 Word.Alignment
+  verticalAlignment?: "Top" | "Center" | "Bottom";                    // 对应 Word.VerticalAlignment
+  backgroundColor?: string;       // 背景颜色（十六进制，如 "#4472C4"）— 对应 cell.shadingColor
+  fontName?: string;              // 字体名称（应用到整个单元格 body，会覆盖原段落字体）
   fontSize?: number;              // 字号（磅）
   fontColor?: string;             // 字体颜色（十六进制，如 "#333333"）
   bold?: boolean;                 // 粗体
   italic?: boolean;               // 斜体
-  cellPadding?: number;           // 单元格内边距（磅，应用四边）
 }
 ```
+
+!!! note "命名对齐 Office.js"
+    枚举值刻意与 Word JavaScript API 的 `Word.Alignment` / `Word.VerticalAlignment` 完全一致（注意 `Centered` / `Justified` 是过去分词形），便于 Add-In 直接 `cast` 不做映射。
+
+!!! note "整刷语义"
+    `fontName` / `fontSize` / `fontColor` / `bold` / `italic` 作用于整个单元格 body，会覆盖单元格内所有段落与 Run 的字体设置。这是 Word.js 的固有行为，不是协议保留的灵活度。
+
+!!! note "单元格内边距"
+    Word JavaScript API 的单元格内边距是**表级 API**（`Word.Table.setCellPadding`），无法逐单元格设置。如需调整内边距，请通过 `word:update:tableFormat.styleOptions.cellPadding` 在表级配置。
 
 > 该结构当前仅 `/word` 命名空间引用；`/ppt` 已有的 `ppt:update:tableFormat` 后续如需统一字段命名，可平滑迁移到本结构。
 

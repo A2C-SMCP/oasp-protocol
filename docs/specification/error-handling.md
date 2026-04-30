@@ -95,6 +95,8 @@ interface ErrorResponse {
 | `3010` | `ELEMENT_NOT_FOUND` | 元素未找到 |
 | `3011` | `STYLE_NOT_FOUND` | 样式未找到 |
 | `3012` | `SEARCH_NO_MATCH` | 搜索无匹配结果 |
+| `3013` | `NO_TABLE_AT_CURSOR` | 缺省 `tableId` 时光标未落在任何表格内 |
+| `3014` | `ALREADY_MERGED` | 目标合并区域内已存在合并冲突，无法再次合并 |
 
 ### 4xxx - 参数验证错误
 
@@ -184,6 +186,53 @@ interface ErrorResponse {
     "details": {
       "requestedStyle": "Custom Heading",
       "availableStyles": ["标题 1", "标题 2", "正文"]
+    }
+  }
+}
+```
+
+### NO_TABLE_AT_CURSOR (3013)
+
+**触发场景**: 表格类事件（如 `word:update:tableCell`、`word:merge:cells` 等）在请求中未提供 `tableId`，且当前光标也不在任何表格内。
+
+**处理建议**:
+
+- 提示用户先把光标点击到目标表格内
+- 或调用 `word:get:documentStructure` 列出所有 `tables[]`，再以显式 `tableId` 重发请求
+
+**示例**:
+
+```json
+{
+  "error": {
+    "code": "NO_TABLE_AT_CURSOR",
+    "message": "tableId not provided and cursor is not inside any table",
+    "details": {
+      "operation": "word:update:tableCell"
+    }
+  }
+}
+```
+
+### ALREADY_MERGED (3014)
+
+**触发场景**: `word:merge:cells` 请求的矩形区域与已有合并单元格冲突（如目标矩形跨越了已合并区域的一部分），Word.js 无法执行二次合并。
+
+**处理建议**:
+
+- 调用方先确认目标区域当前合并状态，必要时调整起止索引
+- 如需重新合并，先取消已有合并（暂未提供拆分事件）
+
+**示例**:
+
+```json
+{
+  "error": {
+    "code": "ALREADY_MERGED",
+    "message": "Target range overlaps with existing merged cells",
+    "details": {
+      "tableId": "table-0",
+      "requestedRange": { "startRowIndex": 0, "startColumnIndex": 0, "endRowIndex": 1, "endColumnIndex": 3 }
     }
   }
 }

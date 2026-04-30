@@ -20,10 +20,27 @@
 | 新增 | `word:update:tableRowColumn` | 📋 Draft，按行/列批量更新单元格内容 |
 | 新增 | `word:update:tableFormat` | 📋 Draft，更新整表样式、边框、列宽、对齐 |
 | 新增 | `CellFormat` 数据结构 | 定义于 `data-structures.md`，承载单元格对齐/字体/底色等格式属性，供 `word:update:tableCell` 等事件复用 |
+| 新增 | 错误码 `3013 NO_TABLE_AT_CURSOR` / `3014 ALREADY_MERGED` | 表格类事件专用错误码，便于 AI 区分"表格 ID 错"、"光标位置错"、"已合并冲突"三类失败 |
+| 新增（Stable 事件向后兼容扩展） | `word:get:documentStructure` 增加可选 `tables: TableSummary[]` | 用于"重新发现"现有表格，配合 `precedingHeading` 启发式定位；旧客户端忽略该字段不受影响 |
 
 **动机**: Add-In 内部 `word-tools/table.ts` 已实现合并单元格、单元格内容/格式更新、整表样式/边框/列宽更新等能力，协议层此前仅暴露 `word:insert:table`，导致 AI 无法调用细粒度表格操作（如生成"蓝底居中表头 + 灰底加粗标签"等常见合同/报告美化效果，或合并表头横跨多列）。本批新增事件按"协议先行"原则补齐该能力面，统一以 `tableId`（与 `word:insert:table` 响应一致）作为定位标识；缺省 `tableId` 时取当前光标所在表格。
 
-**兼容性**: 全部为新增事件，不影响现有 Stable 事件；`/word` 命名空间稳定性整体保持。新事件初始标记 📋 Draft，待消费方双端落地稳定后再统一转 ✅ Stable。
+**与 Office.js 对齐**（消费方 office-editor4ai 验证后修订）:
+
+- `CellFormat.horizontalAlignment` / `verticalAlignment` 枚举值与 `Word.Alignment` / `Word.VerticalAlignment` 完全一致——`"Centered"` / `"Justified"` 用过去分词形，`"Center"` 表示垂直居中（不再是 `"Middle"`），Add-In 可直接 `cast` 不做映射
+- `CellFormat.cellPadding` **未纳入**——Word.js 单元格内边距是表级 API（`Word.Table.setCellPadding`），无法逐单元格设置；改放到 `word:update:tableFormat.styleOptions.cellPadding: { top, bottom, left, right }`
+- `word:merge:cells` 响应字段从 `mergedCells: number` 改为 `requestedRange: { rowCount, columnCount }`——Word.js 不暴露"被合并的原子单元格总数"，乘法计算在已部分合并区域会失真，返回请求矩形的尺寸语义更清晰
+- `word:update:tableFormat.borderOptions.location?: "all" | "inside" | "outside"`（默认 `"all"`）——覆盖"内细外粗"高频场景，对应 `Word.BorderLocation`
+- `word:update:tableFormat` **移除 `data` 字段**——避免与 `word:update:tableRowColumn` 职责重叠，强制写数据与改样式分两步调用，错误恢复粒度更细
+- `word:update:tableFormat.styleOptions.styleType` 不存在的样式名错误码使用 `3011 STYLE_NOT_FOUND`（已存在），非 `OPERATION_FAILED`
+- `word:update:tableFormat.columnWidths` 长度策略放宽为"≤ 列数"——过短只覆盖前缀列，避免 AI 边缘列少传一个就触发失败
+- 全部表格事件错误码修正：`3010 ELEMENT_NOT_FOUND`（表格未找到）+ `3013 NO_TABLE_AT_CURSOR`（缺省 tableId + 光标不在表格内）替代此前误用的 `3003 OPERATION_FAILED`，与现有 `error-handling.md` 错误码定义对齐
+
+**新增警示**：
+
+- `word:insert:table` 响应中 `tableId` 当前为**临时索引**，跨会话或经过结构变更的场景调用方应通过 `word:get:documentStructure` 重新发现表格（响应文档新增 `tableId 稳定性` 警告）。基于 Content Control 的稳定 ID 方案为单独工单跟进，不阻塞本批 Draft 事件转 Stable
+
+**兼容性**: 全部为新增事件 + 新增可选字段，不影响现有 Stable 事件；`/word` 命名空间稳定性整体保持。新事件初始标记 📋 Draft，待消费方双端落地稳定后再统一转 ✅ Stable。
 
 **相关 Issue / 工单**:
 
