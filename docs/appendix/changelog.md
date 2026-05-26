@@ -44,6 +44,22 @@
 
 **能力声明**: 本轮采用**反应式**路由（直接尝试 → 失败返回 `3016` / `3003` 即保证正确性），不新增事件。主动式 `ppt:capabilities`（握手声明 `isSetSupported` 矩阵）作为后续优化单独立项，不阻塞本轮。
 
+### 新增（通用幻灯片 OOXML 搬运事件）
+
+为支撑 OF4AI-21 双路径的路径 B（客户端整页 round-trip），`/ppt`「幻灯片管理类」新增 2 个 **Server→AddIn 请求-响应**事件（📋 Draft）。图表无关的低层传输原语，未来"服务端编辑打开中文档"类能力可复用。纯加法、向后兼容。
+
+| 变更类型 | 事件 / 类型 | 说明 |
+|----------|-------------|------|
+| 新增 | `ppt:get:slideOoxml` | 导出指定页当前 OOXML（含未保存态）为单页 `.pptx` base64；响应含不透明 `slideId` |
+| 新增 | `ppt:insert:slidesOoxml` | 应用 OOXML 页包；可选 `replaceSlideId` + `finalSlideIndex` 把「插入→删旧→复位」做成**原子 round-trip**；响应可回报命名元素（如图表）的最终几何 |
+| 扩展 | `data-structures.md` 标识符不透明性 | `#element-id-opacity` 节从"元素标识符"扩展到涵盖 `slideId` |
+| 扩展 | 错误码 `3010 ELEMENT_NOT_FOUND` | 描述扩展为「元素或幻灯片未找到」，供 `replaceSlideId` 复用，不新增错误码 |
+| 文档基建 | `mkdocs.yml` | 启用 `attr_list`（支撑 `#element-id-opacity` 等锚点；顺带修复既有 `#slideelementelementextensions` 失效链接） |
+
+**命名**: 取 `get:slideOoxml` / `insert:slidesOoxml` 中立对称对——按内容格式（OOXML）命名，不把 `base64` 传输编码或 Office.js 方法名写进规范事件名（遵循本周期确立的事件名实现中立原则）。
+
+**待落地门控**: 这 2 个事件由 office-editor4ai（Add-In / Office.js）实现，合并前须经 `/cross-ask office-editor4ai` 验证 `Slide.exportAsBase64` / `insertSlidesFromBase64` / 重排 API 及 `cNvPr/@name` 穿越 round-trip 的可行性（Step 3.5 硬门控）。
+
 ---
 
 ## [0.2.0] - 2026-04-30

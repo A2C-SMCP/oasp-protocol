@@ -63,6 +63,8 @@
 | [ppt:delete:slide](#pptdeleteslide) | 📋 Draft | 删除幻灯片 |
 | [ppt:move:slide](#pptmoveslide) | 📋 Draft | 移动幻灯片 |
 | [ppt:goto:slide](#pptgotoslide) | 📋 Draft | 跳转到幻灯片 |
+| [ppt:get:slideOoxml](#pptgetslideooxml) | 📋 Draft | 导出单页实时 OOXML（base64），含未保存态 |
+| [ppt:insert:slidesOoxml](#pptinsertslidesooxml) | 📋 Draft | 应用 OOXML 页包；可选替换旧页 + 复位（原子 round-trip） |
 
 !!! info "关于 ppt:insert:video"
     PowerPoint JavaScript API **不支持**插入视频/音频元素。此功能标记为 🚫 Not Feasible，不在事件列表中定义。
@@ -2748,3 +2750,195 @@ interface GotoSlideResponse {
 | 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+
+---
+
+### ppt:get:slideOoxml
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+!!! note "低层传输原语"
+    本事件与 `ppt:insert:slidesOoxml` 是**整页 OOXML 搬运原语**，主要供「双路径」实现搬运幻灯片内容（如 [`ppt:insert:chart` 实现提示路径 B](#pptinsertchart)），而非 AI 常规直接调用。
+
+**说明**: 导出指定幻灯片的当前 OOXML（Office Open XML）为单页 `.pptx` 包，base64 编码。导出反映文档**实时状态（含未保存的本地修改）**，供服务端离线解析或改写后再回插。
+
+**请求数据**:
+
+```typescript
+interface GetSlideOoxmlRequest {
+  requestId: string;       // 请求 ID (UUID)
+  documentUri: string;     // 文档 URI
+  timestamp?: number;      // 请求时间戳（毫秒），可选
+  slideIndex: number;      // 目标幻灯片索引（从 0 开始）
+}
+```
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/presentation.pptx",
+  "slideIndex": 2
+}
+```
+
+**响应数据**:
+
+```typescript
+interface GetSlideOoxmlResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    slideIndex: number;    // 回显目标页索引
+    slideId: string;       // 不透明幻灯片标识符（供后续 insert:slidesOoxml 定位/替换）
+    base64: string;        // 单页 .pptx 整包，base64（无 data URL 前缀）
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+> `slideId` 为服务端分配的不透明字符串，调用方原样回传、不得解析（见 [标识符不透明性](data-structures.md#element-id-opacity)）。
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "slideIndex": 2,
+    "slideId": "slide-003",
+    "base64": "UEsDBBQABgAIAAAAIQ..."
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `MISSING_PARAM` - 缺少 slideIndex |
+| 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3004 | `OPERATION_FAILED` - 导出失败 |
+| 3016 | `API_NOT_SUPPORTED` - 导出所需能力（如 PowerPointApi 1.8）在当前客户端/平台不可用；调用方应降级到另一实现路径 |
+
+---
+
+### ppt:insert:slidesOoxml
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+!!! note "低层传输原语"
+    见 [`ppt:get:slideOoxml`](#pptgetslideooxml) 顶部说明。
+
+**说明**: 将一个 OOXML 页包（≥1 页，base64 编码的 `.pptx`）插入到演示文稿。可选地在插入后**替换旧页并复位**，使「导出 → 改 → 回插 → 删旧 → 复位」成为一次原子 round-trip。
+
+**请求数据**:
+
+```typescript
+interface InsertSlidesOoxmlRequest {
+  requestId: string;          // 请求 ID (UUID)
+  documentUri: string;        // 文档 URI
+  timestamp?: number;         // 请求时间戳（毫秒），可选
+  base64: string;             // 待插入的 .pptx 页包（≥1 页），base64（无 data URL 前缀）
+  formatting?: "keepSourceFormatting" | "useDestinationTheme";  // 默认 "keepSourceFormatting"
+  targetSlideIndex?: number;  // 插到此页之后（从 0 开始）；缺省 = 文档末尾
+  replaceSlideId?: string;    // 可选：插入完成后删除此旧页（slideId 来自 ppt:get:slideOoxml）
+  finalSlideIndex?: number;   // 可选：把插入页移动到此索引（从 0 开始）以复位
+}
+```
+
+**字段说明**:
+
+| 字段 | 类型 | 必需 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| `base64` | string | ✅ | - | 待插入 .pptx 页包（≥1 页） |
+| `formatting` | string | ❌ | `"keepSourceFormatting"` | 沿用源格式或套用目标主题 |
+| `targetSlideIndex` | number | ❌ | 末尾 | 插入位置（插到该索引之后） |
+| `replaceSlideId` | string | ❌ | - | round-trip：插入后删除的旧页 |
+| `finalSlideIndex` | number | ❌ | - | round-trip：插入页复位到的目标索引 |
+
+!!! warning "原子复合执行顺序"
+    当提供 `replaceSlideId` / `finalSlideIndex` 时，本事件按 **[插入 → 删除 `replaceSlideId` → 移动到 `finalSlideIndex`]** 有序复合执行，作为一次逻辑操作：
+
+    - 成功（`success: true`）：三步全部生效，响应 `insertedSlideIndices` 反映最终真实索引。
+    - 失败：返回错误，`error.details` 标明失败步骤；调用方应据响应判断当前文档状态（实现可能无法回滚已生效的前序步骤）。
+
+!!! info "实现提示（非规范 / Informative）"
+    `formatting` 取值对齐 Office.js `PowerPoint.InsertSlideFormatting`。一种可行实现为客户端 `insertSlidesFromBase64(base64, { formatting, targetSlideId })`（`targetSlideIndex` 由 Add-In 解析为 slideId），再按需删旧页 + 重排。整页插入会重置选区/滚动、撤销非原子——详见 [`ppt:insert:chart` 实现提示路径 B](#pptinsertchart)。
+
+**请求示例 — 整页 round-trip（替换并复位）**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/q1-report.pptx",
+  "base64": "UEsDBBQABgAIAAAAIQ...",
+  "formatting": "keepSourceFormatting",
+  "targetSlideIndex": 2,
+  "replaceSlideId": "slide-003",
+  "finalSlideIndex": 2
+}
+```
+
+**响应数据**:
+
+```typescript
+interface InsertSlidesOoxmlResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    insertedSlideIndices: number[];   // 插入页最终索引（从 0 开始）
+    insertedSlideIds: string[];       // 插入页的不透明标识符
+    elements?: Array<{                // 可选：回报命名元素的实际几何（如图表）
+      elementId: string;
+      type: string;
+      left: number;
+      top: number;
+      width: number;
+      height: number;
+    }>;
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+> `insertedSlideIds` 与 `elements[].elementId` 均为不透明标识符（见 [标识符不透明性](data-structures.md#element-id-opacity)）。`elements` 用于把服务端在 OOXML 中命名的元素（如图表）的最终几何回报给调用方，无需额外往返。
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "insertedSlideIndices": [2],
+    "insertedSlideIds": ["slide-009"],
+    "elements": [
+      { "elementId": "oasp-chart-7f3a", "type": "Chart", "left": 60, "top": 120, "width": 480, "height": 320 }
+    ]
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `MISSING_PARAM` - 缺少 base64 |
+| 4002 | `INVALID_PARAM` - base64 非法，或 targetSlideIndex / finalSlideIndex 超出范围 |
+| 3010 | `ELEMENT_NOT_FOUND` - replaceSlideId 指定的幻灯片不存在 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3003 | `DOCUMENT_READ_ONLY` - 目标文档不可写入（只读或被锁定，无法应用修改） |
+| 3004 | `OPERATION_FAILED` - 插入/替换/复位失败 |
+| 3016 | `API_NOT_SUPPORTED` - 所需能力（插入需 PowerPointApi 1.2、finalSlideIndex 复位需 1.8）在当前客户端/平台不满足；调用方应降级到另一实现路径 |

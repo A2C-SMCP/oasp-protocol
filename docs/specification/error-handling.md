@@ -93,7 +93,7 @@ interface ErrorResponse {
 | `3007` | `FORMAT_NOT_SUPPORTED` | 格式不支持 |
 | `3008` | `POSITION_INVALID` | 位置无效 |
 | `3009` | `RANGE_INVALID` | 范围无效 |
-| `3010` | `ELEMENT_NOT_FOUND` | 元素未找到 |
+| `3010` | `ELEMENT_NOT_FOUND` | 元素或幻灯片未找到（按 elementId / slideId 定位失败） |
 | `3011` | `STYLE_NOT_FOUND` | 样式未找到 |
 | `3012` | `SEARCH_NO_MATCH` | 搜索无匹配结果 |
 | `3013` | `NO_TABLE_AT_CURSOR` | 缺省 `tableId` 时光标未落在任何表格内 |
