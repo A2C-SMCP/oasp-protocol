@@ -33,14 +33,14 @@
 | [ppt:insert:shape](#pptinsertshape) | 📋 Draft | 插入形状 |
 | [ppt:insert:image](#pptinsertimage) | 📋 Draft | 插入图片 |
 | [ppt:insert:table](#pptinserttable) | 📋 Draft | 插入表格 |
-| [ppt:insert:chart](#pptinsertchart) | 📋 Draft | 插入图表（Server OOXML 离线处理） |
+| [ppt:insert:chart](#pptinsertchart) | 📋 Draft | 插入图表（柱形/折线/饼/散点等） |
 | [ppt:update:textBox](#pptupdatetextbox) | 📋 Draft | 更新文本框内容/样式 |
 | [ppt:delete:element](#pptdeleteelement) | 📋 Draft | 删除指定元素（亦适用于图表删除） |
 | [ppt:update:image](#pptupdateimage) | 📋 Draft | 替换图片内容 |
 | [ppt:update:tableCell](#pptupdatetablecell) | 📋 Draft | 更新表格单元格 |
 | [ppt:update:tableRowColumn](#pptupdatetablerowcolumn) | 📋 Draft | 更新表格行/列内容 |
-| [ppt:get:chart](#pptgetchart) | 📋 Draft | 读取图表数据（Server OOXML 离线处理） |
-| [ppt:update:chart](#pptupdatechart) | 📋 Draft | 更新图表数据/类型/标题（Server OOXML 离线处理） |
+| [ppt:get:chart](#pptgetchart) | 📋 Draft | 读取图表数据 |
+| [ppt:update:chart](#pptupdatechart) | 📋 Draft | 更新图表数据/类型/标题 |
 
 ### 样式格式类（Server → AddIn，请求-响应）
 
@@ -63,6 +63,8 @@
 | [ppt:delete:slide](#pptdeleteslide) | 📋 Draft | 删除幻灯片 |
 | [ppt:move:slide](#pptmoveslide) | 📋 Draft | 移动幻灯片 |
 | [ppt:goto:slide](#pptgotoslide) | 📋 Draft | 跳转到幻灯片 |
+| [ppt:get:slideOoxml](#pptgetslideooxml) | 📋 Draft | 导出单页实时 OOXML（base64），含未保存态 |
+| [ppt:insert:slidesOoxml](#pptinsertslidesooxml) | 📋 Draft | 应用 OOXML 页包；可选替换旧页 + 复位（顺序复合 round-trip，非原子） |
 
 !!! info "关于 ppt:insert:video"
     PowerPoint JavaScript API **不支持**插入视频/音频元素。此功能标记为 🚫 Not Feasible，不在事件列表中定义。
@@ -526,7 +528,7 @@ interface SlideBackgroundInfo {
     当通过 `ppt:get:slideInfo` 返回时，`SlideElement` 可包含以下扩展字段（详见[元素类型说明](#slideelementelementextensions)）：
     `relativePosition`（相对位置百分比）、`textInfo`（结构化文本信息）、`imageInfo`（图片信息）、`fillInfo`（填充信息）。
 
-**SlideElement 扩展字段说明** {#slideelementelementextensions}:
+#### SlideElement 扩展字段说明 {#slideelementelementextensions}
 
 ```typescript
 interface SlideElement {
@@ -1245,16 +1247,34 @@ interface InsertTableResponse {
 
 **说明**: 在指定幻灯片插入图表（柱形/折线/饼/散点等），含数据系列与基础展示选项。
 
-!!! warning "Server 端 OOXML 离线处理（适用于 ppt:insert:chart / ppt:get:chart / ppt:update:chart）"
-    PowerPoint JavaScript API 当前不暴露图表创建与数据更新接口（参见 [office-js#5463](https://github.com/OfficeDev/office-js/issues/5463)）。本节 chart 类事件**不经 Add-In Office.js 路径**，由 OASP Server 端使用 OOXML 离线工具（如 `python-pptx`）直接修改 .pptx 文件后再通知 Add-In 重新加载文档。
+!!! note "契约说明（实现中立，适用于 ppt:insert:chart / ppt:get:chart / ppt:update:chart）"
+    chart 类事件遵循标准的请求-响应语义。以下为**线缆可观测契约**，任意实现路径都必须满足，与「在哪一端、用何种技术实现」无关：
 
-    **副作用与约束**：
+    - **持久化与可见性**：当响应 `success: true` 时，图表变更已持久化到目标文档，且对后续 `ppt:get:chart` / `ppt:get:slideElements` 可见。
+    - **并发顺序**：协议不保证对同一文档的并发 chart 写入之间的相互可见顺序；若顺序有意义，调用方应串行发起。
+    - **elementId 不透明**：响应中的 `elementId` 是服务端分配的不透明字符串，调用方原样回传、**不得**解析其内部结构（详见 [data-structures.md 元素标识符不透明性](data-structures.md#element-id-opacity)）。
+    - 本协议**不规定**这些事件由哪一端、用何种技术实现——服务端离线处理或客户端图表 API 均可。接口形状、字段语义、错误码及上述契约对各实现路径一致。
+    - 相关数据结构（`ChartData` discriminated union / `ChartType` / `CategoricalSeries` / `ScatterSeries`）定义见 [data-structures.md#ChartType](data-structures.md#charttype)。
 
-    - 预期延迟 >1s（取决于文档大小与磁盘 I/O）
-    - 调用前 Add-In 应已 `save()`，否则未保存的本地修改会被覆盖
-    - 完成后 Add-In 需重新打开/刷新文档以呈现新图表
-    - 同一文档的并发 chart 调用应串行化，避免 OOXML 写入冲突
-    - 相关数据结构（`ChartData` discriminated union / `ChartType` / `CategoricalSeries` / `ScatterSeries`）定义见 [data-structures.md#ChartType](data-structures.md#charttype)
+!!! info "实现提示（非规范 / Informative）"
+    chart 类事件可由不同路径实现。以下特征**均不属于线缆契约**，仅供实现者参考——消费方可按文档连接状态在两条路径间路由。
+
+    **路径 A — 服务端离线（OOXML）**（适用于文档关闭、未被宿主独占时）：
+
+    - 截至撰写时，PowerPoint JavaScript API 未暴露图表创建与数据更新接口（参见 [office-js#5463](https://github.com/OfficeDev/office-js/issues/5463)），因此一种可行实现是由服务端使用 OOXML 工具（如 `python-pptx`）离线修改 `.pptx` 后通知 Add-In 重新加载文档。
+    - 该路径预期延迟 >1s（取决于文档大小与磁盘 I/O）。
+    - 调用前 Add-In 应已 `save()`，否则未保存的本地修改可能被离线写入覆盖。
+    - 完成后 Add-In 需重新打开/刷新文档以呈现新图表。
+    - 同一文档的并发离线写入应串行化，避免文件写入冲突。
+
+    **路径 B — 客户端 Office.js 整页 round-trip**（适用于文档已在宿主中打开时）：
+
+    - 一种可行实现：客户端用 `Slide.exportAsBase64` 取目标页实时 OOXML → 服务端改图表 → `insertSlidesFromBase64(keepSourceFormatting)` 整页回插 + 删旧页 + `moveTo` 复位。
+    - 整页替换会变更该页元素的 native id——故 `elementId` 不应绑定 native id（线缆契约已要求其不透明，见上）。
+    - 操作会重置当前选区与滚动位置。
+    - 撤销非原子：整页 round-trip 是多步操作，宿主单次 `Ctrl+Z` 回不到操作前状态——建议把 chart 增改视为「AI 显式操作」，由客户端自备撤销/确认。
+    - 反复整页写入可能在文档内累积母版/版式副本。
+    - requirement set 门槛：仅插入新页需 PowerPointApi **1.2**；「插入到现有页 / get / update」需 **1.8**；两者皆不满足的平台（如 iPad、老永久版 Office）应回退路径 A。该路径不可用时返回 `3016 API_NOT_SUPPORTED`，调用方据此降级。
 
 **请求数据**:
 
@@ -1361,8 +1381,9 @@ interface InsertChartResponse {
 | 4002 | `INVALID_PARAM` - `chartType` 不在枚举内，或字段形状与 `chartType` 所选 variant 不匹配（例如 `chartType: "Scatter"` 却传了 `categories`） |
 | 3015 | `INVALID_CHART_DATA` - categorical: `series[].values.length !== categories.length`；scatter: `points` 为空 / 含 NaN / Infinity |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3003 | `DOCUMENT_READ_ONLY` - 文档为只读模式 |
-| 3004 | `OPERATION_FAILED` - OOXML 写入失败 |
+| 3003 | `DOCUMENT_READ_ONLY` - 目标文档不可写入（只读或被锁定，无法应用修改） |
+| 3004 | `OPERATION_FAILED` - 图表写入失败 |
+| 3016 | `API_NOT_SUPPORTED` - 目标操作在当前客户端/平台不可用（如所需 PowerPointApi requirement set 不满足）；调用方应降级到另一实现路径或提示用户 |
 
 ---
 
@@ -1374,7 +1395,7 @@ interface InsertChartResponse {
 
 **说明**: 读取指定 `elementId` 图表的当前数据（类型、分类/数据点、系列、标题、展示选项）。
 
-> Server-handled OOXML 路径与并发约束见 [`ppt:insert:chart` 顶部 admonition](#pptinsertchart)。
+> 该事件的可见性/顺序契约及实现提示见 [`ppt:insert:chart` 顶部说明](#pptinsertchart)。
 
 **请求数据**:
 
@@ -1417,6 +1438,7 @@ interface GetChartResponse {
 | 4001 | `MISSING_PARAM` - 缺少 elementId |
 | 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在或不是图表元素 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3016 | `API_NOT_SUPPORTED` - 读取所需能力（PowerPointApi 1.8）在当前客户端/平台不可用；调用方应降级到另一实现路径或提示用户 |
 
 ---
 
@@ -1428,7 +1450,7 @@ interface GetChartResponse {
 
 **说明**: 更新已存在图表的数据、类型、标题或展示选项。除 `chartType`（discriminator，必需）外，其它字段均可选 — 只更新提供的字段。
 
-> Server-handled OOXML 路径与并发约束见 [`ppt:insert:chart` 顶部 admonition](#pptinsertchart)。
+> 该事件的可见性/顺序契约及实现提示见 [`ppt:insert:chart` 顶部说明](#pptinsertchart)。
 
 **请求数据**:
 
@@ -1531,8 +1553,9 @@ interface UpdateChartResponse {
 | 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在或不是图表元素 |
 | 3015 | `INVALID_CHART_DATA` - 跨 variant 切换未补齐 `series`；或更新后 categorical 维度不一致 / scatter `points` 含非法值 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3003 | `DOCUMENT_READ_ONLY` - 文档为只读模式 |
-| 3004 | `OPERATION_FAILED` - OOXML 写入失败 |
+| 3003 | `DOCUMENT_READ_ONLY` - 目标文档不可写入（只读或被锁定，无法应用修改） |
+| 3004 | `OPERATION_FAILED` - 图表写入失败 |
+| 3016 | `API_NOT_SUPPORTED` - 目标操作在当前客户端/平台不可用（如所需 PowerPointApi requirement set 不满足）；调用方应降级到另一实现路径或提示用户 |
 
 ---
 
@@ -2727,3 +2750,204 @@ interface GotoSlideResponse {
 | 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+
+---
+
+### ppt:get:slideOoxml
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+!!! note "低层传输原语"
+    本事件与 `ppt:insert:slidesOoxml` 是**整页 OOXML 搬运原语**，主要供「双路径」实现搬运幻灯片内容（如 [`ppt:insert:chart` 实现提示路径 B](#pptinsertchart)），而非 AI 常规直接调用。
+
+**说明**: 导出指定幻灯片的当前 OOXML（Office Open XML）为单页 `.pptx` 包，base64 编码。导出反映文档**实时状态（含未保存的本地修改）**，供服务端离线解析或改写后再回插。
+
+!!! info "实现提示（非规范 / Informative）"
+    客户端 Office.js 路径的一种可行实现（office-editor4ai 已核对）：`slide.exportAsBase64()` 返回**单页** `.pptx` 的 base64（需 PowerPointApi 1.8）。Office.js 操作内存中的实时文档模型（不读磁盘），故导出含未保存修改——建议实现方以一次 spike 落锤确认（改标题不 save → export → 解压看 XML 含改动）。能力不满足时按 [3016 判定](#pptinsertslidesooxml)用 `isSetSupported` 预检主动返回。
+
+**请求数据**:
+
+```typescript
+interface GetSlideOoxmlRequest {
+  requestId: string;       // 请求 ID (UUID)
+  documentUri: string;     // 文档 URI
+  timestamp?: number;      // 请求时间戳（毫秒），可选
+  slideIndex: number;      // 目标幻灯片索引（从 0 开始）
+}
+```
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/presentation.pptx",
+  "slideIndex": 2
+}
+```
+
+**响应数据**:
+
+```typescript
+interface GetSlideOoxmlResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    slideIndex: number;    // 回显目标页索引
+    slideId: string;       // 不透明幻灯片标识符（供后续 insert:slidesOoxml 定位/替换）
+    base64: string;        // 单页 .pptx 整包，base64（无 data URL 前缀）
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+> `slideId` 为服务端分配的不透明字符串，调用方原样回传、不得解析（见 [标识符不透明性](data-structures.md#element-id-opacity)）。
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "slideIndex": 2,
+    "slideId": "slide-003",
+    "base64": "UEsDBBQABgAIAAAAIQ..."
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `MISSING_PARAM` - 缺少 slideIndex |
+| 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3004 | `OPERATION_FAILED` - 导出失败 |
+| 3016 | `API_NOT_SUPPORTED` - 导出所需能力（如 PowerPointApi 1.8）在当前客户端/平台不可用；调用方应降级到另一实现路径 |
+
+---
+
+### ppt:insert:slidesOoxml
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+!!! note "低层传输原语"
+    见 [`ppt:get:slideOoxml`](#pptgetslideooxml) 顶部说明。
+
+**说明**: 将一个 OOXML 页包（≥1 页，base64 编码的 `.pptx`）插入到演示文稿。可选地在插入后**替换旧页并复位**，把「导出 → 改 → 回插 → 删旧 → 复位」做成一次顺序复合的 round-trip（尽力、非原子，详见下方说明）。
+
+**请求数据**:
+
+```typescript
+interface InsertSlidesOoxmlRequest {
+  requestId: string;          // 请求 ID (UUID)
+  documentUri: string;        // 文档 URI
+  timestamp?: number;         // 请求时间戳（毫秒），可选
+  base64: string;             // 待插入的 .pptx 页包（≥1 页），base64（无 data URL 前缀）
+  formatting?: "keepSourceFormatting" | "useDestinationTheme";  // 默认 "keepSourceFormatting"
+  targetSlideIndex?: number;  // 插到此页之后（从 0 开始）；缺省 = 文档末尾
+  replaceSlideId?: string;    // 可选：插入完成后删除此旧页（slideId 来自 ppt:get:slideOoxml）
+  finalSlideIndex?: number;   // 可选：把插入页移动到此索引（从 0 开始）以复位
+}
+```
+
+**字段说明**:
+
+| 字段 | 类型 | 必需 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| `base64` | string | ✅ | - | 待插入 .pptx 页包（≥1 页） |
+| `formatting` | string | ❌ | `"keepSourceFormatting"` | 沿用源格式或套用目标主题 |
+| `targetSlideIndex` | number | ❌ | 末尾 | 插入位置（插到该索引之后） |
+| `replaceSlideId` | string | ❌ | - | round-trip：插入后删除的旧页 |
+| `finalSlideIndex` | number | ❌ | - | round-trip：插入页复位到的目标索引。任意复位需 PowerPointApi 1.8；省略、或等于被替换页索引（原位替换）时 1.2 即可 |
+
+!!! warning "顺序复合执行（尽力，非原子）"
+    当提供 `replaceSlideId` / `finalSlideIndex` 时，本事件按 **[插入 → 删除 `replaceSlideId` → 移动到 `finalSlideIndex`]** 有序复合执行，语义上视为一次逻辑操作，但**不保证原子性**——底层平台可能不支持事务/回滚，实现应尽量合批以最小化可见中间态，但无法保证零中间态。
+
+    - 成功（`success: true`）：各步全部生效，`insertedSlideIndices` 反映最终真实索引。
+    - 部分失败（`success: false`）：`error.details` 给出 `{ stage, partiallyApplied, createdSlideId }`——`stage` 标明失败阶段（`resolve` / `insert` / `delete` / `move` / `readback`）；`partiallyApplied` 表示是否已有副作用；`createdSlideId` 标明已插入但未清理的新页，供调用方（服务端）**对账补偿**（如删除残留新页以恢复操作前状态）。调用方不得假设失败即无副作用。
+
+!!! info "实现提示（非规范 / Informative）"
+    客户端 Office.js 路径的一种可行实现（office-editor4ai 已核对 API 可行性）：
+
+    - **调用**：`presentation.insertSlidesFromBase64(base64, { formatting, targetSlideId })`（需 PowerPointApi 1.2），再按需删旧页 + `slide.moveTo(finalSlideIndex)`（需 1.8）。整页插入会重置选区/滚动、撤销非原子——详见 [`ppt:insert:chart` 实现提示路径 B](#pptinsertchart)。
+    - **formatting 大小写映射**：协议沿用 camelCase（`keepSourceFormatting` / `useDestinationTheme`，与其它 ppt 事件一致），但 Office.js `PowerPoint.InsertSlideFormatting` 枚举字符串值为 PascalCase（`KeepSourceFormatting` / `UseDestinationTheme`），**不接受 camelCase**。由 Add-In 内部映射到枚举成员，无需改协议。
+    - **targetSlideIndex 解析**：Add-In 先 `slides.load("items/id,items/index")` 把 `targetSlideIndex` 解析为 `targetSlideId`；缺省（末尾）时解析为最后一页 id（注意 Office.js 原生缺省 `targetSlideId` 是插到**开头**，故缺省语义须由 Add-In 显式落到末尾）。建议回插时用 `sourceSlideIds` 把源 pin 成单页避免歧义。
+    - **命名元素回报（`elements[]`）的定位机制**：因 `elementId` 不透明（见 [标识符不透明性](data-structures.md#element-id-opacity)），定位方式属实现细节，规范不绑定。两条可行路径：① **主路径**——服务端写 `cNvPr/@name`（如 `oasp-chart-<uuid>`），Add-In 插入后按 `shape.name` 查回（`Shape.name` 读 API 已确证，1.4；几何单位为磅）。⚠️ `@name` 能否穿越 `keepSourceFormatting` round-trip 存活是**运行时行为**，须 Add-In spike 实测（native 数字 id 必变、不可外传，但 `@name` 通常保留）。② **回退路径**——服务端在 OOXML 写 presentation 级 `customXmlParts` 注册表（`oaspId → {slideId/序号, 页内序号}`），Add-In 经 `presentation.customXmlParts` 读回（需 1.7）；该路径不依赖 `@name` 存活、开/关两态同源。spike 若发现 `@name` 被重写，实现切到回退路径即可，**线缆契约（`elements[]`）不变**。
+    - **3016 判定**：建议用 `Office.context.requirements.isSetSupported('PowerPointApi', '1.2'|'1.8')` **预检后主动返回**（同步、零副作用，避免"insert 成功才发现 moveTo 不支持"留下半成品），少数"API 存在但平台行为不支持"的边缘再由 `OfficeExtension.Error` 兜底映射。
+
+**请求示例 — 整页 round-trip（替换并复位）**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/q1-report.pptx",
+  "base64": "UEsDBBQABgAIAAAAIQ...",
+  "formatting": "keepSourceFormatting",
+  "targetSlideIndex": 2,
+  "replaceSlideId": "slide-003",
+  "finalSlideIndex": 2
+}
+```
+
+**响应数据**:
+
+```typescript
+interface InsertSlidesOoxmlResponse {
+  requestId: string;
+  success: boolean;
+  data?: {
+    insertedSlideIndices: number[];   // 插入页最终索引（从 0 开始）
+    insertedSlideIds: string[];       // 插入页的不透明标识符
+    elements?: Array<{                // 可选：回报命名元素的实际几何（如图表）
+      elementId: string;
+      type: string;
+      left: number;
+      top: number;
+      width: number;
+      height: number;
+    }>;
+  };
+  error?: ErrorResponse;
+  timestamp: number;
+}
+```
+
+> `insertedSlideIds` 与 `elements[].elementId` 均为不透明标识符（见 [标识符不透明性](data-structures.md#element-id-opacity)）。`elements` 用于把服务端在 OOXML 中命名的元素（如图表）的最终几何回报给调用方，无需额外往返。
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "insertedSlideIndices": [2],
+    "insertedSlideIds": ["slide-009"],
+    "elements": [
+      { "elementId": "oasp-chart-7f3a", "type": "Chart", "left": 60, "top": 120, "width": 480, "height": 320 }
+    ]
+  },
+  "timestamp": 1704067200500
+}
+```
+
+**可能的错误**:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `MISSING_PARAM` - 缺少 base64 |
+| 4002 | `INVALID_PARAM` - base64 非法，或 targetSlideIndex / finalSlideIndex 超出范围 |
+| 3010 | `ELEMENT_NOT_FOUND` - replaceSlideId 指定的幻灯片不存在 |
+| 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3003 | `DOCUMENT_READ_ONLY` - 目标文档不可写入（只读或被锁定，无法应用修改） |
+| 3004 | `OPERATION_FAILED` - 插入/替换/复位失败 |
+| 3016 | `API_NOT_SUPPORTED` - 所需能力（插入需 PowerPointApi 1.2、finalSlideIndex 复位需 1.8）在当前客户端/平台不满足；调用方应降级到另一实现路径 |

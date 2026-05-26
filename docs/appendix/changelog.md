@@ -9,7 +9,61 @@
 
 ## [Unreleased]
 
-_暂无未发布变更。_
+### 变更（规范澄清，非破坏性）
+
+**将实现技术规定从规范层剥离，确立 Normative / Informative 分层治理原则**
+
+线缆契约（事件名、请求/响应形状、`ChartData` / `ChartType` / `CategoricalSeries` / `ScatterSeries` 判别联合、错误码）**全部保持不变**；本次仅调整规范文本，使 `/ppt` 图表事件可被服务端或客户端任意路径实现。
+
+| 变更类型 | 位置 | 说明 |
+|----------|------|------|
+| 移除（实现泄漏） | `events-ppt.md` chart 事件顶部 admonition | 删除「不经 Add-In Office.js 路径」「由 Server 端使用 OOXML 工具（如 `python-pptx`）修改 .pptx」等执行位置/技术选型表述 |
+| 重构 | `events-ppt.md` chart 事件 | 拆分为两块：① 实现中立的**线缆契约**（请求-响应语义、`success` 后变更对 `ppt:get:chart` 可见、并发顺序约定、显式声明"协议不规定由哪一端/何种技术实现"）；② `!!! info "实现提示（非规范）"` 收纳仅服务端离线路径相关的副作用（延迟 >1s、调用前 `save()`、完成后重载文档、离线写入串行化） |
+| 中立化 | `events-ppt.md` / `error-handling.md` 错误码触发条件 | `3004 OPERATION_FAILED` 描述由「OOXML 写入失败」改为「图表写入失败」；`3003 DOCUMENT_READ_ONLY` 由「文档为只读模式」改为「目标文档不可写入」，描述线缆可观测状态而非特定实现 |
+| 移除（实现泄漏） | `events-ppt.md` 事件列表表格 | 三个 chart 事件行去掉「（Server OOXML 离线处理）」括注 |
+| 新增（治理原则） | `conventions.md` | 新增「规范分层（Normative / Informative）」章节：规范层只含线缆可观测内容（事件名/方向、字段形状与语义、错误码及实现中立触发条件、顺序/幂等/可见性保证）；用什么库、服务端还是客户端、性能特征、特定实现副作用一律归为非规范实现提示 |
+| 新增（设计原则） | `error-handling.md` | 错误码设计原则补充「与实现无关」：触发条件描述线缆可观测状态而非实现技术/执行位置 |
+
+**动机**: 消费方 office4ai（OF4AI-21）需按文档连接状态在服务端 OOXML 路径与客户端 Office.js 路径之间路由——同一套事件/payload 两种方式均可实现，接口形状无需改动。原 v0.2.0 文本把「用 `python-pptx` / 服务端离线 / 不走 Office.js」写进规范，等于协议层替消费方做了实现决策，阻碍多路径复用。
+
+**兼容性**: 纯文档/规范澄清，无任何线缆契约变更；对已部署消费方零影响。`/ppt` 整体仍处 📋 Draft 阶段。
+
+**相关工单**: [OF4AI-21](https://turingfocus.atlassian.net/browse/OF4AI-21)（PPT 图表双路径路由）
+
+### 新增（图表双路径线缆可观测项）
+
+在上述减法基础上，为支撑 OF4AI-21 双路径路由追加少量线缆可观测项；事件名、请求/响应形状、`ChartData` 判别联合、现有错误码仍不变。
+
+| 变更类型 | 位置 | 说明 |
+|----------|------|------|
+| 新增错误码 | `error-handling.md` + `ppt:insert:chart` / `ppt:get:chart` / `ppt:update:chart` 错误码表 | `3016 API_NOT_SUPPORTED`：目标操作在当前客户端/平台不可用（如所需 PowerPointApi requirement set 不满足、宿主不支持）。语义实现中立，供调用方**反应式降级**到另一路径或提示用户 |
+| 新增（Normative） | `data-structures.md` 新增「元素标识符不透明性」（锚点 `#element-id-opacity`） | 明确 `SlideElement.id` / chart `elementId` 为服务端分配的**不透明字符串**，消费方不得解析其结构。防御整页 round-trip 重置 native id 的实现细节泄漏到协议 |
+| 新增（Informative） | `events-ppt.md` chart 事件 `!!! info` 注记 | 补「路径 B — 客户端 Office.js 整页 round-trip」实现提示（`exportAsBase64` → 服务端改 → `insertSlidesFromBase64` 整页回插），并列其非规范副作用：选区/滚动重置、撤销非原子、母版累积、requirement set 门槛（新页 1.2 / 现有页·get·update 1.8，皆不满足回退路径 A） |
+
+**确认不新增**: `CHART_DATA_NOT_READABLE`——`exportAsBase64` + 服务端解析可读回任意图表数据（含未保存态、含非本系统生成图表），仅平台 <1.8 读不到，已归入 `3016 API_NOT_SUPPORTED`。
+
+**能力声明**: 本轮采用**反应式**路由（直接尝试 → 失败返回 `3016` / `3003` 即保证正确性），不新增事件。主动式 `ppt:capabilities`（握手声明 `isSetSupported` 矩阵）作为后续优化单独立项，不阻塞本轮。
+
+### 新增（通用幻灯片 OOXML 搬运事件）
+
+为支撑 OF4AI-21 双路径的路径 B（客户端整页 round-trip），`/ppt`「幻灯片管理类」新增 2 个 **Server→AddIn 请求-响应**事件（📋 Draft）。图表无关的低层传输原语，未来"服务端编辑打开中文档"类能力可复用。纯加法、向后兼容。
+
+| 变更类型 | 事件 / 类型 | 说明 |
+|----------|-------------|------|
+| 新增 | `ppt:get:slideOoxml` | 导出指定页当前 OOXML（含未保存态）为单页 `.pptx` base64；响应含不透明 `slideId` |
+| 新增 | `ppt:insert:slidesOoxml` | 应用 OOXML 页包；可选 `replaceSlideId` + `finalSlideIndex` 把「插入→删旧→复位」做成**尽力顺序复合（非原子）round-trip**；响应可回报命名元素（如图表）的最终几何 |
+| 扩展 | `data-structures.md` 标识符不透明性 | `#element-id-opacity` 节从"元素标识符"扩展到涵盖 `slideId` |
+| 扩展 | 错误码 `3010 ELEMENT_NOT_FOUND` | 描述扩展为「元素或幻灯片未找到」，供 `replaceSlideId` 复用，不新增错误码 |
+| 文档基建 | `mkdocs.yml` | 启用 `attr_list`（支撑 `#element-id-opacity` 等锚点；顺带修复既有 `#slideelementelementextensions` 失效链接） |
+
+**命名**: 取 `get:slideOoxml` / `insert:slidesOoxml` 中立对称对——按内容格式（OOXML）命名，不把 `base64` 传输编码或 Office.js 方法名写进规范事件名（遵循本周期确立的事件名实现中立原则）。
+
+**消费方验证（office-editor4ai cross-ask，无 P0）**: 据 Add-In 实现可行性反馈做 round-N 修订——
+- `insert:slidesOoxml` 措辞由"原子"放宽为**"尽力顺序复合（非原子，无回滚保证）"**：Office.js 无事务/回滚；部分失败时 `error.details` 给出 `{ stage, partiallyApplied, createdSlideId }` 供服务端对账补偿。
+- 命名元素回报（`elements[]`）的定位机制下沉为 Informative，并列**双路径**：主路径 `cNvPr/@name` + `shape.name`（存活性待 Add-In spike 实测），回退路径 `customXmlParts` 注册表（不依赖 `@name` 存活）；线缆契约不依赖具体机制。
+- `formatting` 保持 camelCase（与其它 ppt 事件一致），Add-In 内部映射到 Office.js PascalCase 枚举；`finalSlideIndex` 任意复位需 1.8、原位替换 1.2 即可；`3016` 经 `isSetSupported` 预检主动返回。
+
+> 唯一运行时未决项是 `@name` 穿越 round-trip 的存活性（Add-In spike），但因定位机制已并列 `customXmlParts` 回退、线缆契约（`elements[]`）与机制无关，**该 spike 不阻塞协议合并**——属 Add-In 实现侧验证。
 
 ---
 

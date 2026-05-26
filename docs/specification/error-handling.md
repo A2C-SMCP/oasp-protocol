@@ -9,8 +9,9 @@
 OASP 的错误码设计遵循以下原则：
 
 1. **与应用无关**: 错误码描述的是「操作失败」或「状态异常」，而非特定于 Word、PPT 或 Excel
-2. **语义清晰**: 每个错误码有明确的含义，便于定位问题
-3. **数字分段**: 使用数字范围区分错误类别，便于程序化处理
+2. **与实现无关**: 触发条件描述**线缆可观测的状态**（如「目标文档不可写入」），而非特定实现技术或执行位置（如「服务端 OOXML 写入失败」）。同一错误码可由任意实现路径在等价条件下抛出
+3. **语义清晰**: 每个错误码有明确的含义，便于定位问题
+4. **数字分段**: 使用数字范围区分错误类别，便于程序化处理
 
 ## 错误响应格式
 
@@ -92,12 +93,13 @@ interface ErrorResponse {
 | `3007` | `FORMAT_NOT_SUPPORTED` | 格式不支持 |
 | `3008` | `POSITION_INVALID` | 位置无效 |
 | `3009` | `RANGE_INVALID` | 范围无效 |
-| `3010` | `ELEMENT_NOT_FOUND` | 元素未找到 |
+| `3010` | `ELEMENT_NOT_FOUND` | 元素或幻灯片未找到（按 elementId / slideId 定位失败） |
 | `3011` | `STYLE_NOT_FOUND` | 样式未找到 |
 | `3012` | `SEARCH_NO_MATCH` | 搜索无匹配结果 |
 | `3013` | `NO_TABLE_AT_CURSOR` | 缺省 `tableId` 时光标未落在任何表格内 |
 | `3014` | `ALREADY_MERGED` | 目标合并区域内已存在合并冲突，无法再次合并 |
-| `3015` | `INVALID_CHART_DATA` | 图表数据维度不一致（series.values 长度与 categories 不匹配） |
+| `3015` | `INVALID_CHART_DATA` | 图表数据非法（categorical: series.values 长度与 categories 不匹配；scatter: points 为空或含非法值；或跨类型切换未补齐数据） |
+| `3016` | `API_NOT_SUPPORTED` | 目标操作在当前客户端/平台不可用（如所需 requirement set 不满足或宿主不支持该能力） |
 
 ### 4xxx - 参数验证错误
 
@@ -162,12 +164,36 @@ interface ErrorResponse {
 
 ### DOCUMENT_READ_ONLY (3003)
 
-**触发场景**: 尝试修改只读文档。
+**触发场景**: 目标文档当前不可写入——只读、被锁定或其它原因导致修改无法应用。该判断只描述「文档可写与否」这一线缆可观测状态，不绑定任何具体实现技术。
 
 **处理建议**:
 - 检查文档是否被其他程序锁定
 - 检查用户是否有编辑权限
 - 提示用户保存文档副本
+
+### API_NOT_SUPPORTED (3016)
+
+**触发场景**: 目标操作所依赖的能力在当前客户端或平台上不可用——例如所需的 PowerPointApi requirement set 未满足，或宿主环境（如移动端、老版本永久授权 Office）不支持该能力。
+
+**处理建议**:
+
+- **反应式降级**：调用方据此切换到另一条实现路径（如客户端 Office.js 路径不可用时回退服务端离线路径），或提示用户更换环境。直接尝试 → 失败返回本码即可保证路由正确性，无需预先声明能力。
+- 同一路径上重试无意义——须更换路径或平台后再发起。
+
+**示例**:
+
+```json
+{
+  "error": {
+    "code": "API_NOT_SUPPORTED",
+    "message": "Required PowerPointApi requirement set 1.8 is not available on this host",
+    "details": {
+      "operation": "ppt:update:chart",
+      "requiredApiSet": "PowerPointApi 1.8"
+    }
+  }
+}
+```
 
 ### STYLE_NOT_FOUND (3011)
 
