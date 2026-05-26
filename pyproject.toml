@@ -26,3 +26,16 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 # 纯文档项目，仅包含 scripts 目录用于部署脚本
 packages = ["scripts"]
+
+[tool.bumpversion]
+current_version = "0.2.0"
+allow_dirty = true   # 允许工作树有 changelog 等改动时 bump
+commit = false       # git 提交/打标由人工控制（配合本仓 mike 发布流程）
+tag = false
+
+# 只更新 [project] 的 version 行；regex 锚定行首避免误伤上面的 current_version
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+regex = true
+search = '(?m)^version = "{current_version}"'
+replace = 'version = "{new_version}"'
