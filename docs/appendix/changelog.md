@@ -30,6 +30,20 @@
 
 **相关工单**: [OF4AI-21](https://turingfocus.atlassian.net/browse/OF4AI-21)（PPT 图表双路径路由）
 
+### 新增（图表双路径线缆可观测项）
+
+在上述减法基础上，为支撑 OF4AI-21 双路径路由追加少量线缆可观测项；事件名、请求/响应形状、`ChartData` 判别联合、现有错误码仍不变。
+
+| 变更类型 | 位置 | 说明 |
+|----------|------|------|
+| 新增错误码 | `error-handling.md` + `ppt:insert:chart` / `ppt:get:chart` / `ppt:update:chart` 错误码表 | `3016 API_NOT_SUPPORTED`：目标操作在当前客户端/平台不可用（如所需 PowerPointApi requirement set 不满足、宿主不支持）。语义实现中立，供调用方**反应式降级**到另一路径或提示用户 |
+| 新增（Normative） | `data-structures.md` 新增「元素标识符不透明性」（锚点 `#element-id-opacity`） | 明确 `SlideElement.id` / chart `elementId` 为服务端分配的**不透明字符串**，消费方不得解析其结构。防御整页 round-trip 重置 native id 的实现细节泄漏到协议 |
+| 新增（Informative） | `events-ppt.md` chart 事件 `!!! info` 注记 | 补「路径 B — 客户端 Office.js 整页 round-trip」实现提示（`exportAsBase64` → 服务端改 → `insertSlidesFromBase64` 整页回插），并列其非规范副作用：选区/滚动重置、撤销非原子、母版累积、requirement set 门槛（新页 1.2 / 现有页·get·update 1.8，皆不满足回退路径 A） |
+
+**确认不新增**: `CHART_DATA_NOT_READABLE`——`exportAsBase64` + 服务端解析可读回任意图表数据（含未保存态、含非本系统生成图表），仅平台 <1.8 读不到，已归入 `3016 API_NOT_SUPPORTED`。
+
+**能力声明**: 本轮采用**反应式**路由（直接尝试 → 失败返回 `3016` / `3003` 即保证正确性），不新增事件。主动式 `ppt:capabilities`（握手声明 `isSetSupported` 矩阵）作为后续优化单独立项，不阻塞本轮。
+
 ---
 
 ## [0.2.0] - 2026-04-30

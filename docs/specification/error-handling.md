@@ -99,6 +99,7 @@ interface ErrorResponse {
 | `3013` | `NO_TABLE_AT_CURSOR` | 缺省 `tableId` 时光标未落在任何表格内 |
 | `3014` | `ALREADY_MERGED` | 目标合并区域内已存在合并冲突，无法再次合并 |
 | `3015` | `INVALID_CHART_DATA` | 图表数据非法（categorical: series.values 长度与 categories 不匹配；scatter: points 为空或含非法值；或跨类型切换未补齐数据） |
+| `3016` | `API_NOT_SUPPORTED` | 目标操作在当前客户端/平台不可用（如所需 requirement set 不满足或宿主不支持该能力） |
 
 ### 4xxx - 参数验证错误
 
@@ -169,6 +170,30 @@ interface ErrorResponse {
 - 检查文档是否被其他程序锁定
 - 检查用户是否有编辑权限
 - 提示用户保存文档副本
+
+### API_NOT_SUPPORTED (3016)
+
+**触发场景**: 目标操作所依赖的能力在当前客户端或平台上不可用——例如所需的 PowerPointApi requirement set 未满足，或宿主环境（如移动端、老版本永久授权 Office）不支持该能力。
+
+**处理建议**:
+
+- **反应式降级**：调用方据此切换到另一条实现路径（如客户端 Office.js 路径不可用时回退服务端离线路径），或提示用户更换环境。直接尝试 → 失败返回本码即可保证路由正确性，无需预先声明能力。
+- 同一路径上重试无意义——须更换路径或平台后再发起。
+
+**示例**:
+
+```json
+{
+  "error": {
+    "code": "API_NOT_SUPPORTED",
+    "message": "Required PowerPointApi requirement set 1.8 is not available on this host",
+    "details": {
+      "operation": "ppt:update:chart",
+      "requiredApiSet": "PowerPointApi 1.8"
+    }
+  }
+}
+```
 
 ### STYLE_NOT_FOUND (3011)
 

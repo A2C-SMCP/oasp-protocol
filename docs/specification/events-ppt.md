@@ -526,7 +526,7 @@ interface SlideBackgroundInfo {
     当通过 `ppt:get:slideInfo` 返回时，`SlideElement` 可包含以下扩展字段（详见[元素类型说明](#slideelementelementextensions)）：
     `relativePosition`（相对位置百分比）、`textInfo`（结构化文本信息）、`imageInfo`（图片信息）、`fillInfo`（填充信息）。
 
-**SlideElement 扩展字段说明** {#slideelementelementextensions}:
+#### SlideElement 扩展字段说明 {#slideelementelementextensions}
 
 ```typescript
 interface SlideElement {
@@ -1250,17 +1250,29 @@ interface InsertTableResponse {
 
     - **持久化与可见性**：当响应 `success: true` 时，图表变更已持久化到目标文档，且对后续 `ppt:get:chart` / `ppt:get:slideElements` 可见。
     - **并发顺序**：协议不保证对同一文档的并发 chart 写入之间的相互可见顺序；若顺序有意义，调用方应串行发起。
+    - **elementId 不透明**：响应中的 `elementId` 是服务端分配的不透明字符串，调用方原样回传、**不得**解析其内部结构（详见 [data-structures.md 元素标识符不透明性](data-structures.md#element-id-opacity)）。
     - 本协议**不规定**这些事件由哪一端、用何种技术实现——服务端离线处理或客户端图表 API 均可。接口形状、字段语义、错误码及上述契约对各实现路径一致。
     - 相关数据结构（`ChartData` discriminated union / `ChartType` / `CategoricalSeries` / `ScatterSeries`）定义见 [data-structures.md#ChartType](data-structures.md#charttype)。
 
 !!! info "实现提示（非规范 / Informative）"
-    以下特征**仅适用于服务端离线（OOXML）实现路径**，不属于线缆契约——客户端 Office.js 实现路径无需这些步骤。仅供实现者参考：
+    chart 类事件可由不同路径实现。以下特征**均不属于线缆契约**，仅供实现者参考——消费方可按文档连接状态在两条路径间路由。
+
+    **路径 A — 服务端离线（OOXML）**（适用于文档关闭、未被宿主独占时）：
 
     - 截至撰写时，PowerPoint JavaScript API 未暴露图表创建与数据更新接口（参见 [office-js#5463](https://github.com/OfficeDev/office-js/issues/5463)），因此一种可行实现是由服务端使用 OOXML 工具（如 `python-pptx`）离线修改 `.pptx` 后通知 Add-In 重新加载文档。
     - 该路径预期延迟 >1s（取决于文档大小与磁盘 I/O）。
     - 调用前 Add-In 应已 `save()`，否则未保存的本地修改可能被离线写入覆盖。
     - 完成后 Add-In 需重新打开/刷新文档以呈现新图表。
     - 同一文档的并发离线写入应串行化，避免文件写入冲突。
+
+    **路径 B — 客户端 Office.js 整页 round-trip**（适用于文档已在宿主中打开时）：
+
+    - 一种可行实现：客户端用 `Slide.exportAsBase64` 取目标页实时 OOXML → 服务端改图表 → `insertSlidesFromBase64(keepSourceFormatting)` 整页回插 + 删旧页 + `moveTo` 复位。
+    - 整页替换会变更该页元素的 native id——故 `elementId` 不应绑定 native id（线缆契约已要求其不透明，见上）。
+    - 操作会重置当前选区与滚动位置。
+    - 撤销非原子：整页 round-trip 是多步操作，宿主单次 `Ctrl+Z` 回不到操作前状态——建议把 chart 增改视为「AI 显式操作」，由客户端自备撤销/确认。
+    - 反复整页写入可能在文档内累积母版/版式副本。
+    - requirement set 门槛：仅插入新页需 PowerPointApi **1.2**；「插入到现有页 / get / update」需 **1.8**；两者皆不满足的平台（如 iPad、老永久版 Office）应回退路径 A。该路径不可用时返回 `3016 API_NOT_SUPPORTED`，调用方据此降级。
 
 **请求数据**:
 
@@ -1369,6 +1381,7 @@ interface InsertChartResponse {
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3003 | `DOCUMENT_READ_ONLY` - 目标文档不可写入（只读或被锁定，无法应用修改） |
 | 3004 | `OPERATION_FAILED` - 图表写入失败 |
+| 3016 | `API_NOT_SUPPORTED` - 目标操作在当前客户端/平台不可用（如所需 PowerPointApi requirement set 不满足）；调用方应降级到另一实现路径或提示用户 |
 
 ---
 
@@ -1423,6 +1436,7 @@ interface GetChartResponse {
 | 4001 | `MISSING_PARAM` - 缺少 elementId |
 | 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在或不是图表元素 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
+| 3016 | `API_NOT_SUPPORTED` - 读取所需能力（PowerPointApi 1.8）在当前客户端/平台不可用；调用方应降级到另一实现路径或提示用户 |
 
 ---
 
@@ -1539,6 +1553,7 @@ interface UpdateChartResponse {
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3003 | `DOCUMENT_READ_ONLY` - 目标文档不可写入（只读或被锁定，无法应用修改） |
 | 3004 | `OPERATION_FAILED` - 图表写入失败 |
+| 3016 | `API_NOT_SUPPORTED` - 目标操作在当前客户端/平台不可用（如所需 PowerPointApi requirement set 不满足）；调用方应降级到另一实现路径或提示用户 |
 
 ---
 
