@@ -51,7 +51,7 @@
 | 变更类型 | 事件 / 类型 | 说明 |
 |----------|-------------|------|
 | 新增 | `ppt:get:slideOoxml` | 导出指定页当前 OOXML（含未保存态）为单页 `.pptx` base64；响应含不透明 `slideId` |
-| 新增 | `ppt:insert:slidesOoxml` | 应用 OOXML 页包；可选 `replaceSlideId` + `finalSlideIndex` 把「插入→删旧→复位」做成**原子 round-trip**；响应可回报命名元素（如图表）的最终几何 |
+| 新增 | `ppt:insert:slidesOoxml` | 应用 OOXML 页包；可选 `replaceSlideId` + `finalSlideIndex` 把「插入→删旧→复位」做成**尽力顺序复合（非原子）round-trip**；响应可回报命名元素（如图表）的最终几何 |
 | 扩展 | `data-structures.md` 标识符不透明性 | `#element-id-opacity` 节从"元素标识符"扩展到涵盖 `slideId` |
 | 扩展 | 错误码 `3010 ELEMENT_NOT_FOUND` | 描述扩展为「元素或幻灯片未找到」，供 `replaceSlideId` 复用，不新增错误码 |
 | 文档基建 | `mkdocs.yml` | 启用 `attr_list`（支撑 `#element-id-opacity` 等锚点；顺带修复既有 `#slideelementelementextensions` 失效链接） |

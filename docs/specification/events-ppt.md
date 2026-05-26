@@ -64,7 +64,7 @@
 | [ppt:move:slide](#pptmoveslide) | 📋 Draft | 移动幻灯片 |
 | [ppt:goto:slide](#pptgotoslide) | 📋 Draft | 跳转到幻灯片 |
 | [ppt:get:slideOoxml](#pptgetslideooxml) | 📋 Draft | 导出单页实时 OOXML（base64），含未保存态 |
-| [ppt:insert:slidesOoxml](#pptinsertslidesooxml) | 📋 Draft | 应用 OOXML 页包；可选替换旧页 + 复位（原子 round-trip） |
+| [ppt:insert:slidesOoxml](#pptinsertslidesooxml) | 📋 Draft | 应用 OOXML 页包；可选替换旧页 + 复位（顺序复合 round-trip，非原子） |
 
 !!! info "关于 ppt:insert:video"
     PowerPoint JavaScript API **不支持**插入视频/音频元素。此功能标记为 🚫 Not Feasible，不在事件列表中定义。
@@ -2842,7 +2842,7 @@ interface GetSlideOoxmlResponse {
 !!! note "低层传输原语"
     见 [`ppt:get:slideOoxml`](#pptgetslideooxml) 顶部说明。
 
-**说明**: 将一个 OOXML 页包（≥1 页，base64 编码的 `.pptx`）插入到演示文稿。可选地在插入后**替换旧页并复位**，使「导出 → 改 → 回插 → 删旧 → 复位」成为一次原子 round-trip。
+**说明**: 将一个 OOXML 页包（≥1 页，base64 编码的 `.pptx`）插入到演示文稿。可选地在插入后**替换旧页并复位**，把「导出 → 改 → 回插 → 删旧 → 复位」做成一次顺序复合的 round-trip（尽力、非原子，详见下方说明）。
 
 **请求数据**:
 
