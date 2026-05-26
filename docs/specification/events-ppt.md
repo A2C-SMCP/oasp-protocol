@@ -2764,6 +2764,9 @@ interface GotoSlideResponse {
 
 **说明**: 导出指定幻灯片的当前 OOXML（Office Open XML）为单页 `.pptx` 包，base64 编码。导出反映文档**实时状态（含未保存的本地修改）**，供服务端离线解析或改写后再回插。
 
+!!! info "实现提示（非规范 / Informative）"
+    客户端 Office.js 路径的一种可行实现（office-editor4ai 已核对）：`slide.exportAsBase64()` 返回**单页** `.pptx` 的 base64（需 PowerPointApi 1.8）。Office.js 操作内存中的实时文档模型（不读磁盘），故导出含未保存修改——建议实现方以一次 spike 落锤确认（改标题不 save → export → 解压看 XML 含改动）。能力不满足时按 [3016 判定](#pptinsertslidesooxml)用 `isSetSupported` 预检主动返回。
+
 **请求数据**:
 
 ```typescript
@@ -2864,16 +2867,22 @@ interface InsertSlidesOoxmlRequest {
 | `formatting` | string | ❌ | `"keepSourceFormatting"` | 沿用源格式或套用目标主题 |
 | `targetSlideIndex` | number | ❌ | 末尾 | 插入位置（插到该索引之后） |
 | `replaceSlideId` | string | ❌ | - | round-trip：插入后删除的旧页 |
-| `finalSlideIndex` | number | ❌ | - | round-trip：插入页复位到的目标索引 |
+| `finalSlideIndex` | number | ❌ | - | round-trip：插入页复位到的目标索引。任意复位需 PowerPointApi 1.8；省略、或等于被替换页索引（原位替换）时 1.2 即可 |
 
-!!! warning "原子复合执行顺序"
-    当提供 `replaceSlideId` / `finalSlideIndex` 时，本事件按 **[插入 → 删除 `replaceSlideId` → 移动到 `finalSlideIndex`]** 有序复合执行，作为一次逻辑操作：
+!!! warning "顺序复合执行（尽力，非原子）"
+    当提供 `replaceSlideId` / `finalSlideIndex` 时，本事件按 **[插入 → 删除 `replaceSlideId` → 移动到 `finalSlideIndex`]** 有序复合执行，语义上视为一次逻辑操作，但**不保证原子性**——底层平台可能不支持事务/回滚，实现应尽量合批以最小化可见中间态，但无法保证零中间态。
 
-    - 成功（`success: true`）：三步全部生效，响应 `insertedSlideIndices` 反映最终真实索引。
-    - 失败：返回错误，`error.details` 标明失败步骤；调用方应据响应判断当前文档状态（实现可能无法回滚已生效的前序步骤）。
+    - 成功（`success: true`）：各步全部生效，`insertedSlideIndices` 反映最终真实索引。
+    - 部分失败（`success: false`）：`error.details` 给出 `{ stage, partiallyApplied, createdSlideId }`——`stage` 标明失败阶段（`resolve` / `insert` / `delete` / `move` / `readback`）；`partiallyApplied` 表示是否已有副作用；`createdSlideId` 标明已插入但未清理的新页，供调用方（服务端）**对账补偿**（如删除残留新页以恢复操作前状态）。调用方不得假设失败即无副作用。
 
 !!! info "实现提示（非规范 / Informative）"
-    `formatting` 取值对齐 Office.js `PowerPoint.InsertSlideFormatting`。一种可行实现为客户端 `insertSlidesFromBase64(base64, { formatting, targetSlideId })`（`targetSlideIndex` 由 Add-In 解析为 slideId），再按需删旧页 + 重排。整页插入会重置选区/滚动、撤销非原子——详见 [`ppt:insert:chart` 实现提示路径 B](#pptinsertchart)。
+    客户端 Office.js 路径的一种可行实现（office-editor4ai 已核对 API 可行性）：
+
+    - **调用**：`presentation.insertSlidesFromBase64(base64, { formatting, targetSlideId })`（需 PowerPointApi 1.2），再按需删旧页 + `slide.moveTo(finalSlideIndex)`（需 1.8）。整页插入会重置选区/滚动、撤销非原子——详见 [`ppt:insert:chart` 实现提示路径 B](#pptinsertchart)。
+    - **formatting 大小写映射**：协议沿用 camelCase（`keepSourceFormatting` / `useDestinationTheme`，与其它 ppt 事件一致），但 Office.js `PowerPoint.InsertSlideFormatting` 枚举字符串值为 PascalCase（`KeepSourceFormatting` / `UseDestinationTheme`），**不接受 camelCase**。由 Add-In 内部映射到枚举成员，无需改协议。
+    - **targetSlideIndex 解析**：Add-In 先 `slides.load("items/id,items/index")` 把 `targetSlideIndex` 解析为 `targetSlideId`；缺省（末尾）时解析为最后一页 id（注意 Office.js 原生缺省 `targetSlideId` 是插到**开头**，故缺省语义须由 Add-In 显式落到末尾）。建议回插时用 `sourceSlideIds` 把源 pin 成单页避免歧义。
+    - **命名元素回报（`elements[]`）的定位机制**：因 `elementId` 不透明（见 [标识符不透明性](data-structures.md#element-id-opacity)），定位方式属实现细节，规范不绑定。两条可行路径：① **主路径**——服务端写 `cNvPr/@name`（如 `oasp-chart-<uuid>`），Add-In 插入后按 `shape.name` 查回（`Shape.name` 读 API 已确证，1.4；几何单位为磅）。⚠️ `@name` 能否穿越 `keepSourceFormatting` round-trip 存活是**运行时行为**，须 Add-In spike 实测（native 数字 id 必变、不可外传，但 `@name` 通常保留）。② **回退路径**——服务端在 OOXML 写 presentation 级 `customXmlParts` 注册表（`oaspId → {slideId/序号, 页内序号}`），Add-In 经 `presentation.customXmlParts` 读回（需 1.7）；该路径不依赖 `@name` 存活、开/关两态同源。spike 若发现 `@name` 被重写，实现切到回退路径即可，**线缆契约（`elements[]`）不变**。
+    - **3016 判定**：建议用 `Office.context.requirements.isSetSupported('PowerPointApi', '1.2'|'1.8')` **预检后主动返回**（同步、零副作用，避免"insert 成功才发现 moveTo 不支持"留下半成品），少数"API 存在但平台行为不支持"的边缘再由 `OfficeExtension.Error` 兜底映射。
 
 **请求示例 — 整页 round-trip（替换并复位）**:
 

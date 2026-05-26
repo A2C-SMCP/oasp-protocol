@@ -58,7 +58,12 @@
 
 **命名**: 取 `get:slideOoxml` / `insert:slidesOoxml` 中立对称对——按内容格式（OOXML）命名，不把 `base64` 传输编码或 Office.js 方法名写进规范事件名（遵循本周期确立的事件名实现中立原则）。
 
-**待落地门控**: 这 2 个事件由 office-editor4ai（Add-In / Office.js）实现，合并前须经 `/cross-ask office-editor4ai` 验证 `Slide.exportAsBase64` / `insertSlidesFromBase64` / 重排 API 及 `cNvPr/@name` 穿越 round-trip 的可行性（Step 3.5 硬门控）。
+**消费方验证（office-editor4ai cross-ask，无 P0）**: 据 Add-In 实现可行性反馈做 round-N 修订——
+- `insert:slidesOoxml` 措辞由"原子"放宽为**"尽力顺序复合（非原子，无回滚保证）"**：Office.js 无事务/回滚；部分失败时 `error.details` 给出 `{ stage, partiallyApplied, createdSlideId }` 供服务端对账补偿。
+- 命名元素回报（`elements[]`）的定位机制下沉为 Informative，并列**双路径**：主路径 `cNvPr/@name` + `shape.name`（存活性待 Add-In spike 实测），回退路径 `customXmlParts` 注册表（不依赖 `@name` 存活）；线缆契约不依赖具体机制。
+- `formatting` 保持 camelCase（与其它 ppt 事件一致），Add-In 内部映射到 Office.js PascalCase 枚举；`finalSlideIndex` 任意复位需 1.8、原位替换 1.2 即可；`3016` 经 `isSetSupported` 预检主动返回。
+
+> 唯一运行时未决项是 `@name` 穿越 round-trip 的存活性（Add-In spike），但因定位机制已并列 `customXmlParts` 回退、线缆契约（`elements[]`）与机制无关，**该 spike 不阻塞协议合并**——属 Add-In 实现侧验证。
 
 ---
 
