@@ -9,7 +9,26 @@
 
 ## [Unreleased]
 
-_暂无未发布变更。_
+### 变更（规范澄清，非破坏性）
+
+**将实现技术规定从规范层剥离，确立 Normative / Informative 分层治理原则**
+
+线缆契约（事件名、请求/响应形状、`ChartData` / `ChartType` / `CategoricalSeries` / `ScatterSeries` 判别联合、错误码）**全部保持不变**；本次仅调整规范文本，使 `/ppt` 图表事件可被服务端或客户端任意路径实现。
+
+| 变更类型 | 位置 | 说明 |
+|----------|------|------|
+| 移除（实现泄漏） | `events-ppt.md` chart 事件顶部 admonition | 删除「不经 Add-In Office.js 路径」「由 Server 端使用 OOXML 工具（如 `python-pptx`）修改 .pptx」等执行位置/技术选型表述 |
+| 重构 | `events-ppt.md` chart 事件 | 拆分为两块：① 实现中立的**线缆契约**（请求-响应语义、`success` 后变更对 `ppt:get:chart` 可见、并发顺序约定、显式声明"协议不规定由哪一端/何种技术实现"）；② `!!! info "实现提示（非规范）"` 收纳仅服务端离线路径相关的副作用（延迟 >1s、调用前 `save()`、完成后重载文档、离线写入串行化） |
+| 中立化 | `events-ppt.md` / `error-handling.md` 错误码触发条件 | `3004 OPERATION_FAILED` 描述由「OOXML 写入失败」改为「图表写入失败」；`3003 DOCUMENT_READ_ONLY` 由「文档为只读模式」改为「目标文档不可写入」，描述线缆可观测状态而非特定实现 |
+| 移除（实现泄漏） | `events-ppt.md` 事件列表表格 | 三个 chart 事件行去掉「（Server OOXML 离线处理）」括注 |
+| 新增（治理原则） | `conventions.md` | 新增「规范分层（Normative / Informative）」章节：规范层只含线缆可观测内容（事件名/方向、字段形状与语义、错误码及实现中立触发条件、顺序/幂等/可见性保证）；用什么库、服务端还是客户端、性能特征、特定实现副作用一律归为非规范实现提示 |
+| 新增（设计原则） | `error-handling.md` | 错误码设计原则补充「与实现无关」：触发条件描述线缆可观测状态而非实现技术/执行位置 |
+
+**动机**: 消费方 office4ai（OF4AI-21）需按文档连接状态在服务端 OOXML 路径与客户端 Office.js 路径之间路由——同一套事件/payload 两种方式均可实现，接口形状无需改动。原 v0.2.0 文本把「用 `python-pptx` / 服务端离线 / 不走 Office.js」写进规范，等于协议层替消费方做了实现决策，阻碍多路径复用。
+
+**兼容性**: 纯文档/规范澄清，无任何线缆契约变更；对已部署消费方零影响。`/ppt` 整体仍处 📋 Draft 阶段。
+
+**相关工单**: [OF4AI-21](https://turingfocus.atlassian.net/browse/OF4AI-21)（PPT 图表双路径路由）
 
 ---
 

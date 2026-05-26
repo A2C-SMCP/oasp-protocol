@@ -33,14 +33,14 @@
 | [ppt:insert:shape](#pptinsertshape) | 📋 Draft | 插入形状 |
 | [ppt:insert:image](#pptinsertimage) | 📋 Draft | 插入图片 |
 | [ppt:insert:table](#pptinserttable) | 📋 Draft | 插入表格 |
-| [ppt:insert:chart](#pptinsertchart) | 📋 Draft | 插入图表（Server OOXML 离线处理） |
+| [ppt:insert:chart](#pptinsertchart) | 📋 Draft | 插入图表（柱形/折线/饼/散点等） |
 | [ppt:update:textBox](#pptupdatetextbox) | 📋 Draft | 更新文本框内容/样式 |
 | [ppt:delete:element](#pptdeleteelement) | 📋 Draft | 删除指定元素（亦适用于图表删除） |
 | [ppt:update:image](#pptupdateimage) | 📋 Draft | 替换图片内容 |
 | [ppt:update:tableCell](#pptupdatetablecell) | 📋 Draft | 更新表格单元格 |
 | [ppt:update:tableRowColumn](#pptupdatetablerowcolumn) | 📋 Draft | 更新表格行/列内容 |
-| [ppt:get:chart](#pptgetchart) | 📋 Draft | 读取图表数据（Server OOXML 离线处理） |
-| [ppt:update:chart](#pptupdatechart) | 📋 Draft | 更新图表数据/类型/标题（Server OOXML 离线处理） |
+| [ppt:get:chart](#pptgetchart) | 📋 Draft | 读取图表数据 |
+| [ppt:update:chart](#pptupdatechart) | 📋 Draft | 更新图表数据/类型/标题 |
 
 ### 样式格式类（Server → AddIn，请求-响应）
 
@@ -1245,16 +1245,22 @@ interface InsertTableResponse {
 
 **说明**: 在指定幻灯片插入图表（柱形/折线/饼/散点等），含数据系列与基础展示选项。
 
-!!! warning "Server 端 OOXML 离线处理（适用于 ppt:insert:chart / ppt:get:chart / ppt:update:chart）"
-    PowerPoint JavaScript API 当前不暴露图表创建与数据更新接口（参见 [office-js#5463](https://github.com/OfficeDev/office-js/issues/5463)）。本节 chart 类事件**不经 Add-In Office.js 路径**，由 OASP Server 端使用 OOXML 离线工具（如 `python-pptx`）直接修改 .pptx 文件后再通知 Add-In 重新加载文档。
+!!! note "契约说明（实现中立，适用于 ppt:insert:chart / ppt:get:chart / ppt:update:chart）"
+    chart 类事件遵循标准的请求-响应语义。以下为**线缆可观测契约**，任意实现路径都必须满足，与「在哪一端、用何种技术实现」无关：
 
-    **副作用与约束**：
+    - **持久化与可见性**：当响应 `success: true` 时，图表变更已持久化到目标文档，且对后续 `ppt:get:chart` / `ppt:get:slideElements` 可见。
+    - **并发顺序**：协议不保证对同一文档的并发 chart 写入之间的相互可见顺序；若顺序有意义，调用方应串行发起。
+    - 本协议**不规定**这些事件由哪一端、用何种技术实现——服务端离线处理或客户端图表 API 均可。接口形状、字段语义、错误码及上述契约对各实现路径一致。
+    - 相关数据结构（`ChartData` discriminated union / `ChartType` / `CategoricalSeries` / `ScatterSeries`）定义见 [data-structures.md#ChartType](data-structures.md#charttype)。
 
-    - 预期延迟 >1s（取决于文档大小与磁盘 I/O）
-    - 调用前 Add-In 应已 `save()`，否则未保存的本地修改会被覆盖
-    - 完成后 Add-In 需重新打开/刷新文档以呈现新图表
-    - 同一文档的并发 chart 调用应串行化，避免 OOXML 写入冲突
-    - 相关数据结构（`ChartData` discriminated union / `ChartType` / `CategoricalSeries` / `ScatterSeries`）定义见 [data-structures.md#ChartType](data-structures.md#charttype)
+!!! info "实现提示（非规范 / Informative）"
+    以下特征**仅适用于服务端离线（OOXML）实现路径**，不属于线缆契约——客户端 Office.js 实现路径无需这些步骤。仅供实现者参考：
+
+    - 截至撰写时，PowerPoint JavaScript API 未暴露图表创建与数据更新接口（参见 [office-js#5463](https://github.com/OfficeDev/office-js/issues/5463)），因此一种可行实现是由服务端使用 OOXML 工具（如 `python-pptx`）离线修改 `.pptx` 后通知 Add-In 重新加载文档。
+    - 该路径预期延迟 >1s（取决于文档大小与磁盘 I/O）。
+    - 调用前 Add-In 应已 `save()`，否则未保存的本地修改可能被离线写入覆盖。
+    - 完成后 Add-In 需重新打开/刷新文档以呈现新图表。
+    - 同一文档的并发离线写入应串行化，避免文件写入冲突。
 
 **请求数据**:
 
@@ -1361,8 +1367,8 @@ interface InsertChartResponse {
 | 4002 | `INVALID_PARAM` - `chartType` 不在枚举内，或字段形状与 `chartType` 所选 variant 不匹配（例如 `chartType: "Scatter"` 却传了 `categories`） |
 | 3015 | `INVALID_CHART_DATA` - categorical: `series[].values.length !== categories.length`；scatter: `points` 为空 / 含 NaN / Infinity |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3003 | `DOCUMENT_READ_ONLY` - 文档为只读模式 |
-| 3004 | `OPERATION_FAILED` - OOXML 写入失败 |
+| 3003 | `DOCUMENT_READ_ONLY` - 目标文档不可写入（只读或被锁定，无法应用修改） |
+| 3004 | `OPERATION_FAILED` - 图表写入失败 |
 
 ---
 
@@ -1374,7 +1380,7 @@ interface InsertChartResponse {
 
 **说明**: 读取指定 `elementId` 图表的当前数据（类型、分类/数据点、系列、标题、展示选项）。
 
-> Server-handled OOXML 路径与并发约束见 [`ppt:insert:chart` 顶部 admonition](#pptinsertchart)。
+> 该事件的可见性/顺序契约及实现提示见 [`ppt:insert:chart` 顶部说明](#pptinsertchart)。
 
 **请求数据**:
 
@@ -1428,7 +1434,7 @@ interface GetChartResponse {
 
 **说明**: 更新已存在图表的数据、类型、标题或展示选项。除 `chartType`（discriminator，必需）外，其它字段均可选 — 只更新提供的字段。
 
-> Server-handled OOXML 路径与并发约束见 [`ppt:insert:chart` 顶部 admonition](#pptinsertchart)。
+> 该事件的可见性/顺序契约及实现提示见 [`ppt:insert:chart` 顶部说明](#pptinsertchart)。
 
 **请求数据**:
 
@@ -1531,8 +1537,8 @@ interface UpdateChartResponse {
 | 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在或不是图表元素 |
 | 3015 | `INVALID_CHART_DATA` - 跨 variant 切换未补齐 `series`；或更新后 categorical 维度不一致 / scatter `points` 含非法值 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3003 | `DOCUMENT_READ_ONLY` - 文档为只读模式 |
-| 3004 | `OPERATION_FAILED` - OOXML 写入失败 |
+| 3003 | `DOCUMENT_READ_ONLY` - 目标文档不可写入（只读或被锁定，无法应用修改） |
+| 3004 | `OPERATION_FAILED` - 图表写入失败 |
 
 ---
 
