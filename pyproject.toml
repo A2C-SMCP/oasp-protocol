@@ -1,6 +1,6 @@
 [project]
 name = "oasp-protocol"
-version = "0.2.0"
+version = "0.3.0"
 description = "Office AddIn Socket Protocol - Office AddIn 与后端服务之间的实时通信协议规范"
 authors = [
     { name = "JQQ", email = "jqq1716@gmail.com" }
@@ -28,7 +28,7 @@ build-backend = "hatchling.build"
 packages = ["scripts"]
 
 [tool.bumpversion]
-current_version = "0.2.0"
+current_version = "0.3.0"
 allow_dirty = true   # 允许工作树有 changelog 等改动时 bump
 commit = false       # git 提交/打标由人工控制（配合本仓 mike 发布流程）
 tag = false
