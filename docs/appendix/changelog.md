@@ -15,6 +15,35 @@ _暂无未发布变更。_
 
 ## [0.3.0] - 2026-05-26
 
+### 架构转变：Python MCP Server 从「纯中转」升级为「具备生产能力」
+
+0.3.0 是 OASP 的一次**模型转变**，也是本次 MINOR 升级（0.2 → 0.3）的根本原因——不是单纯加事件：
+
+- **此前（≤0.2.x）**：Python MCP Server 仅做消息中转，**所有动作都在 AddIn（Office.js）实现**；AddIn 未连接即无法操作文档。
+- **从 0.3.0 起**：Server **也具备生产能力**——当 AddIn 未打开、或 AddIn 能力无法实现某操作时，Server 直接介入生产（借助 `python-pptx` 等 OOXML 工具）；**未来 Server 将在 AddIn 完全未连接的情况下实现全部工具操作**。
+
+本版所有变更都服务于这一转变、互为支撑：
+
+- **剥离实现技术 / Normative-Informative 分层** → 让同一套协议可被 Server 或 AddIn **任一端**满足，是「双端皆可生产」的地基；
+- **图表双路径线缆可观测项（`3016` / `elementId` 不透明性 / 客户端路径 Informative）** → Server-生产 与 AddIn-生产 之间的**路由**与反应式降级；
+- **通用幻灯片 OOXML 搬运事件（`ppt:get:slideOoxml` / `ppt:insert:slidesOoxml`）** → AddIn 开着时也能把整页 OOXML 交给 Server 生产再回插；
+- **协议版本握手** → 既然**两端都生产**，Server ↔ AddIn 的版本错位代价更高，故在连接期强制校验版本。
+
+### 新增（协议版本握手）
+
+为避免新旧 Server / AddIn 协议错位，新增连接握手阶段的协议版本校验机制。AddIn 在 `auth` 中声明 `oaspVersion`，Server 在 `connect` handler 校验兼容性（**版本先于业务参数**），不兼容即拒绝连接。
+
+| 变更类型 | 位置 | 说明 |
+|----------|------|------|
+| 新增（握手参数） | `connection.md` | `auth.oaspVersion`（必填，SemVer）；新增「协议版本握手」节：校验时机/顺序（**oaspVersion 先行**）、`HandshakeRejection` 扁平拒绝结构、Server 校验示例、AddIn 收到拒绝后 MUST 主动断开 |
+| 新增（连接确认字段） | `connection.md` | `connection:established` 增加 `serverVersion` 字段（仅诊断用） |
+| 新增（版本治理） | `conventions.md` | 「版本兼容」升级为「协议版本与兼容性」：MAJOR/MINOR/PATCH 语义与触发条件、`is_compatible` 判定规则（v0.x 严格 MAJOR.MINOR；v1.0+ Server 向后兼容）、Python 参考实现、载体选型理由、**非目标**与「**版本握手 ≠ 运行时能力**」正交说明 |
+| 新增错误码 | `error-handling.md` | `2006 PROTOCOL_VERSION_MISMATCH`（连接/认证段）；复用 `2003 HANDSHAKE_FAILED` 处理缺失/非法 `oaspVersion` |
+
+**兼容性**: 引入新的**必填**握手参数 `oaspVersion`——采用本机制的 Server 会拒绝不声明版本的旧 AddIn，需 Server 与 AddIn **协同升级**。属 v0.x 阶段的 MINOR 级变更（v0.x 阶段 MINOR 可含破坏性）。
+
+**设计来源**: 对齐 A2C-SMCP `versioning.md` 的版本握手规范，按 OASP 两方单连接模型简化——校验放 `connect` handler（非 HTTP 中间件），载体放 `auth`（非 URL query），拒绝走 `ConnectionRefusedError`（非 HTTP 400）。
+
 ### 变更（规范澄清，非破坏性）
 
 **将实现技术规定从规范层剥离，确立 Normative / Informative 分层治理原则**
@@ -66,10 +95,10 @@ _暂无未发布变更。_
 
 **消费方验证（office-editor4ai cross-ask，无 P0）**: 据 Add-In 实现可行性反馈做 round-N 修订——
 - `insert:slidesOoxml` 措辞由"原子"放宽为**"尽力顺序复合（非原子，无回滚保证）"**：Office.js 无事务/回滚；部分失败时 `error.details` 给出 `{ stage, partiallyApplied, createdSlideId }` 供服务端对账补偿。
-- 命名元素回报（`elements[]`）的定位机制下沉为 Informative，并列**双路径**：主路径 `cNvPr/@name` + `shape.name`（存活性待 Add-In spike 实测），回退路径 `customXmlParts` 注册表（不依赖 `@name` 存活）；线缆契约不依赖具体机制。
+- 命名元素回报（`elements[]`）的定位机制下沉为 Informative：**主路径** `cNvPr/@name` + `shape.name`（`@name` 穿越 round-trip 的存活性已由 [office-editor4ai#34](https://github.com/JIAQIA/office-editor4ai/issues/34) 实测确认——Mac/单次：存活、几何可读、`masterLeak: 0`），`customXmlParts` 注册表降为**防御后备**；线缆契约不依赖具体机制。另记：图表可能位于占位符内（`type==="Placeholder"` + `containedType==="Chart"`），按不透明 `elementId` 定位不受影响，但勿用 `type==="Chart"` 过滤。
 - `formatting` 保持 camelCase（与其它 ppt 事件一致），Add-In 内部映射到 Office.js PascalCase 枚举；`finalSlideIndex` 任意复位需 1.8、原位替换 1.2 即可；`3016` 经 `isSetSupported` 预检主动返回。
 
-> 唯一运行时未决项是 `@name` 穿越 round-trip 的存活性（Add-In spike），但因定位机制已并列 `customXmlParts` 回退、线缆契约（`elements[]`）与机制无关，**该 spike 不阻塞协议合并**——属 Add-In 实现侧验证。
+> Add-In spike（[office-editor4ai#34](https://github.com/JIAQIA/office-editor4ai/issues/34)）已确认 `@name` 穿越 round-trip 存活（Mac / 单次 round-trip：存活、几何可读、无母版累积），**主路径成立**；`customXmlParts` 注册表作防御后备。边界：Web/Windows 与多次连续 round-trip 的母版累积建议后续各补一次抽测。
 
 ---
 

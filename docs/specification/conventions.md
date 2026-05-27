@@ -349,19 +349,88 @@ PPT 中的位置和尺寸使用 **磅 (point)** 为单位。
 3. 返回 `TIMEOUT` 错误码
 4. AddIn 收到超时后的响应应忽略
 
-## 版本兼容
+## 协议版本与兼容性 {#versioning}
 
-### 向后兼容原则
+OASP 体系有三方（AI Agent / Server / AddIn），但**协议层只涉及 Server ↔ AddIn 两端**——AI Agent 通过 MCP/API 接入 Server，不直接参与 Socket.IO 通信。为避免新旧两端在网络上「说不同的话」（协议错位），OASP 在**连接握手阶段**强制校验协议版本：不兼容的 AddIn 在 `connect` 阶段即被拒绝，不会进入业务通信。
 
-1. **新增字段**: 可以添加新的可选字段
-2. **新增事件**: 可以添加新的事件类型
-3. **新增枚举值**: 可以添加新的枚举值
+本节定义版本号语义与兼容性判定；握手载体与拒绝流程见[连接与握手 · 协议版本握手](connection.md#protocol-version-handshake)，不匹配错误码见[错误处理 · PROTOCOL_VERSION_MISMATCH](error-handling.md#protocol_version_mismatch-2006)。
 
-### 不兼容变更
+### 版本号语义（MAJOR.MINOR.PATCH）
 
-以下变更需要升级协议主版本号：
+协议版本号采用[语义化版本](https://semver.org/lang/zh-CN/)，格式 `MAJOR.MINOR.PATCH`，单一来源为 `pyproject.toml` 的 `version` 字段（当前 `0.3.0`，由 `bump-my-version` 管理）。
 
-1. 删除或重命名字段
-2. 更改字段类型
-3. 更改字段语义
-4. 删除事件或错误码
+| 位 | 触发条件（任一即 bump） | 兼容性 |
+|----|------------------------|--------|
+| **MAJOR** | 删除/重命名事件或字段；更改字段类型、语义或必需性；更改事件命名或路由语义；删除或更改已有错误码 | 不同 MAJOR **完全不兼容** |
+| **MINOR** | 新增事件；新增**可选**字段；新增枚举值；新增错误码；新增命名空间 | 见下方判定规则 |
+| **PATCH** | bug 修复、文档澄清、错误文案优化（不改变任何线缆可观测行为） | 同 MAJOR.MINOR 内 **永远兼容** |
+
+!!! warning "PATCH 必须 wire 字节兼容"
+    PATCH 升级 **MUST** 保持 wire format 字节兼容——不得新增/删除/重命名任何字段（含可选字段）、不得改类型/值域/必需性、不得改事件名或错误码取值。任何改变序列化字节序列的改动 **MUST** 走 MINOR（v0.x 阶段亦视为破坏性变更）。
+
+### 兼容性判定规则 {#compatibility-rule}
+
+握手时由 Server 判定连接的 AddIn 是否兼容。下文 `client` 指 AddIn 在握手中声明的 `oaspVersion`，`server` 指 Server 自身的 OASP 版本。
+
+**v0.x（MAJOR = 0，不稳定阶段）**——任何 MINOR 都可能是破坏性变更，故 **MAJOR.MINOR 必须严格相等**（PATCH 可自由差异）：
+
+```
+is_compatible(client, server) =
+    client.major == server.major AND client.minor == server.minor
+```
+
+**v1.0+（MAJOR ≥ 1，稳定阶段）**——MAJOR 必须相等，且 Server MINOR **必须 ≥** Client MINOR（较新的 Server 向后兼容较旧的 AddIn）：
+
+```
+is_compatible(client, server) =
+    client.major == server.major AND client.major >= 1 AND client.minor <= server.minor
+```
+
+判定公式与 A2C-SMCP 协议一致，升级次序相同：**Server 先于 AddIn 升级**（OASP 中 Server 通常先部署，且是请求发起方）。
+
+!!! note "v1.0+ 已知版本降级（OASP 两方模型独有）"
+    Server 在握手时已记录 AddIn 的 `oaspVersion`。v1.0+ 阶段，较新的 Server 向较旧 AddIn 发送请求时 **SHOULD** 避免使用该 AddIn 的 MINOR 尚未引入的事件——握手放行只保证「能连」，避免错位还需 Server 据已知版本自我约束。这是两方单连接模型的便利；A2C 的无状态 HTTP 闸门不持有对端版本，做不到这一点。
+
+参考实现（Python）：
+
+```python
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class OaspVersion:
+    major: int
+    minor: int
+    patch: int
+
+    @classmethod
+    def parse(cls, s: str) -> "OaspVersion":
+        parts = s.split(".")
+        if len(parts) != 3:
+            raise ValueError(f"Invalid version: {s}")
+        return cls(int(parts[0]), int(parts[1]), int(parts[2]))
+
+    def __str__(self) -> str:
+        return f"{self.major}.{self.minor}.{self.patch}"
+
+
+def is_compatible(client: OaspVersion, server: OaspVersion) -> bool:
+    if client.major != server.major:
+        return False
+    if client.major == 0:
+        return client.minor == server.minor   # v0.x 严格匹配 MINOR
+    return client.minor <= server.minor        # v1.0+ Server 向后兼容
+```
+
+### 版本声明载体（oaspVersion）
+
+AddIn 连接时 **MUST** 在 `auth` 对象中声明 `oaspVersion`（与 `clientId` / `documentUri` 同处一个握手入口）。
+
+- 版本是「能不能说同一种话」（协议层），认证/路由是「你是谁、操作哪个文档」（业务层）；二者同在 `auth`，由 Server 的 `connect` handler 一次性校验
+- OASP 是**两方单连接**模型（一个文档仅一个 AddIn 连接），不存在 A2C 三方房间的「传递性」需求（A2C 需保证同房间内 Agent 与 Computer 互相兼容，才把版本闸门下沉到 HTTP 中间件层）。OASP 只有一对端点，`connect` handler 校验 + `ConnectionRefusedError` 携带结构化拒绝数据已足够，**无需**引入 HTTP 中间件
+- `oaspVersion` **SHOULD** 由 AddIn SDK 从内置版本常量自动拼入，避免业务代码手动传值导致漂移
+
+### 非目标与边界
+
+- **非目标**（有意排除，保持机制最小）：capabilities 特性发现、自动协商降级、单 Server 实例多协议版本共存、peer-to-peer 协商。多版本并存靠部署拓扑解决——一个 Server 实例只讲一个协议版本。
+- **版本握手 ≠ 运行时能力**：协议版本握手回答「两端能不能说同一种 OASP」（连接期、一次性、强制）；运行时能力（如某 Office.js `PowerPointApi` requirement set 1.2 / 1.8 是否可用）回答「这台宿主此刻能不能做某动作」（操作期、按需）。二者**正交**——握手通过不代表某具体能力可用；能力不满足在操作期由 [`3016 API_NOT_SUPPORTED`](error-handling.md) **反应式**处理，不在握手期校验。

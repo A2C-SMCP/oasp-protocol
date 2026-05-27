@@ -76,6 +76,7 @@ interface ErrorResponse {
 | `2003` | `HANDSHAKE_FAILED` | 握手失败 |
 | `2004` | `SESSION_INVALID` | 会话无效 |
 | `2005` | `CONNECTION_LOST` | 连接丢失 |
+| `2006` | `PROTOCOL_VERSION_MISMATCH` | 协议版本不兼容（握手阶段拒绝） |
 
 ### 3xxx - 文档与操作错误
 
@@ -138,6 +139,35 @@ interface ErrorResponse {
   }
 }
 ```
+
+### PROTOCOL_VERSION_MISMATCH (2006)
+
+**触发场景**: AddIn 在握手 `auth.oaspVersion` 中声明的协议版本与 Server 不兼容（`is_compatible` 判定为假，规则见[通用约定 · 兼容性判定规则](conventions.md#compatibility-rule)）。
+
+**特殊性**: 该错误发生在**连接握手阶段**，不属于请求-响应周期——没有 `requestId`，**不走**标准 `ErrorResponse`。Server 在 `connect` handler 中抛 `ConnectionRefusedError`，**扁平**拒绝数据经 Socket.IO 送达 AddIn `connect_error` 的 `error.data`（见[连接与握手 · 协议版本握手](connection.md#protocol-version-handshake)）。
+
+**拒绝数据**（扁平，非 `ErrorResponse`）:
+
+```json
+{
+  "code": "PROTOCOL_VERSION_MISMATCH",
+  "message": "Protocol version mismatch",
+  "serverVersion": "0.3.0",
+  "clientVersion": "0.2.0",
+  "minSupported": "0.3.0",
+  "maxSupported": "0.3.999"
+}
+```
+
+**处理建议**:
+
+- AddIn **MUST** 主动 `disconnect()` 并停止自动重连，再上抛明确异常——不得静默重试（重连只会再次触发同一拒绝，进入死循环）
+- 据 `serverVersion` / `clientVersion` 提示用户升级 AddIn 或切换到匹配的 Server 实例
+
+**错误码复用说明**:
+
+- **复用 `2003 HANDSHAKE_FAILED`**: 缺少或格式非法的 `oaspVersion`（与缺少 `clientId` / `documentUri` 同类，属「握手参数不合法」）
+- **新增 `2006 PROTOCOL_VERSION_MISMATCH`**: 参数合法但版本语义不兼容（专码以便 AddIn 区分「参数错」与「版本错」——前者改参数，后者须升级端点）
 
 ### SELECTION_EMPTY (3002)
 
