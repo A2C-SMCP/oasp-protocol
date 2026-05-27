@@ -1247,22 +1247,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_36" class="md-nav__link">
+  <a href="#versioning" class="md-nav__link">
     <span class="md-ellipsis">
       
-        版本兼容
+        协议版本与兼容性
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="版本兼容">
+    <nav class="md-nav" aria-label="协议版本与兼容性">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_37" class="md-nav__link">
+  <a href="#majorminorpatch" class="md-nav__link">
     <span class="md-ellipsis">
       
-        向后兼容原则
+        版本号语义（MAJOR.MINOR.PATCH）
       
     </span>
   </a>
@@ -1270,10 +1270,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#_38" class="md-nav__link">
+  <a href="#compatibility-rule" class="md-nav__link">
     <span class="md-ellipsis">
       
-        不兼容变更
+        兼容性判定规则
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#oaspversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        版本声明载体（oaspVersion）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_36" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        非目标与边界
       
     </span>
   </a>
@@ -1951,22 +1973,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_36" class="md-nav__link">
+  <a href="#versioning" class="md-nav__link">
     <span class="md-ellipsis">
       
-        版本兼容
+        协议版本与兼容性
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="版本兼容">
+    <nav class="md-nav" aria-label="协议版本与兼容性">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_37" class="md-nav__link">
+  <a href="#majorminorpatch" class="md-nav__link">
     <span class="md-ellipsis">
       
-        向后兼容原则
+        版本号语义（MAJOR.MINOR.PATCH）
       
     </span>
   </a>
@@ -1974,10 +1996,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#_38" class="md-nav__link">
+  <a href="#compatibility-rule" class="md-nav__link">
     <span class="md-ellipsis">
       
-        不兼容变更
+        兼容性判定规则
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#oaspversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        版本声明载体（oaspVersion）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_36" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        非目标与边界
       
     </span>
   </a>
@@ -2299,21 +2343,96 @@
 <li>返回 <code>TIMEOUT</code> 错误码</li>
 <li>AddIn 收到超时后的响应应忽略</li>
 </ol>
-<h2 id="_36">版本兼容<a class="headerlink" href="#_36" title="Permanent link">&para;</a></h2>
-<h3 id="_37">向后兼容原则<a class="headerlink" href="#_37" title="Permanent link">&para;</a></h3>
-<ol>
-<li><strong>新增字段</strong>: 可以添加新的可选字段</li>
-<li><strong>新增事件</strong>: 可以添加新的事件类型</li>
-<li><strong>新增枚举值</strong>: 可以添加新的枚举值</li>
-</ol>
-<h3 id="_38">不兼容变更<a class="headerlink" href="#_38" title="Permanent link">&para;</a></h3>
-<p>以下变更需要升级协议主版本号：</p>
-<ol>
-<li>删除或重命名字段</li>
-<li>更改字段类型</li>
-<li>更改字段语义</li>
-<li>删除事件或错误码</li>
-</ol>
+<h2 id="versioning">协议版本与兼容性<a class="headerlink" href="#versioning" title="Permanent link">&para;</a></h2>
+<p>OASP 体系有三方（AI Agent / Server / AddIn），但<strong>协议层只涉及 Server ↔ AddIn 两端</strong>——AI Agent 通过 MCP/API 接入 Server，不直接参与 Socket.IO 通信。为避免新旧两端在网络上「说不同的话」（协议错位），OASP 在<strong>连接握手阶段</strong>强制校验协议版本：不兼容的 AddIn 在 <code>connect</code> 阶段即被拒绝，不会进入业务通信。</p>
+<p>本节定义版本号语义与兼容性判定；握手载体与拒绝流程见<a href="../connection/#protocol-version-handshake">连接与握手 · 协议版本握手</a>，不匹配错误码见<a href="../error-handling/#protocol_version_mismatch-2006">错误处理 · PROTOCOL_VERSION_MISMATCH</a>。</p>
+<h3 id="majorminorpatch">版本号语义（MAJOR.MINOR.PATCH）<a class="headerlink" href="#majorminorpatch" title="Permanent link">&para;</a></h3>
+<p>协议版本号采用<a href="https://semver.org/lang/zh-CN/">语义化版本</a>，格式 <code>MAJOR.MINOR.PATCH</code>，单一来源为 <code>pyproject.toml</code> 的 <code>version</code> 字段（当前 <code>0.3.0</code>，由 <code>bump-my-version</code> 管理）。</p>
+<table>
+<thead>
+<tr>
+<th>位</th>
+<th>触发条件（任一即 bump）</th>
+<th>兼容性</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>MAJOR</strong></td>
+<td>删除/重命名事件或字段；更改字段类型、语义或必需性；更改事件命名或路由语义；删除或更改已有错误码</td>
+<td>不同 MAJOR <strong>完全不兼容</strong></td>
+</tr>
+<tr>
+<td><strong>MINOR</strong></td>
+<td>新增事件；新增<strong>可选</strong>字段；新增枚举值；新增错误码；新增命名空间</td>
+<td>见下方判定规则</td>
+</tr>
+<tr>
+<td><strong>PATCH</strong></td>
+<td>bug 修复、文档澄清、错误文案优化（不改变任何线缆可观测行为）</td>
+<td>同 MAJOR.MINOR 内 <strong>永远兼容</strong></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">PATCH 必须 wire 字节兼容</p>
+<p>PATCH 升级 <strong>MUST</strong> 保持 wire format 字节兼容——不得新增/删除/重命名任何字段（含可选字段）、不得改类型/值域/必需性、不得改事件名或错误码取值。任何改变序列化字节序列的改动 <strong>MUST</strong> 走 MINOR（v0.x 阶段亦视为破坏性变更）。</p>
+</div>
+<h3 id="compatibility-rule">兼容性判定规则<a class="headerlink" href="#compatibility-rule" title="Permanent link">&para;</a></h3>
+<p>握手时由 Server 判定连接的 AddIn 是否兼容。下文 <code>client</code> 指 AddIn 在握手中声明的 <code>oaspVersion</code>，<code>server</code> 指 Server 自身的 OASP 版本。</p>
+<p><strong>v0.x（MAJOR = 0，不稳定阶段）</strong>——任何 MINOR 都可能是破坏性变更，故 <strong>MAJOR.MINOR 必须严格相等</strong>（PATCH 可自由差异）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>is_compatible(client, server) =
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>    client.major == server.major AND client.minor == server.minor
+</code></pre></div>
+<p><strong>v1.0+（MAJOR ≥ 1，稳定阶段）</strong>——MAJOR 必须相等，且 Server MINOR <strong>必须 ≥</strong> Client MINOR（较新的 Server 向后兼容较旧的 AddIn）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>is_compatible(client, server) =
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>    client.major == server.major AND client.major &gt;= 1 AND client.minor &lt;= server.minor
+</code></pre></div>
+<p>判定公式与 A2C-SMCP 协议一致，升级次序相同：<strong>Server 先于 AddIn 升级</strong>（OASP 中 Server 通常先部署，且是请求发起方）。</p>
+<div class="admonition note">
+<p class="admonition-title">v1.0+ 已知版本降级（OASP 两方模型独有）</p>
+<p>Server 在握手时已记录 AddIn 的 <code>oaspVersion</code>。v1.0+ 阶段，较新的 Server 向较旧 AddIn 发送请求时 <strong>SHOULD</strong> 避免使用该 AddIn 的 MINOR 尚未引入的事件——握手放行只保证「能连」，避免错位还需 Server 据已知版本自我约束。这是两方单连接模型的便利；A2C 的无状态 HTTP 闸门不持有对端版本，做不到这一点。</p>
+</div>
+<p>参考实现（Python）：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>
+<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>
+<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="k">class</span><span class="w"> </span><span class="nc">OaspVersion</span><span class="p">:</span>
+<a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a>    <span class="n">major</span><span class="p">:</span> <span class="nb">int</span>
+<a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a>    <span class="n">minor</span><span class="p">:</span> <span class="nb">int</span>
+<a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a>    <span class="n">patch</span><span class="p">:</span> <span class="nb">int</span>
+<a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a>
+<a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a>    <span class="nd">@classmethod</span>
+<a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">parse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;OaspVersion&quot;</span><span class="p">:</span>
+<a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a>        <span class="n">parts</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+<a id="__codelineno-23-13" name="__codelineno-23-13" href="#__codelineno-23-13"></a>        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+<a id="__codelineno-23-14" name="__codelineno-23-14" href="#__codelineno-23-14"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid version: </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-23-15" name="__codelineno-23-15" href="#__codelineno-23-15"></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+<a id="__codelineno-23-16" name="__codelineno-23-16" href="#__codelineno-23-16"></a>
+<a id="__codelineno-23-17" name="__codelineno-23-17" href="#__codelineno-23-17"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-23-18" name="__codelineno-23-18" href="#__codelineno-23-18"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">major</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">minor</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">patch</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-23-19" name="__codelineno-23-19" href="#__codelineno-23-19"></a>
+<a id="__codelineno-23-20" name="__codelineno-23-20" href="#__codelineno-23-20"></a>
+<a id="__codelineno-23-21" name="__codelineno-23-21" href="#__codelineno-23-21"></a><span class="k">def</span><span class="w"> </span><span class="nf">is_compatible</span><span class="p">(</span><span class="n">client</span><span class="p">:</span> <span class="n">OaspVersion</span><span class="p">,</span> <span class="n">server</span><span class="p">:</span> <span class="n">OaspVersion</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-23-22" name="__codelineno-23-22" href="#__codelineno-23-22"></a>    <span class="k">if</span> <span class="n">client</span><span class="o">.</span><span class="n">major</span> <span class="o">!=</span> <span class="n">server</span><span class="o">.</span><span class="n">major</span><span class="p">:</span>
+<a id="__codelineno-23-23" name="__codelineno-23-23" href="#__codelineno-23-23"></a>        <span class="k">return</span> <span class="kc">False</span>
+<a id="__codelineno-23-24" name="__codelineno-23-24" href="#__codelineno-23-24"></a>    <span class="k">if</span> <span class="n">client</span><span class="o">.</span><span class="n">major</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<a id="__codelineno-23-25" name="__codelineno-23-25" href="#__codelineno-23-25"></a>        <span class="k">return</span> <span class="n">client</span><span class="o">.</span><span class="n">minor</span> <span class="o">==</span> <span class="n">server</span><span class="o">.</span><span class="n">minor</span>   <span class="c1"># v0.x 严格匹配 MINOR</span>
+<a id="__codelineno-23-26" name="__codelineno-23-26" href="#__codelineno-23-26"></a>    <span class="k">return</span> <span class="n">client</span><span class="o">.</span><span class="n">minor</span> <span class="o">&lt;=</span> <span class="n">server</span><span class="o">.</span><span class="n">minor</span>        <span class="c1"># v1.0+ Server 向后兼容</span>
+</code></pre></div>
+<h3 id="oaspversion">版本声明载体（oaspVersion）<a class="headerlink" href="#oaspversion" title="Permanent link">&para;</a></h3>
+<p>AddIn 连接时 <strong>MUST</strong> 在 <code>auth</code> 对象中声明 <code>oaspVersion</code>（与 <code>clientId</code> / <code>documentUri</code> 同处一个握手入口）。</p>
+<ul>
+<li>版本是「能不能说同一种话」（协议层），认证/路由是「你是谁、操作哪个文档」（业务层）；二者同在 <code>auth</code>，由 Server 的 <code>connect</code> handler 一次性校验</li>
+<li>OASP 是<strong>两方单连接</strong>模型（一个文档仅一个 AddIn 连接），不存在 A2C 三方房间的「传递性」需求（A2C 需保证同房间内 Agent 与 Computer 互相兼容，才把版本闸门下沉到 HTTP 中间件层）。OASP 只有一对端点，<code>connect</code> handler 校验 + <code>ConnectionRefusedError</code> 携带结构化拒绝数据已足够，<strong>无需</strong>引入 HTTP 中间件</li>
+<li><code>oaspVersion</code> <strong>SHOULD</strong> 由 AddIn SDK 从内置版本常量自动拼入，避免业务代码手动传值导致漂移</li>
+</ul>
+<h3 id="_36">非目标与边界<a class="headerlink" href="#_36" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>非目标</strong>（有意排除，保持机制最小）：capabilities 特性发现、自动协商降级、单 Server 实例多协议版本共存、peer-to-peer 协商。多版本并存靠部署拓扑解决——一个 Server 实例只讲一个协议版本。</li>
+<li><strong>版本握手 ≠ 运行时能力</strong>：协议版本握手回答「两端能不能说同一种 OASP」（连接期、一次性、强制）；运行时能力（如某 Office.js <code>PowerPointApi</code> requirement set 1.2 / 1.8 是否可用）回答「这台宿主此刻能不能做某动作」（操作期、按需）。二者<strong>正交</strong>——握手通过不代表某具体能力可用；能力不满足在操作期由 <a href="../error-handling/"><code>3016 API_NOT_SUPPORTED</code></a> <strong>反应式</strong>处理，不在握手期校验。</li>
+</ul>
 
 
 
