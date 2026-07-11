@@ -802,12 +802,18 @@ interface TextInsertOptions {
   top?: number;              // Y 坐标（磅）
   width?: number;            // 文本框宽度（磅），默认 300
   height?: number;           // 文本框高度（磅），默认 100
-  fontSize?: number;         // 字号
-  fontName?: string;         // 字体名称
-  color?: string;            // 文字颜色（十六进制，如 "#FF0000"）
-  fillColor?: string;        // 填充颜色（十六进制）
+  fillColor?: string;        // 文本框填充色（十六进制）
+  font?: PptFont;            // 插入文本的字体格式，见 data-structures.md#pptfont
+
+  // —— 以下扁平字段自 0.3.0 起 ⚠️ Deprecated：等价写入 font.*，保留向后兼容 ——
+  fontSize?: number;         // ⚠️ Deprecated → font.size
+  fontName?: string;         // ⚠️ Deprecated → font.name
+  color?: string;            // ⚠️ Deprecated → font.color
 }
 ```
+
+!!! note "插入即带字体格式"
+    `options.font`（`PptFont`）在插入文本框的同时应用字体格式，语义等价「插入 + 格式」的一次性复合操作。扁平字段 `fontSize` / `fontName` / `color` 已 **Deprecated**，等价 `font.*`；同时提供时 `font.*` 优先。各属性的 requirement set 与**反应式 3016 全或无**降级同 [`PptFont`](data-structures.md#pptfont)。
 
 **请求参数说明**:
 
@@ -819,10 +825,11 @@ interface TextInsertOptions {
 | `top` | number | ❌ | - | Y 坐标（磅），未指定时使用默认位置 |
 | `width` | number | ❌ | 300 | 文本框宽度（磅） |
 | `height` | number | ❌ | 100 | 文本框高度（磅） |
-| `fontSize` | number | ❌ | - | 字号 |
-| `fontName` | string | ❌ | - | 字体名称 |
-| `color` | string | ❌ | - | 文字颜色（十六进制） |
-| `fillColor` | string | ❌ | - | 文本框填充颜色（十六进制） |
+| `fillColor` | string | ❌ | - | 文本框填充色（十六进制） |
+| `font` | [`PptFont`](data-structures.md#pptfont) | ❌ | - | 插入文本的字体格式 |
+| `fontSize` | number | ❌ | - | ⚠️ Deprecated → `font.size` |
+| `fontName` | string | ❌ | - | ⚠️ Deprecated → `font.name` |
+| `color` | string | ❌ | - | ⚠️ Deprecated → `font.color` |
 
 **请求示例**:
 
@@ -886,7 +893,8 @@ interface InsertTextResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 text 参数 |
-| 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
+| 4002 | `INVALID_PARAM` - slideIndex 超出范围，或 `font.underline` 不在枚举内 |
+| 3016 | `API_NOT_SUPPORTED` - `font` 所含属性所需 PowerPointApi requirement set（删除线/上下标/大写=1.8）在当前宿主不满足；`details.requiredApiSet` 标注所需版本 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
@@ -1579,34 +1587,49 @@ interface UpdateTextBoxRequest {
 }
 
 interface TextBoxUpdates {
-  text?: string;             // 新文本内容
-  fontSize?: number;         // 字号
-  fontName?: string;         // 字体名称
-  color?: string;            // 文字颜色（十六进制，如 "#FF0000"）
-  fillColor?: string;        // 填充颜色（十六进制）
-  bold?: boolean;            // 粗体
-  italic?: boolean;          // 斜体
+  text?: string;                     // 新文本内容（整框）
+  fillColor?: string;                // 文本框填充色（十六进制，框级）
+  font?: PptFont;                    // 整框级字体格式（铺底），见 data-structures.md#pptfont
+  runs?: PptTextRun[];               // run 级局部格式（区间覆盖，后者胜）
+  paragraphs?: PptParagraphStyle[];  // 段落级格式（项目符号 bulletFormat）
+
+  // —— 以下扁平字段自 0.3.0 起 ⚠️ Deprecated：等价写入 font.*，保留向后兼容 ——
+  fontSize?: number;                 // ⚠️ Deprecated → font.size
+  fontName?: string;                 // ⚠️ Deprecated → font.name
+  color?: string;                    // ⚠️ Deprecated → font.color
+  bold?: boolean;                    // ⚠️ Deprecated → font.bold
+  italic?: boolean;                  // ⚠️ Deprecated → font.italic
 }
 ```
+
+!!! note "字段结构：font 子对象 + 区间覆盖"
+    - **整框级**用 `font`（`PptFont`）铺底；**run 级**用 `runs[]`（每段 `{start, length, font}`）覆盖指定字符区间；**段落级** bullet 用 `paragraphs[]`（`{start, length, bulletFormat}`）。
+    - **应用顺序**：`font`（整框铺底）→ `runs`（按数组序覆盖重叠区间）→ `paragraphs`（bullet）。
+    - 扁平字段 `fontSize` / `fontName` / `color` / `bold` / `italic` 为 0.3.0 遗留、**已 Deprecated**，语义等价 `font.*`。同时提供扁平字段与 `font.*` 时 **`font.*` 优先**。
+    - `runs` / `paragraphs` 的 `start` / `length` 口径（UTF-16 code unit、含 `\r` / `\v`、越界 → `4002`）见 [字符区间口径](data-structures.md#pptparagraphstyle)。
+    - 各字体属性的 requirement set 及**反应式 3016 全或无**降级见 [`PptFont`](data-structures.md#pptfont)。
 
 **请求参数说明**:
 
 | 参数 | 类型 | 必需 | 说明 |
 |------|------|------|------|
 | `elementId` | string | ✅ | 要更新的元素 ID（可通过 `ppt:get:slideElements` 获取） |
-| `text` | string | ❌ | 新文本内容 |
-| `fontSize` | number | ❌ | 字号 |
-| `fontName` | string | ❌ | 字体名称 |
-| `color` | string | ❌ | 文字颜色（十六进制） |
-| `fillColor` | string | ❌ | 文本框填充颜色（十六进制） |
-| `bold` | boolean | ❌ | 是否粗体 |
-| `italic` | boolean | ❌ | 是否斜体 |
+| `updates.text` | string | ❌ | 新文本内容（整框） |
+| `updates.fillColor` | string | ❌ | 文本框填充色（十六进制，框级） |
+| `updates.font` | [`PptFont`](data-structures.md#pptfont) | ❌ | 整框级字体格式 |
+| `updates.runs` | [`PptTextRun[]`](data-structures.md#ppttextrun) | ❌ | run 级局部格式（字符区间寻址，可多段） |
+| `updates.paragraphs` | [`PptParagraphStyle[]`](data-structures.md#pptparagraphstyle) | ❌ | 段落级项目符号（字符区间寻址） |
+| `updates.fontSize` | number | ❌ | ⚠️ Deprecated → `font.size` |
+| `updates.fontName` | string | ❌ | ⚠️ Deprecated → `font.name` |
+| `updates.color` | string | ❌ | ⚠️ Deprecated → `font.color` |
+| `updates.bold` | boolean | ❌ | ⚠️ Deprecated → `font.bold` |
+| `updates.italic` | boolean | ❌ | ⚠️ Deprecated → `font.italic` |
 
 !!! note "支持的元素类型"
     仅支持 `TextBox`、`Placeholder`、`GeometricShape` 类型的元素。
     对不支持文本的元素类型将返回错误。
 
-**请求示例**:
+**请求示例（font 子对象 + run 级局部格式 + 段落 bullet）**:
 
 ```json
 {
@@ -1615,9 +1638,14 @@ interface TextBoxUpdates {
   "elementId": "shape-001",
   "updates": {
     "text": "更新后的标题",
-    "fontSize": 28,
-    "bold": true,
-    "color": "#333333"
+    "font": { "size": 28, "bold": true, "color": "#333333", "underline": "WavyHeavy" },
+    "runs": [
+      { "start": 0, "length": 4, "font": { "color": "#C00000", "allCaps": true } },
+      { "start": 10, "length": 6, "font": { "underline": "Dotted", "subscript": true } }
+    ],
+    "paragraphs": [
+      { "start": 0, "length": 20, "bulletFormat": { "visible": true, "type": "Numbered", "style": "ArabicNumeralPeriod" } }
+    ]
   }
 }
 ```
@@ -1676,7 +1704,9 @@ interface UpdateTextBoxResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 elementId |
+| 4002 | `INVALID_PARAM` - `runs` / `paragraphs` 的 `start`/`length` 越界（`start < 0` 或 `start + length > text.length`），或 `underline` / `bulletFormat.type` 不在枚举内 |
 | 3003 | `OPERATION_FAILED` - 元素未找到或元素类型不支持文本编辑 |
+| 3016 | `API_NOT_SUPPORTED` - 本次请求所含字体/项目符号属性所需 PowerPointApi requirement set（删除线/上下标/大写=1.8、bullet type/style=1.10）在当前宿主不满足；`details.requiredApiSet` 标注所需版本，调用方应仅发送受支持的属性或提示用户 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
 

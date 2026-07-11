@@ -9,7 +9,37 @@
 
 ## [Unreleased]
 
-_暂无未发布变更。_
+### 新增（/ppt 文字格式能力补齐 — MINOR，向后兼容）
+
+为 `/ppt` 文字工具补齐一批 office.js 原生支持的常规文字格式能力：run 级局部格式、删除线/双删除线、上标/下标、全大写/小型大写、多下划线样式、项目符号、插入即带字体。字段结构收敛为 `font` 子对象，整框级与 run 级复用。
+
+**可行性来源**：office4ai#45 提出；经 `/cross-ask office-editor4ai`（Add-In / office.js）逐项复核可落地，并**纠正了 issue 的版本假设**（见下「requirement set 分档」）——无 P0，无需 Server 离线回退。
+
+| 变更类型 | 位置 | 说明 |
+|----------|------|------|
+| 新增（数据结构） | `data-structures.md` | `PptFont`（整框级 / run 级共用的字体子对象，12 属性含删除线/上下标/大写/下划线）、`ShapeFontUnderlineStyle`（17 值 PascalCase 枚举）、`PptTextRun`（`{start,length,font}` run 级寻址）、`PptParagraphStyle`（`{start,length,bulletFormat}` 段落级寻址）、`BulletFormat`（`visible`/`type`/`style`，**无 `character`**）、`BulletType` 枚举 |
+| 变更（事件字段） | `events-ppt.md` `ppt:update:textBox` | `TextBoxUpdates` 新增 `font` / `runs[]` / `paragraphs[]`；应用顺序 `font`→`runs`→`paragraphs`（后者覆盖重叠区间） |
+| 变更（事件字段） | `events-ppt.md` `ppt:insert:text` | `TextInsertOptions` 新增 `font`（插入即带字体，语义等价「插入 + 格式」复合操作） |
+| Deprecated（向后兼容保留） | `events-ppt.md` | `TextBoxUpdates` 与 `TextInsertOptions` 的扁平 `fontSize`/`fontName`/`color`/`bold`/`italic` 标记 ⚠️ Deprecated，语义等价 `font.*`；同时提供时 `font.*` 优先 |
+| 复用（无新错误码） | `events-ppt.md` / `error-handling.md` | 区间越界 / 枚举非法复用 [`4002 INVALID_PARAM`](../specification/error-handling.md)；requirement set 不满足复用 [`3016 API_NOT_SUPPORTED`](../specification/error-handling.md#api_not_supported-3016)（`details.requiredApiSet` 标注版本） |
+
+**requirement set 分档（经 Add-In 真机复核，纠正 issue 假设）**：
+
+| 能力 | 最低 PowerPointApi | 备注 |
+|------|-------------------|------|
+| 下划线全枚举、run 级寻址（`getSubstring`）、run 级 bold/italic/size/name/color、bullet `visible` | **1.4** | issue 曾误标下划线/大写/删除线为 1.4、getSubstring 为 1.5 |
+| 删除线 / 双删除线、上标 / 下标、全大写 / 小型大写（含其 run 级） | **1.8** | issue 误标为 1.4；整批有效门槛 = 1.8 |
+| bullet `type` / `style`（编号列表） | **1.10** | `visible` 仅需 1.4 |
+
+**降级语义**：宿主不满足**本次请求所含属性**的最高 requirement set 时，事件按**反应式 `3016` 整体失败（全或无）**，与现有 `/ppt` 事件（`insert:chart` / `slidesOoxml`）一致；调用方靠「只发受支持的属性」控制粒度。不引入「部分成功」响应语义。
+
+**字符区间口径**：`runs` / `paragraphs` 的 `start` / `length` 以 **UTF-16 code unit** 计，含段落分隔 `\r` 与软换行 `\v`；越界 → `4002`。
+
+**跨命名空间说明**：PPT `ShapeFontUnderlineStyle`（17 值 PascalCase，对齐 office.js PowerPoint 枚举、零映射）与 `/word` `UnderlineStyle`（7 值小写、映射 Word.js）**有意不同**，服务不同宿主 API，不复用。
+
+**兼容性**：纯新增可选字段 + 扁平字段 Deprecated 别名，**向后兼容**；`/ppt` 为 Draft。已部署 AddIn 忽略未知字段即可。属 v0.x 阶段的 MINOR 级变更（目标 `0.4.0`）。
+
+**范围边界（不含）**：段落级排版（行距 / 缩进 / 段间距）、字间距、超链接写入、竖排——office.js PowerPoint API 无原生支持，走 OOXML 路径另案；bullet 自定义字符 / 字体 / 颜色——office.js 不提供，协议不设字段。Add-In 侧既有实现缺口（`insert:text` 字体哑参数 / `update:textBox` `fillColor` 未透传 / underline 退化实现）由 office-editor4ai 单独立项修复，非协议变更。
 
 ---
 

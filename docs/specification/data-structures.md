@@ -124,6 +124,120 @@ type UnderlineStyle =
 
 ---
 
+## PPT 文本格式（/ppt）
+
+> 以下结构服务于 [`ppt:update:textBox`](events-ppt.md#pptupdatetextbox) 与 [`ppt:insert:text`](events-ppt.md#pptinserttext)。字体属性统一收敛到 `PptFont`，**整框级与 run 级复用同一结构**。每个属性标注其最低 PowerPointApi requirement set；宿主不满足时按事件定义走**反应式** [`3016 API_NOT_SUPPORTED`](error-handling.md#api_not_supported-3016) 处理。
+
+### PptFont
+
+PPT 文字字体格式。整框级（`TextBoxUpdates.font` / `TextInsertOptions.font`）与 run 级（`PptTextRun.font`）共用本结构。所有字段可选，未提供的属性保持原样。
+
+```typescript
+interface PptFont {
+  size?: number;                       // 字号（磅）           [1.4]
+  name?: string;                       // 字体名称             [1.4]
+  color?: string;                      // 文字颜色（十六进制） [1.4]
+  bold?: boolean;                      // 粗体                 [1.4]
+  italic?: boolean;                    // 斜体                 [1.4]
+  underline?: ShapeFontUnderlineStyle; // 下划线样式           [1.4]
+  strikethrough?: boolean;             // 删除线               [1.8]
+  doubleStrikethrough?: boolean;       // 双删除线             [1.8]
+  superscript?: boolean;               // 上标                 [1.8]
+  subscript?: boolean;                 // 下标                 [1.8]
+  allCaps?: boolean;                   // 全大写               [1.8]
+  smallCaps?: boolean;                 // 小型大写             [1.8]
+}
+```
+
+| 字段 | 类型 | requirement set | 说明 |
+|------|------|-----------------|------|
+| `size` | number | 1.4 | 字号（磅） |
+| `name` | string | 1.4 | 字体名称 |
+| `color` | string | 1.4 | 文字颜色（十六进制，如 `#FF0000`） |
+| `bold` | boolean | 1.4 | 粗体 |
+| `italic` | boolean | 1.4 | 斜体 |
+| `underline` | ShapeFontUnderlineStyle | 1.4 | 下划线样式（17 值枚举，见下） |
+| `strikethrough` | boolean | 1.8 | 删除线 |
+| `doubleStrikethrough` | boolean | 1.8 | 双删除线 |
+| `superscript` | boolean | 1.8 | 上标 |
+| `subscript` | boolean | 1.8 | 下标 |
+| `allCaps` | boolean | 1.8 | 全大写 |
+| `smallCaps` | boolean | 1.8 | 小型大写 |
+
+!!! note "requirement set 与降级（全或无）"
+    每个属性标注其最低 PowerPointApi requirement set。当前宿主不满足**本次请求所含属性**的最高 requirement set 时，承载该 `PptFont` 的事件按**反应式** [`3016 API_NOT_SUPPORTED`](error-handling.md#api_not_supported-3016) **整体失败（全或无，不做部分应用）**，错误 `details.requiredApiSet` 标注所需版本。调用方据此降级——例如仅发送 1.4 属性以适配低版本宿主。此处理与握手无关：[版本握手 ≠ 运行时能力](conventions.md)，能力不足在操作期反应式处理。
+
+### ShapeFontUnderlineStyle
+
+PPT 下划线样式枚举（17 值，PowerPointApi 1.4）。线缆值即 office.js `ShapeFontUnderlineStyle` 枚举字面量，双端零映射。
+
+```typescript
+type ShapeFontUnderlineStyle =
+  | "None" | "Single" | "Double" | "Heavy"
+  | "Dotted" | "DottedHeavy"
+  | "Dash" | "DashHeavy" | "DashLong" | "DashLongHeavy"
+  | "DotDash" | "DotDashHeavy" | "DotDotDash" | "DotDotDashHeavy"
+  | "Wavy" | "WavyHeavy" | "WavyDouble";
+```
+
+!!! info "与 Word 的 UnderlineStyle 有意不同"
+    `/word` 的 [`UnderlineStyle`](#underlinestyle) 是 7 值小写（`single` / `double` / …），映射 Word.js；PPT 的 `ShapeFontUnderlineStyle` 是 17 值 PascalCase，直接对齐 office.js PowerPoint 的同名枚举。二者服务不同宿主 API，故**不复用**——这是有意的跨命名空间差异，非命名不一致。
+
+### PptTextRun
+
+run 级局部格式：对文本框内一段字符区间单独设置字体。
+
+```typescript
+interface PptTextRun {
+  start: number;    // 区间起始字符下标（0 基，UTF-16 code unit）
+  length: number;   // 区间字符数（UTF-16 code unit）
+  font: PptFont;    // 应用到该区间的字体格式
+}
+```
+
+### PptParagraphStyle
+
+段落级格式（当前仅项目符号）。同样以字符区间寻址：区间**接触到的段落**整体应用。
+
+```typescript
+interface PptParagraphStyle {
+  start: number;               // 区间起始字符下标（0 基，UTF-16 code unit）
+  length: number;              // 区间字符数（UTF-16 code unit）
+  bulletFormat: BulletFormat;  // 应用到区间所在段落的项目符号格式
+}
+```
+
+!!! important "字符区间口径（start / length）"
+    - `start` 为 0 基字符下标、`length` 为字符数，二者均以 **UTF-16 code unit** 计（= JavaScript 字符串语义；emoji / 代理对算 2 个单位）。
+    - 计数对齐文本框 `text` 的完整内容，**含段落分隔符 `\r` 与软换行 `\v`**（这些字符占下标）。双端须以同一口径计算 offset。
+    - 越界（`start < 0` 或 `start + length > text.length`）按 [`4002 INVALID_PARAM`](error-handling.md) 处理。
+    - `runs` / `paragraphs` 在同一次请求内按数组顺序应用，后者覆盖先者的重叠区间。
+
+### BulletFormat
+
+项目符号格式。对齐 office.js `paragraphFormat.bulletFormat`，仅含下列可写属性。
+
+```typescript
+interface BulletFormat {
+  visible?: boolean;   // 是否显示项目符号                      [1.4]
+  type?: BulletType;   // 项目符号类型（无/编号/非编号）        [1.10]
+  style?: string;      // 编号 / 符号样式，对齐 office.js 枚举  [1.10]
+}
+
+type BulletType = "None" | "Numbered" | "Unnumbered" | "Unsupported";
+```
+
+| 字段 | 类型 | requirement set | 说明 |
+|------|------|-----------------|------|
+| `visible` | boolean | 1.4 | 显示 / 隐藏项目符号 |
+| `type` | BulletType | 1.10 | 无 / 编号 / 非编号列表 |
+| `style` | string | 1.10 | 具体编号或符号样式，取值对齐 office.js bullet 样式枚举（如 `ArabicNumeralPeriod` / `RomanUppercasePeriod` / `SimplifiedChinesePeriod` 等 40+ 值） |
+
+!!! warning "office.js 硬限制"
+    `bulletFormat` **没有** `character`（自定义符号字符）、字体、颜色属性——协议不提供这些字段。`type` / `style`（真正的编号列表）需 PowerPointApi **1.10**；`visible`（显示 / 隐藏）仅需 **1.4**。
+
+---
+
 ## 样式相关
 
 ### StyleInfo
