@@ -9,6 +9,24 @@
 
 ## [Unreleased]
 
+### /word 字体字段收敛为 WordFont + 修正 UnderlineStyle（含 Stable 破坏性变更）
+
+延续 #10 的字体抽象统一，把 `/word` 散落在 `TextFormat` / `CellFormat` 上的字体字段收敛为统一实体 **`WordFont`**（`bold`/`italic`/`underline`/`size`/`name`/`color`/`highlightColor`，两处复用）。经 `/cross-ask office-editor4ai` 复核可行（全 `Word.Font`、文本场景 WordApi 1.1），并**纠正了现协议 `UnderlineStyle` 的严重错误**。
+
+| 变更类型 | 位置 | 说明 |
+|----------|------|------|
+| 新增（数据结构） | `data-structures.md` | `WordFont`（7 属性字体子对象，对齐 `Word.Font`、零映射） |
+| **修正（错误值）** | `data-structures.md` `UnderlineStyle` | 原 7 值小写（`single`/`double`/…）**三重错误**：大小写全错、`dashed` 为**非法值**（Word 用 `DashLine`）、且为漏项子集。改为对齐 `Word.UnderlineType` 的 **18 值 PascalCase**（`None` + 17 可 SET 值，排除仅回读 `Mixed` 与废弃 `Hidden`/`DotLine`）。已部署 Add-In 本就用 PascalCase 全枚举，本次收敛掉文档与实现的漂移 |
+| **移除 + 收敛（Stable 破坏性，clean-break）** | `TextFormat`（`word:insert:text` / `replace:selection` / `replace:text`） | 扁平 `bold`/`italic`/`underline`/`fontSize`/`fontName`/`color`/`highlightColor` **删除**，收敛为 `TextFormat = { font?: WordFont, styleName? }`。经确认无外部已部署发送方，直接 clean-break、不留兼容窗口 |
+| **移除 + 收敛（Draft 破坏性）** | `CellFormat`（`word:update:tableCell`） | 扁平 `fontName`/`fontSize`/`fontColor`/`bold`/`italic` **删除**，收敛为 `font?: WordFont`（`fontColor`→`color`）；单元格因此获得 `underline`/`highlightColor`。对齐 / `backgroundColor` 保留顶层 |
+| 澄清（既有一致性） | `data-structures.md` | `TextFormat.styleName` 经 `styleBuiltIn`（中文宿主必需，实际 WordApi 1.3）；`highlightColor` 桌面端仅 15 预置色、非自由 RGB、`null` 清除；`CellFormat` 全字段有效门槛 WordApi 1.3 |
+
+**版本门槛**：文本字体 **WordApi 1.1**（几乎恒满足）；表格单元格字体经 `cell.body.font` 抬至 **1.3**（与 `CellFormat` 其余字段同档，不额外抬高）；`styleName` 可靠应用（`styleBuiltIn`）需 **1.3**。降级同 `/ppt` 反应式 `3016`。
+
+**跨命名空间**：`/word` `UnderlineStyle`（18 值，对齐 `Word.UnderlineType`）与 `/ppt` `ShapeFontUnderlineStyle`（17 值，对齐 office.js）字面量不同（虚线 `DashLine` vs `Dash`），**有意不复用**。
+
+**兼容性**：`TextFormat`（Stable）与 `CellFormat`（Draft）均破坏性收敛；因确认无外部消费方，`/word` 亦采 clean-break。工具侧（`JIAQIA/office-editor4ai`）跟进消费——Add-In 现状已是 PascalCase 全枚举，underline 侧零改动，主要改动为扁平→嵌套 schema 归一化。目标 `0.4.0`。
+
 ### /ppt 文字格式能力补齐 + 字段收敛（Draft 破坏性收敛）
 
 为 `/ppt` 文字工具补齐一批 office.js 原生支持的常规文字格式能力：run 级局部格式、删除线/双删除线、上标/下标、全大写/小型大写、多下划线样式、项目符号、插入即带字体。**字段结构统一收敛为 `font` 子对象**：`insert:text` / `update:textBox` 原有的扁平 `fontSize`/`fontName`/`color`/`bold`/`italic` **直接移除**（不保留 Deprecated 别名），改由 `font.*` 承载——整框级与 run 级复用同一 `PptFont`。因 `/ppt` 为 Draft，允许此破坏性收敛，避免协议表面长期背负散堆的扁平字段。

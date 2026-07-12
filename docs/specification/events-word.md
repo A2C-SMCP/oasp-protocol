@@ -795,9 +795,9 @@ interface GetStylesResponse {
 **说明**: 在指定位置插入文本。
 
 !!! important "样式优先级规则"
-    当同时指定直接格式（如 `bold`、`fontSize`）和 `styleName` 时，**直接格式优先级高于样式名**。
+    当同时指定 `format.font`（[`WordFont`](data-structures.md#wordfont)）和 `styleName` 时，**`font` 优先级高于样式名**。
 
-    即：先应用 `styleName` 指定的样式，再覆盖应用直接格式属性。
+    即：先应用 `styleName` 指定的样式，再覆盖应用 `format.font`。
 
 **请求数据**:
 
@@ -823,10 +823,7 @@ interface InsertTextRequest {
   "text": "这是新插入的文本",
   "location": "Cursor",
   "format": {
-    "bold": true,
-    "fontSize": 14,
-    "fontName": "微软雅黑",
-    "color": "#FF0000"
+    "font": { "bold": true, "size": 14, "name": "微软雅黑", "color": "#FF0000" }
   }
 }
 ```
@@ -872,7 +869,7 @@ interface InsertTextResponse {
     选区必须非空。如果选区为空，将返回错误码 `SELECTION_EMPTY` (3002)。
 
 !!! important "格式优先级规则"
-    - `format`（最高优先级）：包含直接格式属性和 `format.styleName`
+    - `format`（最高优先级）：包含 `format.font`（字体）和 `format.styleName`
     - `styleName`（仅在 `format` 未提供时使用）
     - 默认保持选区原有格式
 
@@ -903,7 +900,7 @@ interface ReplaceContent {
   "content": {
     "text": "新的替换文本",
     "format": {
-      "bold": true
+      "font": { "bold": true }
     }
   }
 }
@@ -992,8 +989,8 @@ interface ReplaceSelectionResponse {
 **说明**: 查找并替换文档中的文本。
 
 !!! important "样式优先级规则"
-    当同时指定直接格式（如 `bold`、`fontSize`）和 `styleName` 时，**直接格式优先级高于样式名**。
-    即：先应用 `styleName` 指定的样式，再覆盖应用直接格式属性。
+    当同时指定 `format.font`（[`WordFont`](data-structures.md#wordfont)）和 `styleName` 时，**`font` 优先级高于样式名**。
+    即：先应用 `styleName` 指定的样式，再覆盖应用 `format.font`。
 
 !!! note "特殊字符搜索"
     `searchText` 和 `replaceText` 支持 Word 特殊字符记号来匹配不可见字符。**不要使用 `\n` 等转义字符**，而应使用下表中的 Word 记号：
@@ -1039,9 +1036,7 @@ interface ReplaceTextRequest {
     "replaceAll": true
   },
   "format": {
-    "bold": true,
-    "fontSize": 14,
-    "color": "#FF0000"
+    "font": { "bold": true, "size": 14, "color": "#FF0000" }
   }
 }
 ```
@@ -1255,8 +1250,7 @@ interface AppendTextRequest {
   "text": "这是追加的文本",
   "location": "End",
   "format": {
-    "bold": true,
-    "fontSize": 12
+    "font": { "bold": true, "size": 12 }
   }
 }
 ```
@@ -1738,8 +1732,7 @@ interface UpdateTableCellRequest {
       "format": {
         "horizontalAlignment": "Centered",
         "backgroundColor": "#4472C4",
-        "fontColor": "#FFFFFF",
-        "bold": true
+        "font": { "color": "#FFFFFF", "bold": true }
       }
     }
   ]
