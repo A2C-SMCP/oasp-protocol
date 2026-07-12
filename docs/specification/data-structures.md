@@ -85,42 +85,59 @@ type SelectionType =
 
 ### TextFormat
 
-文本格式定义。
+文本格式定义：字体格式收敛到 [`WordFont`](#wordfont)，`styleName`（Word 样式）为独立关注点。
 
 ```typescript
 interface TextFormat {
-  bold?: boolean;          // 粗体
-  italic?: boolean;        // 斜体
-  underline?: UnderlineStyle;  // 下划线样式
-  fontSize?: number;       // 字号（磅）
-  fontName?: string;       // 字体名称
-  color?: string;          // 文字颜色（十六进制，如 "#FF0000"）
-  highlightColor?: string; // 高亮颜色
-  styleName?: string;      // Word 样式名称
+  font?: WordFont;       // 字体格式，见 #wordfont
+  styleName?: string;    // Word 内置样式名（如 "Heading 1"），经 styleBuiltIn 应用
 }
 ```
 
 !!! important "样式优先级"
-    当 `styleName` 与直接格式属性同时存在时，**直接格式属性优先级更高**。
+    当 `styleName` 与 `font` 同时存在时，**`font` 优先级更高**。处理顺序：先应用 `styleName` 指定的样式，再用 `font` 覆盖。
 
-    处理顺序：
-    1. 先应用 `styleName` 指定的样式
-    2. 再用直接格式属性覆盖
+!!! note "styleName 的宿主口径"
+    `styleName` 经 Word.js `range.styleBuiltIn` 应用（内置样式需去空格 PascalCase：`"Heading 1"` → `Heading1`），未命中再回退 `range.style`。**中文 / 非英文宿主必须走 `styleBuiltIn`**（`range.style = "Heading 1"` 会抛 `InvalidArgument`），故 `styleName` 的可靠应用实际需 **WordApi 1.3**。
+
+### WordFont
+
+Word 字体格式。整段（`TextFormat.font`）与表格单元格（`CellFormat.font`）复用同一结构。所有字段可选，未提供的属性保持原样。对齐 Word.js `Word.Font`，双端零映射。
+
+```typescript
+interface WordFont {
+  bold?: boolean;                  // 粗体                          [WordApi 1.1]
+  italic?: boolean;                // 斜体                          [1.1]
+  underline?: UnderlineStyle;      // 下划线样式（见下）            [1.1]
+  size?: number;                   // 字号（磅）                    [1.1]
+  name?: string;                   // 字体名称                      [1.1]
+  color?: string;                  // 文字颜色（十六进制 #RRGGBB 或色名） [1.1]
+  highlightColor?: string | null;  // 高亮色（见下；null = 清除）   [1.1]
+}
+```
+
+!!! note "requirement set 与降级"
+    文本字体全部字段经 Word.js `range.font`（`Word.Font`），**统一 WordApi 1.1**，几乎所有宿主满足、无访问器抬平。用于表格单元格时经 `cell.body.font`，因 `TableCell` / `TableCell.body` 访问器门槛升至 **WordApi 1.3**（与 [`CellFormat`](#cellformat) 其余字段同档，不额外抬高）。宿主不满足时按事件定义走反应式 [`3016 API_NOT_SUPPORTED`](error-handling.md#api_not_supported-3016)。
+
+!!! warning "highlightColor ≠ color（桌面端预置色吸附）"
+    `highlightColor` 取值为十六进制 `#RRGGBB` 或 Word 预置色名（如 `"Yellow"`），`null` 表示**清除高亮**。⚠️ **桌面版 Word 仅支持 15 个预置高亮色**（Yellow / Lime / Turquoise / Pink / Blue / Red / DarkBlue / Teal / Green / Purple / DarkRed / Olive / Gray / LightGray / Black），传任意 `#RRGGBB` 会被**吸附到最近的预置色**——故 `highlightColor` 不是自由 RGB（与 `color` 不同）；需精确可控时建议直接传上述 15 个预置色名。
 
 ### UnderlineStyle
 
-下划线样式枚举。
+Word 下划线样式枚举（对齐 Word.js `Word.UnderlineType`，PascalCase，双端零映射）。列出全部**可 SET** 值，排除仅回读的 `Mixed` 与已废弃的 `Hidden` / `DotLine`。
 
 ```typescript
 type UnderlineStyle =
-  | "none"                 // 无下划线
-  | "single"               // 单下划线
-  | "double"               // 双下划线
-  | "dotted"               // 点线
-  | "dashed"               // 虚线
-  | "thick"                // 粗下划线
-  | "wave";                // 波浪线
+  | "None"
+  | "Single" | "Word" | "Double" | "Thick"
+  | "Dotted" | "DottedHeavy"
+  | "DashLine" | "DashLineHeavy" | "DashLineLong" | "DashLineLongHeavy"
+  | "DotDashLine" | "DotDashLineHeavy" | "TwoDotDashLine" | "TwoDotDashLineHeavy"
+  | "Wave" | "WaveHeavy" | "WaveDouble";
 ```
+
+!!! info "与 /ppt 的 ShapeFontUnderlineStyle 有意不同"
+    本枚举 PascalCase、对齐 Word.js `Word.UnderlineType`；`/ppt` 的 [`ShapeFontUnderlineStyle`](#shapefontunderlinestyle) 对齐 office.js PowerPoint。二者服务不同宿主 API、字面量不同（虚线 Word 为 `DashLine`、PPT 为 `Dash`），**有意不复用**。
 
 ---
 
@@ -183,7 +200,7 @@ type ShapeFontUnderlineStyle =
 ```
 
 !!! info "与 Word 的 UnderlineStyle 有意不同"
-    `/word` 的 [`UnderlineStyle`](#underlinestyle) 是 7 值小写（`single` / `double` / …），映射 Word.js；PPT 的 `ShapeFontUnderlineStyle` 是 17 值 PascalCase，直接对齐 office.js PowerPoint 的同名枚举。二者服务不同宿主 API，故**不复用**——这是有意的跨命名空间差异，非命名不一致。
+    `/word` 的 [`UnderlineStyle`](#underlinestyle) 是 18 值 PascalCase（对齐 Word.js `Word.UnderlineType`）；PPT 的 `ShapeFontUnderlineStyle` 是 17 值 PascalCase（对齐 office.js PowerPoint 的同名枚举）。二者对齐不同宿主 API、字面量不同（如虚线 Word 为 `DashLine`、PPT 为 `Dash`），故**不复用**——这是有意的跨命名空间差异，非命名不一致。
 
 ### PptTextRun
 
@@ -361,7 +378,7 @@ interface ReplaceContent {
 ```
 
 !!! important "格式优先级"
-    - `format`（最高优先级）：包含直接格式属性和 `format.styleName`
+    - `format`（最高优先级）：包含 `format.font`（字体）和 `format.styleName`
     - `styleName`（仅在 `format` 未提供时使用）
     - 默认保持选区原有格式
 
@@ -416,25 +433,24 @@ type TableInsertLocation =
 interface CellFormat {
   horizontalAlignment?: "Left" | "Centered" | "Right" | "Justified";  // 对应 Word.Alignment
   verticalAlignment?: "Top" | "Center" | "Bottom";                    // 对应 Word.VerticalAlignment
-  backgroundColor?: string;       // 背景颜色（十六进制，如 "#4472C4"）— 对应 cell.shadingColor
-  fontName?: string;              // 字体名称（应用到整个单元格 body，会覆盖原段落字体）
-  fontSize?: number;              // 字号（磅）
-  fontColor?: string;             // 字体颜色（十六进制，如 "#333333"）
-  bold?: boolean;                 // 粗体
-  italic?: boolean;               // 斜体
+  backgroundColor?: string;   // 背景色（十六进制，如 "#4472C4"）— 对应 cell.shadingColor
+  font?: WordFont;            // 单元格字体格式（整刷，见下），见 #wordfont
 }
 ```
 
 !!! note "命名对齐 Office.js"
-    枚举值刻意与 Word JavaScript API 的 `Word.Alignment` / `Word.VerticalAlignment` 完全一致（注意 `Centered` / `Justified` 是过去分词形），便于 Add-In 直接 `cast` 不做映射。
+    对齐枚举值刻意与 Word JavaScript API 的 `Word.Alignment` / `Word.VerticalAlignment` 完全一致（注意 `Centered` / `Justified` 是过去分词形），便于 Add-In 直接 `cast` 不做映射。
 
-!!! note "整刷语义"
-    `fontName` / `fontSize` / `fontColor` / `bold` / `italic` 作用于整个单元格 body，会覆盖单元格内所有段落与 Run 的字体设置。这是 Word.js 的固有行为，不是协议保留的灵活度。
+!!! note "字体收敛为 WordFont（整刷语义）"
+    单元格字体统一走 [`WordFont`](#wordfont)（`fontColor` 已并入 `font.color`；单元格因此获得 `underline` / `highlightColor` 等全部 7 属性）。`font` 经 Word.js `cell.body.font` 应用，**作用于整个单元格 body、覆盖单元格内所有段落与 Run 的字体**——这是 Word.js 的固有行为（对 `Body.font` 赋值即整体套用），不是协议保留的灵活度。
+
+!!! note "requirement set"
+    `CellFormat` 全字段有效门槛 **WordApi 1.3**：`TableCell` / `TableCell.body`、`cell.shadingColor`、`horizontalAlignment` / `verticalAlignment` 均为 1.3。`font` 的字体属性本身是 1.1，经单元格访问器（`cell.body.font`）抬至 1.3，与本结构其余字段同档、不额外抬高。
 
 !!! note "单元格内边距"
     Word JavaScript API 的单元格内边距是**表级 API**（`Word.Table.setCellPadding`），无法逐单元格设置。如需调整内边距，请通过 `word:update:tableFormat.styleOptions.cellPadding` 在表级配置。
 
-> 该结构仅 `/word` 命名空间引用（对齐 Word.js：[`UnderlineStyle`](#underlinestyle) 7 值小写、`Word.Alignment` 的 `Centered` / `Justified`）。`/ppt` 的 [`ppt:update:tableFormat`](events-ppt.md#pptupdatetableformat) **有意不复用本结构**，改用 [`PptFont`](#pptfont) + [`ParagraphHorizontalAlignment`](#paragraphhorizontalalignment) / [`TextVerticalAlignment`](#textverticalalignment)（对齐 office.js PowerPoint、17 值 PascalCase 下划线、`Center` / `Justify`）——与 underline 枚举同理，服务不同宿主 API、零映射，跨命名空间不复用。
+> 该结构仅 `/word` 命名空间引用（对齐 Word.js：[`UnderlineStyle`](#underlinestyle) 18 值 PascalCase 对齐 `Word.UnderlineType`、`Word.Alignment` 的 `Centered` / `Justified`）。`/ppt` 的 [`ppt:update:tableFormat`](events-ppt.md#pptupdatetableformat) **有意不复用本结构**，改用 [`PptFont`](#pptfont) + [`ParagraphHorizontalAlignment`](#paragraphhorizontalalignment) / [`TextVerticalAlignment`](#textverticalalignment)（对齐 office.js PowerPoint、17 值 PascalCase 下划线、`Center` / `Justify`）——与 underline 枚举同理，服务不同宿主 API、零映射，跨命名空间不复用。
 
 ---
 
