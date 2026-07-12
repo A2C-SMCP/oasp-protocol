@@ -124,6 +124,151 @@ type UnderlineStyle =
 
 ---
 
+## PPT 文本格式（/ppt）
+
+> 以下结构服务于 [`ppt:update:textBox`](events-ppt.md#pptupdatetextbox) 与 [`ppt:insert:text`](events-ppt.md#pptinserttext)。字体属性统一收敛到 `PptFont`，**整框级与 run 级复用同一结构**。每个属性标注其最低 PowerPointApi requirement set；宿主不满足时按事件定义走**反应式** [`3016 API_NOT_SUPPORTED`](error-handling.md#api_not_supported-3016) 处理。
+
+### PptFont
+
+PPT 文字字体格式。整框级（`TextBoxUpdates.font` / `TextInsertOptions.font`）与 run 级（`PptTextRun.font`）共用本结构。所有字段可选，未提供的属性保持原样。
+
+```typescript
+interface PptFont {
+  size?: number;                       // 字号（磅）           [1.4]
+  name?: string;                       // 字体名称             [1.4]
+  color?: string;                      // 文字颜色（十六进制） [1.4]
+  bold?: boolean;                      // 粗体                 [1.4]
+  italic?: boolean;                    // 斜体                 [1.4]
+  underline?: ShapeFontUnderlineStyle; // 下划线样式           [1.4]
+  strikethrough?: boolean;             // 删除线               [1.8]
+  doubleStrikethrough?: boolean;       // 双删除线             [1.8]
+  superscript?: boolean;               // 上标                 [1.8]
+  subscript?: boolean;                 // 下标                 [1.8]
+  allCaps?: boolean;                   // 全大写               [1.8]
+  smallCaps?: boolean;                 // 小型大写             [1.8]
+}
+```
+
+| 字段 | 类型 | requirement set | 说明 |
+|------|------|-----------------|------|
+| `size` | number | 1.4 | 字号（磅） |
+| `name` | string | 1.4 | 字体名称 |
+| `color` | string | 1.4 | 文字颜色（十六进制，如 `#FF0000`） |
+| `bold` | boolean | 1.4 | 粗体 |
+| `italic` | boolean | 1.4 | 斜体 |
+| `underline` | ShapeFontUnderlineStyle | 1.4 | 下划线样式（17 值枚举，见下） |
+| `strikethrough` | boolean | 1.8 | 删除线 |
+| `doubleStrikethrough` | boolean | 1.8 | 双删除线 |
+| `superscript` | boolean | 1.8 | 上标 |
+| `subscript` | boolean | 1.8 | 下标 |
+| `allCaps` | boolean | 1.8 | 全大写 |
+| `smallCaps` | boolean | 1.8 | 小型大写 |
+
+!!! note "requirement set 与降级（全或无）"
+    每个属性标注其最低 PowerPointApi requirement set。当前宿主不满足**本次请求所含属性**的最高 requirement set 时，承载该 `PptFont` 的事件按**反应式** [`3016 API_NOT_SUPPORTED`](error-handling.md#api_not_supported-3016) **整体失败（全或无，不做部分应用）**，错误 `details.requiredApiSet` 标注所需版本。调用方据此降级——例如仅发送 1.4 属性以适配低版本宿主。此处理与握手无关：[版本握手 ≠ 运行时能力](conventions.md)，能力不足在操作期反应式处理。
+
+    **上表 1.4 / 1.8 分档为文本框（`textRange.font`）语境。** `PptFont` 复用于 [`ppt:update:tableFormat`](events-ppt.md#pptupdatetableformat) 的表格单元格时，因 office.js `TableCell.font` 访问器门槛为 **1.9**，会把底层属性整体**抬平到 1.9**（单一门槛，无需按属性取 max）；且单元格**无 run 级**（office.js 未暴露单元格内字符区间寻址），`PptFont` 仅作用于整格。详见该事件的版本门槛说明。
+
+### ShapeFontUnderlineStyle
+
+PPT 下划线样式枚举（17 值，PowerPointApi 1.4）。线缆值即 office.js `ShapeFontUnderlineStyle` 枚举字面量，双端零映射。
+
+```typescript
+type ShapeFontUnderlineStyle =
+  | "None" | "Single" | "Double" | "Heavy"
+  | "Dotted" | "DottedHeavy"
+  | "Dash" | "DashHeavy" | "DashLong" | "DashLongHeavy"
+  | "DotDash" | "DotDashHeavy" | "DotDotDash" | "DotDotDashHeavy"
+  | "Wavy" | "WavyHeavy" | "WavyDouble";
+```
+
+!!! info "与 Word 的 UnderlineStyle 有意不同"
+    `/word` 的 [`UnderlineStyle`](#underlinestyle) 是 7 值小写（`single` / `double` / …），映射 Word.js；PPT 的 `ShapeFontUnderlineStyle` 是 17 值 PascalCase，直接对齐 office.js PowerPoint 的同名枚举。二者服务不同宿主 API，故**不复用**——这是有意的跨命名空间差异，非命名不一致。
+
+### PptTextRun
+
+run 级局部格式：对文本框内一段字符区间单独设置字体。
+
+```typescript
+interface PptTextRun {
+  start: number;    // 区间起始字符下标（0 基，UTF-16 code unit）
+  length: number;   // 区间字符数（UTF-16 code unit）
+  font: PptFont;    // 应用到该区间的字体格式
+}
+```
+
+### PptParagraphStyle
+
+段落级格式（当前仅项目符号）。同样以字符区间寻址：区间**接触到的段落**整体应用。
+
+```typescript
+interface PptParagraphStyle {
+  start: number;               // 区间起始字符下标（0 基，UTF-16 code unit）
+  length: number;              // 区间字符数（UTF-16 code unit）
+  bulletFormat: BulletFormat;  // 应用到区间所在段落的项目符号格式
+}
+```
+
+!!! important "字符区间口径（start / length）"
+    - `start` 为 0 基字符下标、`length` 为字符数，二者均以 **UTF-16 code unit** 计（= JavaScript 字符串语义；emoji / 代理对算 2 个单位）。
+    - 计数对齐文本框的**最终文本**完整内容，**含段落分隔符 `\r` 与软换行 `\v`**（这些字符占下标）。双端须以同一口径计算 offset。
+    - **与 `text` 替换并存时的口径**：当同一次 `ppt:update:textBox` 请求既提供 `updates.text`（整框内容替换）又提供 `runs` / `paragraphs` 时，**内容替换先于格式应用**，`start` / `length` 一律对齐**替换后的新文本**（不是替换前的旧内容）；未提供 `updates.text` 时则对齐文本框现有内容。因此 `text.length` 指该次生效的最终文本长度。
+    - 越界（`start < 0` 或 `start + length > text.length`，此处 `text.length` 即上条所指最终文本长度）按 [`4002 INVALID_PARAM`](error-handling.md) 处理。
+    - `runs` / `paragraphs` 在同一次请求内按数组顺序应用，后者覆盖先者的重叠区间。
+
+### BulletFormat
+
+项目符号格式。对齐 office.js `paragraphFormat.bulletFormat`，仅含下列可写属性。
+
+```typescript
+interface BulletFormat {
+  visible?: boolean;   // 是否显示项目符号                      [1.4]
+  type?: BulletType;   // 项目符号类型（无/编号/非编号）        [1.10]
+  style?: string;      // 编号 / 符号样式，对齐 office.js 枚举  [1.10]
+}
+
+type BulletType = "None" | "Numbered" | "Unnumbered" | "Unsupported";
+```
+
+| 字段 | 类型 | requirement set | 说明 |
+|------|------|-----------------|------|
+| `visible` | boolean | 1.4 | 显示 / 隐藏项目符号 |
+| `type` | BulletType | 1.10 | 无 / 编号 / 非编号列表 |
+| `style` | string | 1.10 | 具体编号或符号样式，取值对齐 office.js bullet 样式枚举（如 `ArabicNumeralPeriod` / `RomanUppercasePeriod` / `SimplifiedChinesePeriod` 等 40+ 值） |
+
+!!! warning "office.js 硬限制"
+    `bulletFormat` **没有** `character`（自定义符号字符）、字体、颜色属性——协议不提供这些字段。`type` / `style`（真正的编号列表）需 PowerPointApi **1.10**；`visible`（显示 / 隐藏）仅需 **1.4**。
+
+!!! info "为何 `style` 用 `string` 而 `underline` 用完整枚举（有意的不对称）"
+    协议对宿主枚举有两种收敛策略，按**集合大小与稳定性**择一，非随意：
+
+    - **小而封闭的集合 → 就地全枚举**（如 [`ShapeFontUnderlineStyle`](#shapefontunderlinestyle) 的 17 值）：值少、稳定、可在协议层做类型校验与提示，收益高、维护成本低。
+    - **大而易变的宿主枚举 → 直通 `string`**（`style` 对应 office.js bullet 样式，40+ 值且随宿主版本增补）：就地全枚举会让协议文档与一个庞大且演进中的宿主枚举强耦合、易过时。故 `style` 定义为**对齐 office.js 样式字面量的直通字符串**，由宿主在应用时校验；非法值按 [`4002 INVALID_PARAM`](error-handling.md) 处理，与 `underline` 非枚举值的失败口径一致。
+
+    即：**两者都是"零映射对齐宿主枚举"，只是承载形态按集合规模分档**——这是一致的抽象原则，不是遗漏。
+
+### ParagraphHorizontalAlignment
+
+段落 / 表格单元格水平对齐枚举（7 值，PowerPointApi 1.9）。线缆值即 office.js `ParagraphHorizontalAlignment` 枚举字面量，双端零映射。
+
+```typescript
+type ParagraphHorizontalAlignment =
+  | "Left" | "Center" | "Right" | "Justify"
+  | "JustifyLow" | "Distributed" | "ThaiDistributed";
+```
+
+### TextVerticalAlignment
+
+文本 / 表格单元格垂直对齐枚举（6 值，PowerPointApi 1.9）。线缆值即 office.js `TextVerticalAlignment` 枚举字面量，双端零映射。
+
+```typescript
+type TextVerticalAlignment =
+  | "Top" | "Middle" | "Bottom"
+  | "TopCentered" | "MiddleCentered" | "BottomCentered";
+```
+
+---
+
 ## 样式相关
 
 ### StyleInfo
@@ -289,7 +434,7 @@ interface CellFormat {
 !!! note "单元格内边距"
     Word JavaScript API 的单元格内边距是**表级 API**（`Word.Table.setCellPadding`），无法逐单元格设置。如需调整内边距，请通过 `word:update:tableFormat.styleOptions.cellPadding` 在表级配置。
 
-> 该结构当前仅 `/word` 命名空间引用；`/ppt` 已有的 `ppt:update:tableFormat` 后续如需统一字段命名，可平滑迁移到本结构。
+> 该结构仅 `/word` 命名空间引用（对齐 Word.js：[`UnderlineStyle`](#underlinestyle) 7 值小写、`Word.Alignment` 的 `Centered` / `Justified`）。`/ppt` 的 [`ppt:update:tableFormat`](events-ppt.md#pptupdatetableformat) **有意不复用本结构**，改用 [`PptFont`](#pptfont) + [`ParagraphHorizontalAlignment`](#paragraphhorizontalalignment) / [`TextVerticalAlignment`](#textverticalalignment)（对齐 office.js PowerPoint、17 值 PascalCase 下划线、`Center` / `Justify`）——与 underline 枚举同理，服务不同宿主 API、零映射，跨命名空间不复用。
 
 ---
 

@@ -9,7 +9,62 @@
 
 ## [Unreleased]
 
-_暂无未发布变更。_
+### /ppt 文字格式能力补齐 + 字段收敛（Draft 破坏性收敛）
+
+为 `/ppt` 文字工具补齐一批 office.js 原生支持的常规文字格式能力：run 级局部格式、删除线/双删除线、上标/下标、全大写/小型大写、多下划线样式、项目符号、插入即带字体。**字段结构统一收敛为 `font` 子对象**：`insert:text` / `update:textBox` 原有的扁平 `fontSize`/`fontName`/`color`/`bold`/`italic` **直接移除**（不保留 Deprecated 别名），改由 `font.*` 承载——整框级与 run 级复用同一 `PptFont`。因 `/ppt` 为 Draft，允许此破坏性收敛，避免协议表面长期背负散堆的扁平字段。
+
+**可行性来源**：office4ai#45 提出；经 `/cross-ask office-editor4ai`（Add-In / office.js）逐项复核可落地，并**纠正了 issue 的版本假设**（见下「requirement set 分档」）——无 P0，无需 Server 离线回退。
+
+| 变更类型 | 位置 | 说明 |
+|----------|------|------|
+| 新增（数据结构） | `data-structures.md` | `PptFont`（整框级 / run 级共用的字体子对象，12 属性含删除线/上下标/大写/下划线）、`ShapeFontUnderlineStyle`（17 值 PascalCase 枚举）、`PptTextRun`（`{start,length,font}` run 级寻址）、`PptParagraphStyle`（`{start,length,bulletFormat}` 段落级寻址）、`BulletFormat`（`visible`/`type`/`style`，**无 `character`**）、`BulletType` 枚举 |
+| 变更（事件字段） | `events-ppt.md` `ppt:update:textBox` | `TextBoxUpdates` 新增 `font` / `runs[]` / `paragraphs[]`；应用顺序 `text`→`font`→`runs`→`paragraphs`（内容替换在先，区间寻址对齐替换后最终文本；后者覆盖重叠区间） |
+| 变更（事件字段） | `events-ppt.md` `ppt:insert:text` | `TextInsertOptions` 新增 `font`（插入即带字体，语义等价「插入 + 格式」复合操作） |
+| **移除（Draft 破坏性收敛）** | `events-ppt.md` | `TextBoxUpdates` 与 `TextInsertOptions` 的扁平 `fontSize`/`fontName`/`color`/`bold`/`italic` **删除**，统一改用 `font.*`；`/ppt` 为 Draft，不保留 Deprecated 别名 |
+| 复用（无新错误码） | `events-ppt.md` / `error-handling.md` | 区间越界 / 枚举非法复用 [`4002 INVALID_PARAM`](../specification/error-handling.md)；requirement set 不满足复用 [`3016 API_NOT_SUPPORTED`](../specification/error-handling.md#api_not_supported-3016)（`details.requiredApiSet` 标注版本） |
+
+**requirement set 分档（经 Add-In 真机复核，纠正 issue 假设）**：
+
+| 能力 | 最低 PowerPointApi | 备注 |
+|------|-------------------|------|
+| 下划线全枚举、run 级寻址（`getSubstring`）、run 级 bold/italic/size/name/color、bullet `visible` | **1.4** | issue 曾误标下划线/大写/删除线为 1.4、getSubstring 为 1.5 |
+| 删除线 / 双删除线、上标 / 下标、全大写 / 小型大写（含其 run 级） | **1.8** | issue 误标为 1.4；整批有效门槛 = 1.8 |
+| bullet `type` / `style`（编号列表） | **1.10** | `visible` 仅需 1.4 |
+
+**降级语义**：宿主不满足**本次请求所含属性**的最高 requirement set 时，事件按**反应式 `3016` 整体失败（全或无）**，与现有 `/ppt` 事件（`insert:chart` / `slidesOoxml`）一致；调用方靠「只发受支持的属性」控制粒度。不引入「部分成功」响应语义。
+
+**字符区间口径**：`runs` / `paragraphs` 的 `start` / `length` 以 **UTF-16 code unit** 计，含段落分隔 `\r` 与软换行 `\v`；与 `updates.text` 并存时**先替换内容、offset 对齐替换后的最终文本**；越界 → `4002`。
+
+**跨命名空间说明**：PPT `ShapeFontUnderlineStyle`（17 值 PascalCase，对齐 office.js PowerPoint 枚举、零映射）与 `/word` `UnderlineStyle`（7 值小写、映射 Word.js）**有意不同**，服务不同宿主 API，不复用。
+
+**枚举承载分档**：宿主枚举按**集合大小与稳定性**择一承载——小而封闭者就地全枚举（`ShapeFontUnderlineStyle` 17 值，可校验）；大而易变者直通 `string`（bullet `style` 40+ 值，由宿主校验、非法值 → `4002`）。二者同为"零映射对齐宿主"，形态分档是一致原则而非遗漏。
+
+**兼容性**：新增可选字段属向后兼容；但**移除扁平 `fontSize`/`fontName`/`color`/`bold`/`italic` 对 `/ppt` 是破坏性变更**——调用方须改用 `font.*`。因 `/ppt` 为 Draft（无稳定性承诺），此收敛可接受。已部署 AddIn 忽略未知字段即可。属 v0.x 阶段变更（目标 `0.4.0`）。
+
+**范围边界（不含）**：段落级排版（行距 / 缩进 / 段间距）、字间距、超链接写入、竖排——office.js PowerPoint API 无原生支持，走 OOXML 路径另案；bullet 自定义字符 / 字体 / 颜色——office.js 不提供，协议不设字段。Add-In 侧既有实现缺口（`insert:text` 字体哑参数 / `update:textBox` `fillColor` 未透传 / underline 退化实现）由 office-editor4ai 单独立项修复，非协议变更。
+
+### /ppt 表格单元格字体收敛（`ppt:update:tableFormat`，Draft 破坏性收敛）
+
+延续上条的字体抽象统一：`ppt:update:tableFormat` 的 `cellFormats` / `rowFormats` / `columnFormats` 原本平铺 `fontSize`/`fontColor`/`bold`/`italic`，属同类散堆，现**收敛复用同一 [`PptFont`](../specification/data-structures.md#pptfont)**（12 属性全量可用，含 17 值下划线 / 删除线 / 上下标 / 大写），使全 `/ppt` 字体抽象一致。
+
+**可行性来源**：经 `/cross-ask office-editor4ai` 复核——`TableCell.font` 即标准 `ShapeFont`，`PptFont` 12 属性零丢失、无需另立精简结构。
+
+| 变更类型 | 位置 | 说明 |
+|----------|------|------|
+| **移除 + 收敛（Draft 破坏性）** | `ppt:update:tableFormat` | 三级 formats 的扁平 `fontSize`/`fontColor`/`bold`/`italic` **删除**，统一改用 `font?: PptFont`（`fontColor`→`color` 语义一致、安全改名） |
+| 新增（行/列级字体，方案 A） | `rowFormats[]` / `columnFormats[]` | 由「仅 `fontSize`」升级为完整 `font?: PptFont`，消除「行/列只能设字号」的割裂；`height`/`width` 保留为行/列 native |
+| 新增（数据结构） | `data-structures.md` | `ParagraphHorizontalAlignment`（7 值）、`TextVerticalAlignment`（6 值）枚举，替换原 `string` 并放开到 office.js 全枚举 |
+| 复用（新增错误码引用） | `ppt:update:tableFormat` | 门槛不满足 → [`3016`](../specification/error-handling.md#api_not_supported-3016)；越界 / 合并单元格非左上格 / 枚举非法 → [`4002`](../specification/error-handling.md) |
+
+**版本门槛（与文本框不同，单列）**：表格单元格字体 / 对齐 / 行高列宽**统一 1.9**——因 `TableCell.font` 访问器门槛为 1.9，把复用的 `PptFont` 底层 1.4/1.8 属性整体抬平；降级判定为单一 `isSetSupported("PowerPointApi","1.9")`，不按属性取 max。现工具已依赖 `cell.font`（1.9），扩到 12 属性**零额外版本成本**。
+
+**单元格无 run 级**：office.js 未暴露单元格内字符区间寻址，`font` 作用于整格，不支持 `runs`。
+
+**行/列级即逐格扇出**：office.js 无「整行/整列字体」原生 API，`rowFormats`/`columnFormats` 的 `font`/`backgroundColor` 均为逐格施加到该行/列每个单元格的糖；命中同一格优先级 `cellFormats` > `columnFormats` > `rowFormats`（沿用既有 `backgroundColor` 口径）。
+
+**全或无（含合并单元格）**：应用前前置校验所有目标格（含行/列展开），任一越界或命中合并单元格非左上格（`getCellOrNullObject` 空对象）→ 整请求 `4002` 失败、不写入任何格；与文本框「全或无」口径一致（纠正现工具「跳过非法格」的部分成功语义，由 office-editor4ai 跟进实现）。
+
+**兼容性**：移除三级 formats 的扁平字体字段对 `/ppt` 为破坏性变更；因 `/ppt` 为 Draft 可接受。目标 `0.4.0`。
 
 ---
 

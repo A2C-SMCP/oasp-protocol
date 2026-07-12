@@ -802,12 +802,13 @@ interface TextInsertOptions {
   top?: number;              // Y 坐标（磅）
   width?: number;            // 文本框宽度（磅），默认 300
   height?: number;           // 文本框高度（磅），默认 100
-  fontSize?: number;         // 字号
-  fontName?: string;         // 字体名称
-  color?: string;            // 文字颜色（十六进制，如 "#FF0000"）
-  fillColor?: string;        // 填充颜色（十六进制）
+  fillColor?: string;        // 文本框填充色（十六进制）
+  font?: PptFont;            // 插入文本的字体格式，见 data-structures.md#pptfont
 }
 ```
+
+!!! note "插入即带字体格式"
+    `options.font`（`PptFont`）在插入文本框的同时应用字体格式，语义等价「插入 + 格式」的一次性复合操作。各属性的 requirement set 与**反应式 3016 全或无**降级同 [`PptFont`](data-structures.md#pptfont)。
 
 **请求参数说明**:
 
@@ -819,10 +820,8 @@ interface TextInsertOptions {
 | `top` | number | ❌ | - | Y 坐标（磅），未指定时使用默认位置 |
 | `width` | number | ❌ | 300 | 文本框宽度（磅） |
 | `height` | number | ❌ | 100 | 文本框高度（磅） |
-| `fontSize` | number | ❌ | - | 字号 |
-| `fontName` | string | ❌ | - | 字体名称 |
-| `color` | string | ❌ | - | 文字颜色（十六进制） |
-| `fillColor` | string | ❌ | - | 文本框填充颜色（十六进制） |
+| `fillColor` | string | ❌ | - | 文本框填充色（十六进制） |
+| `font` | [`PptFont`](data-structures.md#pptfont) | ❌ | - | 插入文本的字体格式 |
 
 **请求示例**:
 
@@ -837,9 +836,7 @@ interface TextInsertOptions {
     "top": 200,
     "width": 400,
     "height": 80,
-    "fontSize": 18,
-    "fontName": "微软雅黑",
-    "color": "#333333"
+    "font": { "size": 18, "name": "微软雅黑", "color": "#333333" }
   }
 }
 ```
@@ -886,7 +883,8 @@ interface InsertTextResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 text 参数 |
-| 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
+| 4002 | `INVALID_PARAM` - slideIndex 超出范围，或 `font.underline` 不在枚举内 |
+| 3016 | `API_NOT_SUPPORTED` - `font` 所含属性所需 PowerPointApi requirement set（删除线/上下标/大写=1.8）在当前宿主不满足；`details.requiredApiSet` 标注所需版本 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
@@ -1579,34 +1577,36 @@ interface UpdateTextBoxRequest {
 }
 
 interface TextBoxUpdates {
-  text?: string;             // 新文本内容
-  fontSize?: number;         // 字号
-  fontName?: string;         // 字体名称
-  color?: string;            // 文字颜色（十六进制，如 "#FF0000"）
-  fillColor?: string;        // 填充颜色（十六进制）
-  bold?: boolean;            // 粗体
-  italic?: boolean;          // 斜体
+  text?: string;                     // 新文本内容（整框）
+  fillColor?: string;                // 文本框填充色（十六进制，框级）
+  font?: PptFont;                    // 整框级字体格式（铺底），见 data-structures.md#pptfont
+  runs?: PptTextRun[];               // run 级局部格式（区间覆盖，后者胜）
+  paragraphs?: PptParagraphStyle[];  // 段落级格式（项目符号 bulletFormat）
 }
 ```
+
+!!! note "字段结构：font 子对象 + 区间覆盖"
+    - **整框级**用 `font`（`PptFont`）铺底；**run 级**用 `runs[]`（每段 `{start, length, font}`）覆盖指定字符区间；**段落级** bullet 用 `paragraphs[]`（`{start, length, bulletFormat}`）。
+    - **应用顺序**：先 `text`（整框内容替换，如提供）→ 再 `font`（整框铺底）→ 再 `runs`（按数组序覆盖重叠区间）→ 最后 `paragraphs`（bullet）。因内容替换在先，`runs` / `paragraphs` 的 `start` / `length` **一律对齐替换后的最终文本**（详见下）。
+    - `runs` / `paragraphs` 的 `start` / `length` 口径（UTF-16 code unit、含 `\r` / `\v`、对齐最终文本、越界 → `4002`）见 [字符区间口径](data-structures.md#pptparagraphstyle)。
+    - 各字体属性的 requirement set 及**反应式 3016 全或无**降级见 [`PptFont`](data-structures.md#pptfont)。
 
 **请求参数说明**:
 
 | 参数 | 类型 | 必需 | 说明 |
 |------|------|------|------|
 | `elementId` | string | ✅ | 要更新的元素 ID（可通过 `ppt:get:slideElements` 获取） |
-| `text` | string | ❌ | 新文本内容 |
-| `fontSize` | number | ❌ | 字号 |
-| `fontName` | string | ❌ | 字体名称 |
-| `color` | string | ❌ | 文字颜色（十六进制） |
-| `fillColor` | string | ❌ | 文本框填充颜色（十六进制） |
-| `bold` | boolean | ❌ | 是否粗体 |
-| `italic` | boolean | ❌ | 是否斜体 |
+| `updates.text` | string | ❌ | 新文本内容（整框） |
+| `updates.fillColor` | string | ❌ | 文本框填充色（十六进制，框级） |
+| `updates.font` | [`PptFont`](data-structures.md#pptfont) | ❌ | 整框级字体格式 |
+| `updates.runs` | [`PptTextRun[]`](data-structures.md#ppttextrun) | ❌ | run 级局部格式（字符区间寻址，可多段） |
+| `updates.paragraphs` | [`PptParagraphStyle[]`](data-structures.md#pptparagraphstyle) | ❌ | 段落级项目符号（字符区间寻址） |
 
 !!! note "支持的元素类型"
     仅支持 `TextBox`、`Placeholder`、`GeometricShape` 类型的元素。
     对不支持文本的元素类型将返回错误。
 
-**请求示例**:
+**请求示例（font 子对象 + run 级局部格式 + 段落 bullet）**:
 
 ```json
 {
@@ -1615,9 +1615,14 @@ interface TextBoxUpdates {
   "elementId": "shape-001",
   "updates": {
     "text": "更新后的标题",
-    "fontSize": 28,
-    "bold": true,
-    "color": "#333333"
+    "font": { "size": 28, "bold": true, "color": "#333333", "underline": "WavyHeavy" },
+    "runs": [
+      { "start": 0, "length": 4, "font": { "color": "#C00000", "allCaps": true } },
+      { "start": 10, "length": 6, "font": { "underline": "Dotted", "subscript": true } }
+    ],
+    "paragraphs": [
+      { "start": 0, "length": 20, "bulletFormat": { "visible": true, "type": "Numbered", "style": "ArabicNumeralPeriod" } }
+    ]
   }
 }
 ```
@@ -1676,7 +1681,9 @@ interface UpdateTextBoxResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 elementId |
+| 4002 | `INVALID_PARAM` - `runs` / `paragraphs` 的 `start`/`length` 越界（`start < 0` 或 `start + length > text.length`），或 `underline` / `bulletFormat.type` 不在枚举内 |
 | 3003 | `OPERATION_FAILED` - 元素未找到或元素类型不支持文本编辑 |
+| 3016 | `API_NOT_SUPPORTED` - 本次请求所含字体/项目符号属性所需 PowerPointApi requirement set（删除线/上下标/大写=1.8、bullet type/style=1.10）在当前宿主不满足；`details.requiredApiSet` 标注所需版本，调用方应仅发送受支持的属性或提示用户 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
@@ -2097,30 +2104,34 @@ interface UpdateTableFormatRequest {
   timestamp?: number;        // 请求时间戳（毫秒），可选
   elementId: string;         // 表格元素 ID
   cellFormats?: Array<{
-    rowIndex: number;        // 行索引（从 0 开始）
-    columnIndex: number;     // 列索引（从 0 开始）
-    backgroundColor?: string;    // 背景颜色（十六进制）
-    fontSize?: number;           // 字号
-    fontColor?: string;          // 字体颜色（十六进制）
-    bold?: boolean;              // 粗体
-    italic?: boolean;            // 斜体
-    horizontalAlignment?: string; // 水平对齐（"Left" | "Center" | "Right"）
-    verticalAlignment?: string;   // 垂直对齐（"Top" | "Middle" | "Bottom"）
+    rowIndex: number;                                    // 行索引（从 0 开始）
+    columnIndex: number;                                 // 列索引（从 0 开始）
+    backgroundColor?: string;                            // 单元格填充色（十六进制）
+    font?: PptFont;                                      // 单元格字体格式（整格级，见 data-structures.md#pptfont）
+    horizontalAlignment?: ParagraphHorizontalAlignment;  // 水平对齐（7 值枚举）
+    verticalAlignment?: TextVerticalAlignment;           // 垂直对齐（6 值枚举）
   }>;
   rowFormats?: Array<{
-    rowIndex: number;        // 行索引（从 0 开始）
-    height?: number;         // 行高（磅）
-    backgroundColor?: string;    // 背景颜色（十六进制）
-    fontSize?: number;           // 字号
+    rowIndex: number;          // 行索引（从 0 开始）
+    height?: number;           // 行高（磅），行级 native
+    backgroundColor?: string;  // 背景色（逐格施加，见下）
+    font?: PptFont;            // 字体格式（逐格施加，见下）
   }>;
   columnFormats?: Array<{
-    columnIndex: number;     // 列索引（从 0 开始）
-    width?: number;          // 列宽（磅）
-    backgroundColor?: string;    // 背景颜色（十六进制）
-    fontSize?: number;           // 字号
+    columnIndex: number;       // 列索引（从 0 开始）
+    width?: number;            // 列宽（磅），列级 native
+    backgroundColor?: string;  // 背景色（逐格施加，见下）
+    font?: PptFont;            // 字体格式（逐格施加，见下）
   }>;
 }
 ```
+
+!!! note "版本门槛与降级（全或无，统一 1.9）"
+    本事件的字体 / 对齐 / 行高列宽 / 单元格填充均经 office.js `TableCell` / `TableRow` / `TableColumn`，其中 `TableCell.font` 访问器门槛为 **PowerPointApi 1.9**，会把复用的 [`PptFont`](data-structures.md#pptfont) 底层 1.4/1.8 属性**整体抬平到 1.9**。故本事件**有效门槛统一为 1.9**——不套用文本框的 1.4/1.8 分档，降级判定为单一 `isSetSupported("PowerPointApi","1.9")`：不满足 → 反应式 [`3016 API_NOT_SUPPORTED`](error-handling.md#api_not_supported-3016)（`details.requiredApiSet: "1.9"`），全或无、不做部分应用。
+    单元格**无 run 级**：office.js 未暴露单元格内字符区间寻址，`font` 作用于**整格**，不支持 `runs`。
+
+!!! warning "目标格前置校验（全或无，含合并单元格）"
+    应用前须前置校验本次涉及的所有单元格坐标（含由 `rowFormats` / `columnFormats` 展开到的单元格）：任一坐标越界、或命中**合并单元格的非左上格**（office.js `getCellOrNullObject` 返回空对象）→ 整请求按 [`4002 INVALID_PARAM`](error-handling.md) 失败，**不写入任何单元格**。不采用"跳过非法格"的部分成功语义，与文本框口径一致。
 
 **请求参数说明**:
 
@@ -2131,8 +2142,9 @@ interface UpdateTableFormatRequest {
 | `rowFormats` | Array | ❌ | 按行设置格式（应用到整行所有单元格） |
 | `columnFormats` | Array | ❌ | 按列设置格式（应用到整列所有单元格） |
 
-!!! note "优先级"
-    当多种格式同时应用到同一单元格时，优先级为：`cellFormats` > `columnFormats` > `rowFormats`。
+!!! note "行/列级即逐格扇出 + 优先级"
+    office.js 无"整行 / 整列字体"原生 API：`rowFormats[].font` / `columnFormats[].font` / `backgroundColor` 均为**逐格施加**到该行 / 列每个单元格的语法糖（唯有 `height` / `width` 是行 / 列 native 属性）。因此行 / 列级字体与单元格级字体走同一 `PptFont` 实体、同一 1.9 门槛。
+    当多级格式命中同一单元格时优先级：**`cellFormats` > `columnFormats` > `rowFormats`**（细粒度覆盖粗粒度），与 `backgroundColor` 现有口径一致。
 
 **请求示例**:
 
@@ -2142,10 +2154,10 @@ interface UpdateTableFormatRequest {
   "documentUri": "file:///Users/john/Documents/presentation.pptx",
   "elementId": "shape-030",
   "rowFormats": [
-    { "rowIndex": 0, "backgroundColor": "#4472C4", "fontSize": 14 }
+    { "rowIndex": 0, "backgroundColor": "#4472C4", "font": { "size": 14, "bold": true, "color": "#FFFFFF" } }
   ],
   "cellFormats": [
-    { "rowIndex": 1, "columnIndex": 0, "bold": true, "fontColor": "#333333" }
+    { "rowIndex": 1, "columnIndex": 0, "font": { "color": "#333333", "underline": "Single" }, "horizontalAlignment": "Center" }
   ]
 }
 ```
@@ -2185,7 +2197,8 @@ interface UpdateTableFormatResponse {
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 elementId |
 | 3003 | `OPERATION_FAILED` - 元素未找到或不是表格类型 |
-| 4002 | `INVALID_PARAM` - rowIndex/columnIndex 超出范围 |
+| 4002 | `INVALID_PARAM` - `rowIndex`/`columnIndex` 超出范围、命中合并单元格非左上格（空对象），或 `font.underline` / 对齐值不在枚举内 |
+| 3016 | `API_NOT_SUPPORTED` - 表格单元格字体 / 对齐 / 行高列宽需 PowerPointApi **1.9**，当前宿主不满足；`details.requiredApiSet` 标注所需版本 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
 
@@ -2202,7 +2215,7 @@ interface UpdateTableFormatResponse {
 **说明**: 更新元素的位置、尺寸或旋转角度。这是布局优化的核心操作，用于移动和缩放元素。
 
 !!! note "与 ppt:update:textBox 的关系"
-    `ppt:update:textBox` 用于更新文本**内容和样式**（text, fontSize, bold 等），
+    `ppt:update:textBox` 用于更新文本**内容和样式**（text、`font` 字体格式、`runs` 局部格式、bullet 等），
     `ppt:update:element` 用于更新**几何属性**（left, top, width, height, rotation）。
     两者互补，分别处理不同维度的更新。
 
