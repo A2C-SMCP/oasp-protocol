@@ -434,7 +434,7 @@ interface CellFormat {
 !!! note "单元格内边距"
     Word JavaScript API 的单元格内边距是**表级 API**（`Word.Table.setCellPadding`），无法逐单元格设置。如需调整内边距，请通过 `word:update:tableFormat.styleOptions.cellPadding` 在表级配置。
 
-> 该结构当前仅 `/word` 命名空间引用；`/ppt` 已有的 `ppt:update:tableFormat` 后续如需统一字段命名，可平滑迁移到本结构。
+> 该结构仅 `/word` 命名空间引用（对齐 Word.js：[`UnderlineStyle`](#underlinestyle) 7 值小写、`Word.Alignment` 的 `Centered` / `Justified`）。`/ppt` 的 [`ppt:update:tableFormat`](events-ppt.md#pptupdatetableformat) **有意不复用本结构**，改用 [`PptFont`](#pptfont) + [`ParagraphHorizontalAlignment`](#paragraphhorizontalalignment) / [`TextVerticalAlignment`](#textverticalalignment)（对齐 office.js PowerPoint、17 值 PascalCase 下划线、`Center` / `Justify`）——与 underline 枚举同理，服务不同宿主 API、零映射，跨命名空间不复用。
 
 ---
 
