@@ -804,16 +804,11 @@ interface TextInsertOptions {
   height?: number;           // 文本框高度（磅），默认 100
   fillColor?: string;        // 文本框填充色（十六进制）
   font?: PptFont;            // 插入文本的字体格式，见 data-structures.md#pptfont
-
-  // —— 以下扁平字段自 0.3.0 起 ⚠️ Deprecated：等价写入 font.*，保留向后兼容 ——
-  fontSize?: number;         // ⚠️ Deprecated → font.size
-  fontName?: string;         // ⚠️ Deprecated → font.name
-  color?: string;            // ⚠️ Deprecated → font.color
 }
 ```
 
 !!! note "插入即带字体格式"
-    `options.font`（`PptFont`）在插入文本框的同时应用字体格式，语义等价「插入 + 格式」的一次性复合操作。扁平字段 `fontSize` / `fontName` / `color` 已 **Deprecated**，等价 `font.*`；同时提供时 `font.*` 优先。各属性的 requirement set 与**反应式 3016 全或无**降级同 [`PptFont`](data-structures.md#pptfont)。
+    `options.font`（`PptFont`）在插入文本框的同时应用字体格式，语义等价「插入 + 格式」的一次性复合操作。各属性的 requirement set 与**反应式 3016 全或无**降级同 [`PptFont`](data-structures.md#pptfont)。
 
 **请求参数说明**:
 
@@ -827,9 +822,6 @@ interface TextInsertOptions {
 | `height` | number | ❌ | 100 | 文本框高度（磅） |
 | `fillColor` | string | ❌ | - | 文本框填充色（十六进制） |
 | `font` | [`PptFont`](data-structures.md#pptfont) | ❌ | - | 插入文本的字体格式 |
-| `fontSize` | number | ❌ | - | ⚠️ Deprecated → `font.size` |
-| `fontName` | string | ❌ | - | ⚠️ Deprecated → `font.name` |
-| `color` | string | ❌ | - | ⚠️ Deprecated → `font.color` |
 
 **请求示例**:
 
@@ -844,9 +836,7 @@ interface TextInsertOptions {
     "top": 200,
     "width": 400,
     "height": 80,
-    "fontSize": 18,
-    "fontName": "微软雅黑",
-    "color": "#333333"
+    "font": { "size": 18, "name": "微软雅黑", "color": "#333333" }
   }
 }
 ```
@@ -1592,21 +1582,13 @@ interface TextBoxUpdates {
   font?: PptFont;                    // 整框级字体格式（铺底），见 data-structures.md#pptfont
   runs?: PptTextRun[];               // run 级局部格式（区间覆盖，后者胜）
   paragraphs?: PptParagraphStyle[];  // 段落级格式（项目符号 bulletFormat）
-
-  // —— 以下扁平字段自 0.3.0 起 ⚠️ Deprecated：等价写入 font.*，保留向后兼容 ——
-  fontSize?: number;                 // ⚠️ Deprecated → font.size
-  fontName?: string;                 // ⚠️ Deprecated → font.name
-  color?: string;                    // ⚠️ Deprecated → font.color
-  bold?: boolean;                    // ⚠️ Deprecated → font.bold
-  italic?: boolean;                  // ⚠️ Deprecated → font.italic
 }
 ```
 
 !!! note "字段结构：font 子对象 + 区间覆盖"
     - **整框级**用 `font`（`PptFont`）铺底；**run 级**用 `runs[]`（每段 `{start, length, font}`）覆盖指定字符区间；**段落级** bullet 用 `paragraphs[]`（`{start, length, bulletFormat}`）。
-    - **应用顺序**：`font`（整框铺底）→ `runs`（按数组序覆盖重叠区间）→ `paragraphs`（bullet）。
-    - 扁平字段 `fontSize` / `fontName` / `color` / `bold` / `italic` 为 0.3.0 遗留、**已 Deprecated**，语义等价 `font.*`。同时提供扁平字段与 `font.*` 时 **`font.*` 优先**。
-    - `runs` / `paragraphs` 的 `start` / `length` 口径（UTF-16 code unit、含 `\r` / `\v`、越界 → `4002`）见 [字符区间口径](data-structures.md#pptparagraphstyle)。
+    - **应用顺序**：先 `text`（整框内容替换，如提供）→ 再 `font`（整框铺底）→ 再 `runs`（按数组序覆盖重叠区间）→ 最后 `paragraphs`（bullet）。因内容替换在先，`runs` / `paragraphs` 的 `start` / `length` **一律对齐替换后的最终文本**（详见下）。
+    - `runs` / `paragraphs` 的 `start` / `length` 口径（UTF-16 code unit、含 `\r` / `\v`、对齐最终文本、越界 → `4002`）见 [字符区间口径](data-structures.md#pptparagraphstyle)。
     - 各字体属性的 requirement set 及**反应式 3016 全或无**降级见 [`PptFont`](data-structures.md#pptfont)。
 
 **请求参数说明**:
@@ -1619,11 +1601,6 @@ interface TextBoxUpdates {
 | `updates.font` | [`PptFont`](data-structures.md#pptfont) | ❌ | 整框级字体格式 |
 | `updates.runs` | [`PptTextRun[]`](data-structures.md#ppttextrun) | ❌ | run 级局部格式（字符区间寻址，可多段） |
 | `updates.paragraphs` | [`PptParagraphStyle[]`](data-structures.md#pptparagraphstyle) | ❌ | 段落级项目符号（字符区间寻址） |
-| `updates.fontSize` | number | ❌ | ⚠️ Deprecated → `font.size` |
-| `updates.fontName` | string | ❌ | ⚠️ Deprecated → `font.name` |
-| `updates.color` | string | ❌ | ⚠️ Deprecated → `font.color` |
-| `updates.bold` | boolean | ❌ | ⚠️ Deprecated → `font.bold` |
-| `updates.italic` | boolean | ❌ | ⚠️ Deprecated → `font.italic` |
 
 !!! note "支持的元素类型"
     仅支持 `TextBox`、`Placeholder`、`GeometricShape` 类型的元素。
@@ -2232,7 +2209,7 @@ interface UpdateTableFormatResponse {
 **说明**: 更新元素的位置、尺寸或旋转角度。这是布局优化的核心操作，用于移动和缩放元素。
 
 !!! note "与 ppt:update:textBox 的关系"
-    `ppt:update:textBox` 用于更新文本**内容和样式**（text, fontSize, bold 等），
+    `ppt:update:textBox` 用于更新文本**内容和样式**（text、`font` 字体格式、`runs` 局部格式、bullet 等），
     `ppt:update:element` 用于更新**几何属性**（left, top, width, height, rotation）。
     两者互补，分别处理不同维度的更新。
 

@@ -209,8 +209,9 @@ interface PptParagraphStyle {
 
 !!! important "字符区间口径（start / length）"
     - `start` 为 0 基字符下标、`length` 为字符数，二者均以 **UTF-16 code unit** 计（= JavaScript 字符串语义；emoji / 代理对算 2 个单位）。
-    - 计数对齐文本框 `text` 的完整内容，**含段落分隔符 `\r` 与软换行 `\v`**（这些字符占下标）。双端须以同一口径计算 offset。
-    - 越界（`start < 0` 或 `start + length > text.length`）按 [`4002 INVALID_PARAM`](error-handling.md) 处理。
+    - 计数对齐文本框的**最终文本**完整内容，**含段落分隔符 `\r` 与软换行 `\v`**（这些字符占下标）。双端须以同一口径计算 offset。
+    - **与 `text` 替换并存时的口径**：当同一次 `ppt:update:textBox` 请求既提供 `updates.text`（整框内容替换）又提供 `runs` / `paragraphs` 时，**内容替换先于格式应用**，`start` / `length` 一律对齐**替换后的新文本**（不是替换前的旧内容）；未提供 `updates.text` 时则对齐文本框现有内容。因此 `text.length` 指该次生效的最终文本长度。
+    - 越界（`start < 0` 或 `start + length > text.length`，此处 `text.length` 即上条所指最终文本长度）按 [`4002 INVALID_PARAM`](error-handling.md) 处理。
     - `runs` / `paragraphs` 在同一次请求内按数组顺序应用，后者覆盖先者的重叠区间。
 
 ### BulletFormat
@@ -235,6 +236,14 @@ type BulletType = "None" | "Numbered" | "Unnumbered" | "Unsupported";
 
 !!! warning "office.js 硬限制"
     `bulletFormat` **没有** `character`（自定义符号字符）、字体、颜色属性——协议不提供这些字段。`type` / `style`（真正的编号列表）需 PowerPointApi **1.10**；`visible`（显示 / 隐藏）仅需 **1.4**。
+
+!!! info "为何 `style` 用 `string` 而 `underline` 用完整枚举（有意的不对称）"
+    协议对宿主枚举有两种收敛策略，按**集合大小与稳定性**择一，非随意：
+
+    - **小而封闭的集合 → 就地全枚举**（如 [`ShapeFontUnderlineStyle`](#shapefontunderlinestyle) 的 17 值）：值少、稳定、可在协议层做类型校验与提示，收益高、维护成本低。
+    - **大而易变的宿主枚举 → 直通 `string`**（`style` 对应 office.js bullet 样式，40+ 值且随宿主版本增补）：就地全枚举会让协议文档与一个庞大且演进中的宿主枚举强耦合、易过时。故 `style` 定义为**对齐 office.js 样式字面量的直通字符串**，由宿主在应用时校验；非法值按 [`4002 INVALID_PARAM`](error-handling.md) 处理，与 `underline` 非枚举值的失败口径一致。
+
+    即：**两者都是"零映射对齐宿主枚举"，只是承载形态按集合规模分档**——这是一致的抽象原则，不是遗漏。
 
 ---
 
