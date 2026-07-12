@@ -808,19 +808,11 @@ interface InsertTextRequest {
   timestamp?: number;
   text: string;                              // 要插入的文本
   location?: "Cursor" | "Start" | "End";     // 插入位置，默认 "Cursor"
-  format?: TextFormat;                       // 可选的格式设置
-}
-
-interface TextFormat {
-  bold?: boolean;
-  italic?: boolean;
-  fontSize?: number;
-  fontName?: string;
-  color?: string;        // hex 颜色值，如 "#FF0000"
-  underline?: string;    // 下划线类型，如 "Single", "Double", "None"
-  styleName?: string;    // Word 样式名，如 "Heading 1", "Normal"
+  format?: TextFormat;                       // 可选的格式设置，定义见 data-structures.md#textformat
 }
 ```
+
+`TextFormat` 数据结构定义见 [data-structures.md#textformat](data-structures.md#textformat)（权威单一来源；`underline` 为 [`UnderlineStyle`](data-structures.md#underlinestyle) 枚举）。
 
 **请求示例**:
 
@@ -1029,7 +1021,7 @@ interface ReplaceTextRequest {
     matchWholeWord?: boolean; // 全词匹配，默认 false
     replaceAll?: boolean;    // 替换全部，默认 false
   };
-  format?: TextFormat;       // 可选的格式设置（定义见 word:insert:text）
+  format?: TextFormat;       // 可选的格式设置（定义见 data-structures.md#textformat）
 }
 ```
 
