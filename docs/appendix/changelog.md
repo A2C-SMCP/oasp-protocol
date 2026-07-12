@@ -43,6 +43,29 @@
 
 **范围边界（不含）**：段落级排版（行距 / 缩进 / 段间距）、字间距、超链接写入、竖排——office.js PowerPoint API 无原生支持，走 OOXML 路径另案；bullet 自定义字符 / 字体 / 颜色——office.js 不提供，协议不设字段。Add-In 侧既有实现缺口（`insert:text` 字体哑参数 / `update:textBox` `fillColor` 未透传 / underline 退化实现）由 office-editor4ai 单独立项修复，非协议变更。
 
+### /ppt 表格单元格字体收敛（`ppt:update:tableFormat`，Draft 破坏性收敛）
+
+延续上条的字体抽象统一：`ppt:update:tableFormat` 的 `cellFormats` / `rowFormats` / `columnFormats` 原本平铺 `fontSize`/`fontColor`/`bold`/`italic`，属同类散堆，现**收敛复用同一 [`PptFont`](../specification/data-structures.md#pptfont)**（12 属性全量可用，含 17 值下划线 / 删除线 / 上下标 / 大写），使全 `/ppt` 字体抽象一致。
+
+**可行性来源**：经 `/cross-ask office-editor4ai` 复核——`TableCell.font` 即标准 `ShapeFont`，`PptFont` 12 属性零丢失、无需另立精简结构。
+
+| 变更类型 | 位置 | 说明 |
+|----------|------|------|
+| **移除 + 收敛（Draft 破坏性）** | `ppt:update:tableFormat` | 三级 formats 的扁平 `fontSize`/`fontColor`/`bold`/`italic` **删除**，统一改用 `font?: PptFont`（`fontColor`→`color` 语义一致、安全改名） |
+| 新增（行/列级字体，方案 A） | `rowFormats[]` / `columnFormats[]` | 由「仅 `fontSize`」升级为完整 `font?: PptFont`，消除「行/列只能设字号」的割裂；`height`/`width` 保留为行/列 native |
+| 新增（数据结构） | `data-structures.md` | `ParagraphHorizontalAlignment`（7 值）、`TextVerticalAlignment`（6 值）枚举，替换原 `string` 并放开到 office.js 全枚举 |
+| 复用（新增错误码引用） | `ppt:update:tableFormat` | 门槛不满足 → [`3016`](../specification/error-handling.md#api_not_supported-3016)；越界 / 合并单元格非左上格 / 枚举非法 → [`4002`](../specification/error-handling.md) |
+
+**版本门槛（与文本框不同，单列）**：表格单元格字体 / 对齐 / 行高列宽**统一 1.9**——因 `TableCell.font` 访问器门槛为 1.9，把复用的 `PptFont` 底层 1.4/1.8 属性整体抬平；降级判定为单一 `isSetSupported("PowerPointApi","1.9")`，不按属性取 max。现工具已依赖 `cell.font`（1.9），扩到 12 属性**零额外版本成本**。
+
+**单元格无 run 级**：office.js 未暴露单元格内字符区间寻址，`font` 作用于整格，不支持 `runs`。
+
+**行/列级即逐格扇出**：office.js 无「整行/整列字体」原生 API，`rowFormats`/`columnFormats` 的 `font`/`backgroundColor` 均为逐格施加到该行/列每个单元格的糖；命中同一格优先级 `cellFormats` > `columnFormats` > `rowFormats`（沿用既有 `backgroundColor` 口径）。
+
+**全或无（含合并单元格）**：应用前前置校验所有目标格（含行/列展开），任一越界或命中合并单元格非左上格（`getCellOrNullObject` 空对象）→ 整请求 `4002` 失败、不写入任何格；与文本框「全或无」口径一致（纠正现工具「跳过非法格」的部分成功语义，由 office-editor4ai 跟进实现）。
+
+**兼容性**：移除三级 formats 的扁平字体字段对 `/ppt` 为破坏性变更；因 `/ppt` 为 Draft 可接受。目标 `0.4.0`。
+
 ---
 
 ## [0.3.0] - 2026-05-26

@@ -2104,30 +2104,34 @@ interface UpdateTableFormatRequest {
   timestamp?: number;        // 请求时间戳（毫秒），可选
   elementId: string;         // 表格元素 ID
   cellFormats?: Array<{
-    rowIndex: number;        // 行索引（从 0 开始）
-    columnIndex: number;     // 列索引（从 0 开始）
-    backgroundColor?: string;    // 背景颜色（十六进制）
-    fontSize?: number;           // 字号
-    fontColor?: string;          // 字体颜色（十六进制）
-    bold?: boolean;              // 粗体
-    italic?: boolean;            // 斜体
-    horizontalAlignment?: string; // 水平对齐（"Left" | "Center" | "Right"）
-    verticalAlignment?: string;   // 垂直对齐（"Top" | "Middle" | "Bottom"）
+    rowIndex: number;                                    // 行索引（从 0 开始）
+    columnIndex: number;                                 // 列索引（从 0 开始）
+    backgroundColor?: string;                            // 单元格填充色（十六进制）
+    font?: PptFont;                                      // 单元格字体格式（整格级，见 data-structures.md#pptfont）
+    horizontalAlignment?: ParagraphHorizontalAlignment;  // 水平对齐（7 值枚举）
+    verticalAlignment?: TextVerticalAlignment;           // 垂直对齐（6 值枚举）
   }>;
   rowFormats?: Array<{
-    rowIndex: number;        // 行索引（从 0 开始）
-    height?: number;         // 行高（磅）
-    backgroundColor?: string;    // 背景颜色（十六进制）
-    fontSize?: number;           // 字号
+    rowIndex: number;          // 行索引（从 0 开始）
+    height?: number;           // 行高（磅），行级 native
+    backgroundColor?: string;  // 背景色（逐格施加，见下）
+    font?: PptFont;            // 字体格式（逐格施加，见下）
   }>;
   columnFormats?: Array<{
-    columnIndex: number;     // 列索引（从 0 开始）
-    width?: number;          // 列宽（磅）
-    backgroundColor?: string;    // 背景颜色（十六进制）
-    fontSize?: number;           // 字号
+    columnIndex: number;       // 列索引（从 0 开始）
+    width?: number;            // 列宽（磅），列级 native
+    backgroundColor?: string;  // 背景色（逐格施加，见下）
+    font?: PptFont;            // 字体格式（逐格施加，见下）
   }>;
 }
 ```
+
+!!! note "版本门槛与降级（全或无，统一 1.9）"
+    本事件的字体 / 对齐 / 行高列宽 / 单元格填充均经 office.js `TableCell` / `TableRow` / `TableColumn`，其中 `TableCell.font` 访问器门槛为 **PowerPointApi 1.9**，会把复用的 [`PptFont`](data-structures.md#pptfont) 底层 1.4/1.8 属性**整体抬平到 1.9**。故本事件**有效门槛统一为 1.9**——不套用文本框的 1.4/1.8 分档，降级判定为单一 `isSetSupported("PowerPointApi","1.9")`：不满足 → 反应式 [`3016 API_NOT_SUPPORTED`](error-handling.md#api_not_supported-3016)（`details.requiredApiSet: "1.9"`），全或无、不做部分应用。
+    单元格**无 run 级**：office.js 未暴露单元格内字符区间寻址，`font` 作用于**整格**，不支持 `runs`。
+
+!!! warning "目标格前置校验（全或无，含合并单元格）"
+    应用前须前置校验本次涉及的所有单元格坐标（含由 `rowFormats` / `columnFormats` 展开到的单元格）：任一坐标越界、或命中**合并单元格的非左上格**（office.js `getCellOrNullObject` 返回空对象）→ 整请求按 [`4002 INVALID_PARAM`](error-handling.md) 失败，**不写入任何单元格**。不采用"跳过非法格"的部分成功语义，与文本框口径一致。
 
 **请求参数说明**:
 
@@ -2138,8 +2142,9 @@ interface UpdateTableFormatRequest {
 | `rowFormats` | Array | ❌ | 按行设置格式（应用到整行所有单元格） |
 | `columnFormats` | Array | ❌ | 按列设置格式（应用到整列所有单元格） |
 
-!!! note "优先级"
-    当多种格式同时应用到同一单元格时，优先级为：`cellFormats` > `columnFormats` > `rowFormats`。
+!!! note "行/列级即逐格扇出 + 优先级"
+    office.js 无"整行 / 整列字体"原生 API：`rowFormats[].font` / `columnFormats[].font` / `backgroundColor` 均为**逐格施加**到该行 / 列每个单元格的语法糖（唯有 `height` / `width` 是行 / 列 native 属性）。因此行 / 列级字体与单元格级字体走同一 `PptFont` 实体、同一 1.9 门槛。
+    当多级格式命中同一单元格时优先级：**`cellFormats` > `columnFormats` > `rowFormats`**（细粒度覆盖粗粒度），与 `backgroundColor` 现有口径一致。
 
 **请求示例**:
 
@@ -2149,10 +2154,10 @@ interface UpdateTableFormatRequest {
   "documentUri": "file:///Users/john/Documents/presentation.pptx",
   "elementId": "shape-030",
   "rowFormats": [
-    { "rowIndex": 0, "backgroundColor": "#4472C4", "fontSize": 14 }
+    { "rowIndex": 0, "backgroundColor": "#4472C4", "font": { "size": 14, "bold": true, "color": "#FFFFFF" } }
   ],
   "cellFormats": [
-    { "rowIndex": 1, "columnIndex": 0, "bold": true, "fontColor": "#333333" }
+    { "rowIndex": 1, "columnIndex": 0, "font": { "color": "#333333", "underline": "Single" }, "horizontalAlignment": "Center" }
   ]
 }
 ```
@@ -2192,7 +2197,8 @@ interface UpdateTableFormatResponse {
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 elementId |
 | 3003 | `OPERATION_FAILED` - 元素未找到或不是表格类型 |
-| 4002 | `INVALID_PARAM` - rowIndex/columnIndex 超出范围 |
+| 4002 | `INVALID_PARAM` - `rowIndex`/`columnIndex` 超出范围、命中合并单元格非左上格（空对象），或 `font.underline` / 对齐值不在枚举内 |
+| 3016 | `API_NOT_SUPPORTED` - 表格单元格字体 / 对齐 / 行高列宽需 PowerPointApi **1.9**，当前宿主不满足；`details.requiredApiSet` 标注所需版本 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
 

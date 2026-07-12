@@ -167,6 +167,8 @@ interface PptFont {
 !!! note "requirement set 与降级（全或无）"
     每个属性标注其最低 PowerPointApi requirement set。当前宿主不满足**本次请求所含属性**的最高 requirement set 时，承载该 `PptFont` 的事件按**反应式** [`3016 API_NOT_SUPPORTED`](error-handling.md#api_not_supported-3016) **整体失败（全或无，不做部分应用）**，错误 `details.requiredApiSet` 标注所需版本。调用方据此降级——例如仅发送 1.4 属性以适配低版本宿主。此处理与握手无关：[版本握手 ≠ 运行时能力](conventions.md)，能力不足在操作期反应式处理。
 
+    **上表 1.4 / 1.8 分档为文本框（`textRange.font`）语境。** `PptFont` 复用于 [`ppt:update:tableFormat`](events-ppt.md#pptupdatetableformat) 的表格单元格时，因 office.js `TableCell.font` 访问器门槛为 **1.9**，会把底层属性整体**抬平到 1.9**（单一门槛，无需按属性取 max）；且单元格**无 run 级**（office.js 未暴露单元格内字符区间寻址），`PptFont` 仅作用于整格。详见该事件的版本门槛说明。
+
 ### ShapeFontUnderlineStyle
 
 PPT 下划线样式枚举（17 值，PowerPointApi 1.4）。线缆值即 office.js `ShapeFontUnderlineStyle` 枚举字面量，双端零映射。
@@ -244,6 +246,26 @@ type BulletType = "None" | "Numbered" | "Unnumbered" | "Unsupported";
     - **大而易变的宿主枚举 → 直通 `string`**（`style` 对应 office.js bullet 样式，40+ 值且随宿主版本增补）：就地全枚举会让协议文档与一个庞大且演进中的宿主枚举强耦合、易过时。故 `style` 定义为**对齐 office.js 样式字面量的直通字符串**，由宿主在应用时校验；非法值按 [`4002 INVALID_PARAM`](error-handling.md) 处理，与 `underline` 非枚举值的失败口径一致。
 
     即：**两者都是"零映射对齐宿主枚举"，只是承载形态按集合规模分档**——这是一致的抽象原则，不是遗漏。
+
+### ParagraphHorizontalAlignment
+
+段落 / 表格单元格水平对齐枚举（7 值，PowerPointApi 1.9）。线缆值即 office.js `ParagraphHorizontalAlignment` 枚举字面量，双端零映射。
+
+```typescript
+type ParagraphHorizontalAlignment =
+  | "Left" | "Center" | "Right" | "Justify"
+  | "JustifyLow" | "Distributed" | "ThaiDistributed";
+```
+
+### TextVerticalAlignment
+
+文本 / 表格单元格垂直对齐枚举（6 值，PowerPointApi 1.9）。线缆值即 office.js `TextVerticalAlignment` 枚举字面量，双端零映射。
+
+```typescript
+type TextVerticalAlignment =
+  | "Top" | "Middle" | "Bottom"
+  | "TopCentered" | "MiddleCentered" | "BottomCentered";
+```
 
 ---
 
