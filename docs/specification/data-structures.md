@@ -143,11 +143,11 @@ type UnderlineStyle =
 
 ## PPT 文本格式（/ppt）
 
-> 以下结构服务于 [`ppt:update:textBox`](events-ppt.md#pptupdatetextbox) 与 [`ppt:insert:text`](events-ppt.md#pptinserttext)。字体属性统一收敛到 `PptFont`，**整框级与 run 级复用同一结构**。每个属性标注其最低 PowerPointApi requirement set；宿主不满足时按事件定义走**反应式** [`3016 API_NOT_SUPPORTED`](error-handling.md#api_not_supported-3016) 处理。
+> 以下结构服务于 [`ppt:update:textBox`](events-ppt.md#pptupdatetextbox)、[`ppt:insert:text`](events-ppt.md#pptinserttext) 与 [`ppt:insert:shape`](events-ppt.md#pptinsertshape)。字体属性统一收敛到 `PptFont`，**整框级与 run 级复用同一结构**。每个属性标注其最低 PowerPointApi requirement set；宿主不满足时按事件定义走**反应式** [`3016 API_NOT_SUPPORTED`](error-handling.md#api_not_supported-3016) 处理。
 
 ### PptFont
 
-PPT 文字字体格式。整框级（`TextBoxUpdates.font` / `TextInsertOptions.font`）与 run 级（`PptTextRun.font`）共用本结构。所有字段可选，未提供的属性保持原样。
+PPT 文字字体格式。整框级（`TextBoxUpdates.font` / `TextInsertOptions.font` / `ShapeInsertOptions.font`）与 run 级（`PptTextRun.font`）共用本结构。所有字段可选，未提供的属性保持原样。
 
 ```typescript
 interface PptFont {
