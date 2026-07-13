@@ -929,11 +929,23 @@ interface ShapeInsertOptions {
   fillColor?: string;        // 填充颜色（十六进制），默认 "#4472C4"
   borderColor?: string;      // 边框颜色（十六进制），默认 "#2E5090"
   borderWidth?: number;      // 边框宽度（磅），默认 2
-  text?: string;             // 形状内文本
+  text?: string;             // 形状内文本（仅 text-capable 形状）
+  font?: PptFont;            // 插入形状的字体格式（仅 text-capable 形状），见 data-structures.md#pptfont
 }
 ```
 
+!!! note "插入即带字体格式（仅 text-capable 形状）"
+    `options.font`（`PptFont`）在插入形状的同时应用字体格式，语义等价「插入 + 格式」的一次性复合操作，与 [`ppt:insert:text`](#pptinserttext) 的 `font` 字段 / 语义一致。
+
+    **仅适用 text-capable 形状**——`TextBox` 及具备文本框的几何形状（`Rectangle` / `RoundedRectangle` / `Circle` / `Oval` / `Triangle` / `Star` / `Arrow`）。对**无文本框**的形状（`Line`）传入 `font`（或 `text`）→ 前置 `4002 INVALID_PARAM`（语义误用，静态拒绝、非静默忽略）。
+
+    当 `text` 与 `font` 并存时，施加顺序为 `text` → `font`——**`font` 作用于插入后的最终文本内容**。未提供 `text` 时，`font` 作用于形状文本框的默认字体（空文本框，后续输入继承）。
+
+    各属性的 requirement set（基础属性 1.4 / 删除线·上下标·大写 1.8）与降级同 [`PptFont`](data-structures.md#pptfont)：宿主 requirement set 不满足时走**反应式** [`3016 API_NOT_SUPPORTED`](error-handling.md#api_not_supported-3016) **整体失败（全或无）**——能力不足（`3016`）与语义误用（`4002`）语义分离。
+
 **形状类型说明**:
+
+> 除 `Line` 外的所有形状均为 text-capable（接受 `text` / `font`）；`Line` 无文本框。
 
 | 类型 | 说明 |
 |------|------|
@@ -942,10 +954,26 @@ interface ShapeInsertOptions {
 | `Circle` | 圆形 |
 | `Oval` | 椭圆 |
 | `Triangle` | 三角形 |
-| `Line` | 线条 |
-| `Arrow` | 箭头 |
+| `Line` | 线条（无文本框，不接受 `text` / `font`） |
+| `Arrow` | 箭头（块状箭头，含文本框，接受 `text` / `font`） |
 | `Star` | 星形 |
 | `TextBox` | 文本框 |
+
+**请求参数说明**:
+
+| 参数 | 类型 | 必需 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| `shapeType` | `ShapeType` | ✅ | - | 形状类型（见上「形状类型说明」） |
+| `slideIndex` | number | ❌ | 当前幻灯片 | 目标幻灯片索引（从 0 开始） |
+| `left` | number | ❌ | 居中 | X 坐标（磅） |
+| `top` | number | ❌ | 居中 | Y 坐标（磅） |
+| `width` | number | ❌ | 100 | 宽度（磅） |
+| `height` | number | ❌ | 100 | 高度（磅） |
+| `fillColor` | string | ❌ | `#4472C4` | 填充颜色（十六进制） |
+| `borderColor` | string | ❌ | `#2E5090` | 边框颜色（十六进制） |
+| `borderWidth` | number | ❌ | 2 | 边框宽度（磅） |
+| `text` | string | ❌ | - | 形状内文本（仅 text-capable 形状；用于 `Line` → `4002`） |
+| `font` | [`PptFont`](data-structures.md#pptfont) | ❌ | - | 插入形状的字体格式（仅 text-capable 形状；用于 `Line` → `4002`） |
 
 **请求示例**:
 
@@ -962,7 +990,8 @@ interface ShapeInsertOptions {
     "height": 100,
     "fillColor": "#4472C4",
     "borderColor": "#2E5090",
-    "text": "点击这里"
+    "text": "点击这里",
+    "font": { "size": 18, "name": "微软雅黑", "color": "#FFFFFF", "bold": true }
   }
 }
 ```
@@ -1009,7 +1038,8 @@ interface InsertShapeResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 shapeType 参数 |
-| 4002 | `INVALID_PARAM` - shapeType 不支持或 slideIndex 超出范围 |
+| 4002 | `INVALID_PARAM` - shapeType 不支持、slideIndex 超出范围、`font` / `text` 用于无文本框的形状（如 `Line`），或 `font.underline` 不在枚举内 |
+| 3016 | `API_NOT_SUPPORTED` - `font` 所含属性所需 PowerPointApi requirement set（删除线 / 上下标 / 大写 = 1.8）在当前宿主不满足；`details.requiredApiSet` 标注所需版本 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
 

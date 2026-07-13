@@ -38,6 +38,7 @@
 | 新增（数据结构） | `data-structures.md` | `PptFont`（整框级 / run 级共用的字体子对象，12 属性含删除线/上下标/大写/下划线）、`ShapeFontUnderlineStyle`（17 值 PascalCase 枚举）、`PptTextRun`（`{start,length,font}` run 级寻址）、`PptParagraphStyle`（`{start,length,bulletFormat}` 段落级寻址）、`BulletFormat`（`visible`/`type`/`style`，**无 `character`**）、`BulletType` 枚举 |
 | 变更（事件字段） | `events-ppt.md` `ppt:update:textBox` | `TextBoxUpdates` 新增 `font` / `runs[]` / `paragraphs[]`；应用顺序 `text`→`font`→`runs`→`paragraphs`（内容替换在先，区间寻址对齐替换后最终文本；后者覆盖重叠区间） |
 | 变更（事件字段） | `events-ppt.md` `ppt:insert:text` | `TextInsertOptions` 新增 `font`（插入即带字体，语义等价「插入 + 格式」复合操作） |
+| 变更（事件字段） | `events-ppt.md` `ppt:insert:shape` | `ShapeInsertOptions` 新增 `font`（插入即带字体，复用 `PptFont`，字段 / 语义与 `insert:text` 一致）；`font` / `text` 仅适用 text-capable 形状（`TextBox` + 除 `Line` 外的几何形状），用于无文本框的 `Line` → 前置 `4002 INVALID_PARAM`（语义误用，与能力不足 `3016` 分离）；`text` 与 `font` 并存施加顺序 `text`→`font` |
 | **移除（Draft 破坏性收敛）** | `events-ppt.md` | `TextBoxUpdates` 与 `TextInsertOptions` 的扁平 `fontSize`/`fontName`/`color`/`bold`/`italic` **删除**，统一改用 `font.*`；`/ppt` 为 Draft，不保留 Deprecated 别名 |
 | 复用（无新错误码） | `events-ppt.md` / `error-handling.md` | 区间越界 / 枚举非法复用 [`4002 INVALID_PARAM`](../specification/error-handling.md)；requirement set 不满足复用 [`3016 API_NOT_SUPPORTED`](../specification/error-handling.md#api_not_supported-3016)（`details.requiredApiSet` 标注版本） |
 
