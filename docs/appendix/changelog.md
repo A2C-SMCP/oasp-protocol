@@ -9,6 +9,8 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-13
+
 ### /word 字体字段收敛为 WordFont + 修正 UnderlineStyle（含 Stable 破坏性变更）
 
 延续 #10 的字体抽象统一，把 `/word` 散落在 `TextFormat` / `CellFormat` 上的字体字段收敛为统一实体 **`WordFont`**（`bold`/`italic`/`underline`/`size`/`name`/`color`/`highlightColor`，两处复用）。经 `/cross-ask office-editor4ai` 复核可行（全 `Word.Font`、文本场景 WordApi 1.1），并**纠正了现协议 `UnderlineStyle` 的严重错误**。
