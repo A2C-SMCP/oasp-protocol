@@ -9,6 +9,24 @@
 
 ## [Unreleased]
 
+### /excel 错误码收敛回通用注册表（Draft 破坏性收敛）
+
+裁决 [#17](https://github.com/A2C-SMCP/oasp-protocol/issues/17)：`RANGE_INVALID` 在 `error-handling.md`（`3009`）与 `events-excel.md`（`5002`）间编号打架。全局排查发现根因不止于此——OASP 错误码的既定架构是「一张与应用无关的共享注册表（1xxx–4xxx）」（`error-handling.md` 设计原则 #1），`/word`（Stable）与 `/ppt` 连单命名空间语义都放进通用 3xxx 表；**唯 `/excel` 例外**开了 `5xxx` 专属块，且 10 码中 7 码重复了已有通用码。故**退役整个 `5xxx` 块**，逐码收敛回通用注册表，对齐 word/ppt。
+
+| 变更类型 | 位置 | 说明 |
+|----------|------|------|
+| **移除（Draft 破坏性）** | `events-excel.md` | 删除「Excel 专属错误码」`5001`~`5010` 块，替换为「Excel 错误码映射（规范层）」——一张「触发条件 × 通用错误码 × 涉及事件 × `details`」映射表 |
+| 收敛（错误码复用） | `events-excel.md` 全部逐事件「可能的错误」表 | `5001/5006/5007/5008 → 3010 ELEMENT_NOT_FOUND`（由 `details.kind` 区分 worksheet/table/chart/pivotTable）、`5002 → 3009 RANGE_INVALID`、`5003 → 3014 ALREADY_MERGED`、`5004 → 3003 DOCUMENT_READ_ONLY`（`details.scope`）、`5010 → 3016 API_NOT_SUPPORTED` |
+| 新增（通用错误码） | `error-handling.md` | `3017 FORMULA_ERROR`、`3018 DATA_TYPE_MISMATCH`（两码无干净通用孪生，按 3011/3013 先例落入通用 3xxx；`5005 → 3017`、`5009 → 3018`） |
+| 澄清（描述扩容，非破坏） | `error-handling.md` | `3003`/`3010`/`3014`/`3016` 表述与触发场景去 Word/PPT 专有化，覆盖 Excel 条件（语义不变，既有 word/ppt 用法仍有效） |
+| 澄清（规范层归属） | `events-excel.md` / `conventions.md` | 引用 `conventions.md` §规范分层（补 `{#normative-layering}` 锚点）明确 Excel 错误码为**规范层（MUST）**：出现所列线缆可观测条件时实现 **MUST** 返回对应码，不得降级为通用 `3000` |
+
+**Normative 级别（#17 Problem 3）**：无需新增级别——`conventions.md` §规范分层 早已把「错误码 + 实现中立触发条件」列入规范层（MUST）。本次仅把该既有框架显式应用到 Excel 条件并补齐每码的线缆可观测触发条件。
+
+**跨命名空间**：本次为**收敛**（错误码是与应用无关的共享 wire 语义，应复用）——与字体枚举「跨命名空间零映射不复用」（对齐不同宿主 API、故不共享）方向相反、各自适用，不冲突。
+
+**兼容性**：`/excel` 为 Draft（无稳定性承诺），退役 5xxx 属可接受的破坏性收敛；通用码描述扩容对 `/word`（Stable）/`/ppt` 向后兼容。跨仓跟进——office4ai e2e（`manual_tests/excel/test_excel_e2e.py`）按通用码 reassert（`*_NOT_FOUND` 以 `details.kind` 区分）；office-editor4ai（`packages/shared/src/error-codes.ts`）port 通用 3xxx 而非 5xxx。
+
 ## [0.4.0] - 2026-07-13
 
 ### /word 字体字段收敛为 WordFont + 修正 UnderlineStyle（含 Stable 破坏性变更）

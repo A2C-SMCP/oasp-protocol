@@ -4,7 +4,7 @@
 
 本章定义 OASP 协议的错误码体系和错误处理规范。
 
-## 设计原则
+## 设计原则 {#design-principles}
 
 OASP 的错误码设计遵循以下原则：
 
@@ -87,20 +87,22 @@ interface ErrorResponse {
 | `3000` | `DOCUMENT_ERROR` | 文档操作错误（通用） |
 | `3001` | `DOCUMENT_NOT_FOUND` | 文档不存在或未打开 |
 | `3002` | `SELECTION_EMPTY` | 选区为空（需要非空选区的操作） |
-| `3003` | `DOCUMENT_READ_ONLY` | 文档为只读模式 |
+| `3003` | `DOCUMENT_READ_ONLY` | 目标不可写入（文档只读、被锁定，或其中的工作表/区域受保护） |
 | `3004` | `OPERATION_FAILED` | 操作执行失败 |
 | `3005` | `RESOURCE_NOT_ACCESSIBLE` | 资源不可访问 |
 | `3006` | `CONTENT_TOO_LARGE` | 内容超过大小限制 |
 | `3007` | `FORMAT_NOT_SUPPORTED` | 格式不支持 |
 | `3008` | `POSITION_INVALID` | 位置无效 |
-| `3009` | `RANGE_INVALID` | 范围无效 |
-| `3010` | `ELEMENT_NOT_FOUND` | 元素或幻灯片未找到（按 elementId / slideId 定位失败） |
+| `3009` | `RANGE_INVALID` | 范围/区域地址无效（如非法的 A1 表示法、越界区域） |
+| `3010` | `ELEMENT_NOT_FOUND` | 具名/具 id 对象未找到（元素、幻灯片、工作表、表格、图表、透视表等，按 id 或名称定位失败；具体类型见 `details.kind`） |
 | `3011` | `STYLE_NOT_FOUND` | 样式未找到 |
 | `3012` | `SEARCH_NO_MATCH` | 搜索无匹配结果 |
 | `3013` | `NO_TABLE_AT_CURSOR` | 缺省 `tableId` 时光标未落在任何表格内 |
 | `3014` | `ALREADY_MERGED` | 目标合并区域内已存在合并冲突，无法再次合并 |
 | `3015` | `INVALID_CHART_DATA` | 图表数据非法（categorical: series.values 长度与 categories 不匹配；scatter: points 为空或含非法值；或跨类型切换未补齐数据） |
-| `3016` | `API_NOT_SUPPORTED` | 目标操作在当前客户端/平台不可用（如所需 requirement set 不满足或宿主不支持该能力） |
+| `3016` | `API_NOT_SUPPORTED` | 目标操作在当前客户端/平台不可用（如所需 requirement set 不满足、宿主不支持该能力，或该平台不提供此功能如透视表） |
+| `3017` | `FORMULA_ERROR` | 公式语法错误或引用无效 |
+| `3018` | `DATA_TYPE_MISMATCH` | 写入值与目标单元格/列的数据类型不兼容（apply-time，区别于线缆参数类型错误 `4003`） |
 
 ### 4xxx - 参数验证错误
 
@@ -194,16 +196,16 @@ interface ErrorResponse {
 
 ### DOCUMENT_READ_ONLY (3003)
 
-**触发场景**: 目标文档当前不可写入——只读、被锁定或其它原因导致修改无法应用。该判断只描述「文档可写与否」这一线缆可观测状态，不绑定任何具体实现技术。
+**触发场景**: 目标不可写入——文档只读、被锁定，或其中的工作表/区域受保护，导致修改无法应用。该判断只描述「目标可写与否」这一线缆可观测状态，不绑定任何具体实现技术。受保护的范围可经 `details.scope`（如 `"document"` / `"worksheet"`）指明。
 
 **处理建议**:
 - 检查文档是否被其他程序锁定
-- 检查用户是否有编辑权限
-- 提示用户保存文档副本
+- 检查用户是否有编辑权限，或目标工作表是否受保护
+- 提示用户保存文档副本，或解除工作表保护后重试
 
 ### API_NOT_SUPPORTED (3016)
 
-**触发场景**: 目标操作所依赖的能力在当前客户端或平台上不可用——例如所需的 PowerPointApi requirement set 未满足，或宿主环境（如移动端、老版本永久授权 Office）不支持该能力。
+**触发场景**: 目标操作所依赖的能力在当前客户端或平台上不可用——例如所需的 requirement set 未满足（如 PowerPointApi、ExcelApi），或宿主环境（如移动端、Web 端、老版本永久授权 Office）不提供该能力（如部分平台不支持透视表 `excel:insert:pivotTable`）。
 
 **处理建议**:
 
@@ -224,6 +226,28 @@ interface ErrorResponse {
   }
 }
 ```
+
+### ELEMENT_NOT_FOUND (3010)
+
+**触发场景**: 按 id 或名称定位的目标对象不存在。该码跨命名空间复用，具体对象类型由 `details.kind` 区分（同一事件可能对不同 `kind` 分别返回 3010，如 Excel 图表事件先查工作表再查图表）。
+
+**`details.kind` 取值**（规范层，双端据此对齐断言）:
+
+| `kind` | 命名空间 | 含义 |
+|--------|----------|------|
+| `element` | `/word`、`/ppt` | 按 `elementId` 定位的内容元素 |
+| `slide` | `/ppt` | 按 `slideId` 定位的幻灯片 |
+| `worksheet` | `/excel` | 按名称定位的工作表 |
+| `table` | `/excel` | 按名称/id 定位的表格 |
+| `chart` | `/excel` | 按名称定位的图表 |
+| `pivotTable` | `/excel` | 按名称定位的透视表 |
+
+`details` 另可回带被查标识（如 `id` / `name`）便于定位。取值集合随命名空间演进而扩充，但已列值语义固定、不复用。
+
+**处理建议**:
+
+- 先用对应的 `get:*` 列举可用对象，再以有效 id/名称重发
+- 据 `details.kind` 定位是哪一类对象未找到
 
 ### STYLE_NOT_FOUND (3011)
 
@@ -273,12 +297,12 @@ interface ErrorResponse {
 
 ### ALREADY_MERGED (3014)
 
-**触发场景**: `word:merge:cells` 请求的矩形区域与已有合并单元格冲突（如目标矩形跨越了已合并区域的一部分），Word.js 无法执行二次合并。
+**触发场景**: 合并请求的矩形区域与已有合并单元格冲突（如目标矩形跨越了已合并区域的一部分），无法执行二次合并。适用于 Word 表格单元格（`word:merge:cells`）与 Excel 区域（`excel:merge:cells`）。
 
 **处理建议**:
 
 - 调用方先确认目标区域当前合并状态，必要时调整起止索引
-- 如需重新合并，先取消已有合并（暂未提供拆分事件）
+- 如需重新合并，先取消已有合并（Word 暂未提供拆分事件；Excel 可先 `excel:unmerge:cells`）
 
 **示例**:
 
@@ -294,6 +318,24 @@ interface ErrorResponse {
   }
 }
 ```
+
+### FORMULA_ERROR (3017)
+
+**触发场景**: 写入的公式存在语法错误或引用无效（如括号不匹配、函数名拼写错误、引用了不存在的名称/区域）。适用于承载公式的操作（如 `excel:set:formula`）。
+
+**处理建议**:
+
+- 校正公式字符串后重发（`details` 可回带宿主报告的具体公式错误）
+- 确认引用的单元格/区域/命名对象存在
+
+### DATA_TYPE_MISMATCH (3018)
+
+**触发场景**: 写入值与目标单元格/列在应用时（apply-time）的数据类型不兼容——值在线缆上类型合法，但无法被目标接受（如向强类型表格列写入不可转换的值）。区别于 `4003 INVALID_PARAM_TYPE`（请求参数在**线缆层**类型即不合法）。
+
+**处理建议**:
+
+- 调整写入值类型以匹配目标列/单元格
+- 如需覆盖类型，先清除目标格式或改用可接受的表示
 
 ### MISSING_PARAM (4001)
 

@@ -60,7 +60,7 @@
 
 | 事件名 | 状态 | 说明 |
 |--------|------|------|
-| [excel:insert:table](#excelInserttable) | 📋 Draft | 创建结构化表格 |
+| [excel:insert:table](#excelinserttable) | 📋 Draft | 创建结构化表格 |
 | [excel:get:table](#excelgettable) | 📋 Draft | 获取表格详细信息 |
 | [excel:get:tables](#excelgettables) | 📋 Draft | 获取工作表中所有表格 |
 | [excel:add:tableRow](#exceladdtablerow) | 📋 Draft | 追加表格行 |
@@ -100,22 +100,30 @@
 
 ---
 
-## Excel 专属错误码
+## Excel 错误码映射（规范层）
 
-除通用错误码（1xxx ~ 4xxx）外，Excel 命名空间定义以下专属错误码：
+`/excel` **不使用命名空间专属错误码块**，与 `/word`、`/ppt` 一致，全部复用[错误处理](error-handling.md)定义的共享注册表（1xxx ~ 4xxx）。错误码描述的是**线缆可观测的失败条件**，与具体应用无关（见[错误处理 · 设计原则](error-handling.md#design-principles)）。
 
-| 错误码 | 名称 | 说明 |
-|--------|------|------|
-| `5001` | `WORKSHEET_NOT_FOUND` | 指定的工作表不存在 |
-| `5002` | `RANGE_INVALID` | 无效的区域地址 |
-| `5003` | `MERGE_CONFLICT` | 合并操作与现有合并区域冲突 |
-| `5004` | `PROTECTED_SHEET` | 工作表受保护，无法修改 |
-| `5005` | `FORMULA_ERROR` | 公式语法错误或引用无效 |
-| `5006` | `TABLE_NOT_FOUND` | 指定的表格不存在 |
-| `5007` | `CHART_NOT_FOUND` | 指定的图表不存在 |
-| `5008` | `PIVOT_NOT_FOUND` | 指定的透视表不存在 |
-| `5009` | `DATA_TYPE_MISMATCH` | 写入值的数据类型不匹配 |
-| `5010` | `NOT_SUPPORTED` | 当前平台不支持此功能 |
+!!! warning "规范层（Normative）"
+    本节为**规范层**（见[通用约定 · 规范分层](conventions.md#normative-layering)）。当出现下表所列**线缆可观测条件**时，实现 **MUST** 返回对应错误码，**不得**降级为通用 `3000 DOCUMENT_ERROR`。多个同类对象（工作表 / 表格 / 图表 / 透视表）共用 `3010`，由 [`details.kind`](error-handling.md#element_not_found-3010) 区分（取值集合见该处规范定义）。
+
+| 触发条件（线缆可观测） | 错误码 | 名称 | `details` | 典型事件 |
+|---|---|---|---|---|
+| 按名称/id 定位工作表失败 | `3010` | `ELEMENT_NOT_FOUND` | `kind:"worksheet"` | 所有工作表作用域事件（`get:worksheetInfo`、`delete:worksheet`、`get:range` …） |
+| 按名称/id 定位表格失败 | `3010` | `ELEMENT_NOT_FOUND` | `kind:"table"` | `get:table`、`add:tableRow`、`delete:tableRow`、`sort:table` |
+| 按名称定位图表失败 | `3010` | `ELEMENT_NOT_FOUND` | `kind:"chart"` | `update:chart`、`delete:chart` |
+| 按名称定位透视表失败 | `3010` | `ELEMENT_NOT_FOUND` | `kind:"pivotTable"` | `delete:pivotTable` |
+| 区域/单元格地址非法（语法或越界） | `3009` | `RANGE_INVALID` | — | `get:range`、`set:range`、`insert:chart`(source)、`insert:pivotTable`(source/target)、`find:values`、`set:formula` … |
+| 合并区域与现有合并冲突 | `3014` | `ALREADY_MERGED` | — | `merge:cells` |
+| 目标工作表/区域受保护不可写 | `3003` | `DOCUMENT_READ_ONLY` | `scope:"worksheet"` | `set:range`、`clear:range`、`delete:range`、`insert:range`、`set:rangeFormat`、`merge:cells`、`insert:table`、`delete:worksheet`、`set:formula` … |
+| 公式语法错误或引用无效 | `3017` | `FORMULA_ERROR` | — | `set:formula` |
+| 写入值与目标类型不兼容（apply-time） | `3018` | `DATA_TYPE_MISMATCH` | — | `set:range`、`add:tableRow` |
+| 平台不提供该功能（如透视表） | `3016` | `API_NOT_SUPPORTED` | `requiredApiSet` / 平台 | `insert:pivotTable` |
+| 文档未打开/找不到 | `3001` | `DOCUMENT_NOT_FOUND` | — | `get:workbookInfo`、`get:worksheets` … |
+| 参数缺失/非法/越界 | `4001`/`4002`/`4004` | `MISSING_PARAM` / `INVALID_PARAM` / `PARAM_OUT_OF_RANGE` | — | `add:conditionalFormat`、`insert:chart`(type)、`sort:table`、`delete:tableRow`、`set:autoFilter` |
+
+!!! note "从早期 5xxx 草案迁移"
+    早期草案曾为 `/excel` 定义 `5001`~`5010` 专属码，现已全部收敛至上述通用码（对齐 `/word`、`/ppt`）：`5001/5006/5007/5008 → 3010`（`details.kind`）、`5002 → 3009`、`5003 → 3014`、`5004 → 3003`、`5005 → 3017`、`5009 → 3018`、`5010 → 3016`。`5xxx` 不再使用。
 
 ---
 
@@ -317,7 +325,7 @@ interface GetWorksheetInfoResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
 
 ---
 
@@ -514,8 +522,8 @@ interface RangeFormatInfo {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5002 | `RANGE_INVALID` - 无效的区域地址 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3009 | `RANGE_INVALID` - 无效的区域地址 |
 
 ---
 
@@ -607,10 +615,10 @@ interface SetRangeResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5002 | `RANGE_INVALID` - 无效的区域地址 |
-| 5004 | `PROTECTED_SHEET` - 工作表受保护 |
-| 5009 | `DATA_TYPE_MISMATCH` - 数据类型不匹配 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3009 | `RANGE_INVALID` - 无效的区域地址 |
+| 3003 | `DOCUMENT_READ_ONLY` - 工作表受保护（`details.scope:"worksheet"`） |
+| 3018 | `DATA_TYPE_MISMATCH` - 数据类型不匹配 |
 
 ---
 
@@ -671,9 +679,9 @@ interface ClearRangeResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5002 | `RANGE_INVALID` - 无效的区域地址 |
-| 5004 | `PROTECTED_SHEET` - 工作表受保护 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3009 | `RANGE_INVALID` - 无效的区域地址 |
+| 3003 | `DOCUMENT_READ_ONLY` - 工作表受保护（`details.scope:"worksheet"`） |
 
 ---
 
@@ -734,9 +742,9 @@ interface CopyRangeResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5002 | `RANGE_INVALID` - 无效的区域地址 |
-| 5004 | `PROTECTED_SHEET` - 工作表受保护 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3009 | `RANGE_INVALID` - 无效的区域地址 |
+| 3003 | `DOCUMENT_READ_ONLY` - 工作表受保护（`details.scope:"worksheet"`） |
 
 ---
 
@@ -797,9 +805,9 @@ interface DeleteRangeResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5002 | `RANGE_INVALID` - 无效的区域地址 |
-| 5004 | `PROTECTED_SHEET` - 工作表受保护 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3009 | `RANGE_INVALID` - 无效的区域地址 |
+| 3003 | `DOCUMENT_READ_ONLY` - 工作表受保护（`details.scope:"worksheet"`） |
 
 ---
 
@@ -860,9 +868,9 @@ interface InsertRangeResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5002 | `RANGE_INVALID` - 无效的区域地址 |
-| 5004 | `PROTECTED_SHEET` - 工作表受保护 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3009 | `RANGE_INVALID` - 无效的区域地址 |
+| 3003 | `DOCUMENT_READ_ONLY` - 工作表受保护（`details.scope:"worksheet"`） |
 
 ---
 
@@ -947,8 +955,8 @@ interface GetRangeFormatResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5002 | `RANGE_INVALID` - 无效的区域地址 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3009 | `RANGE_INVALID` - 无效的区域地址 |
 
 ---
 
@@ -1037,9 +1045,9 @@ interface SetRangeFormatResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5002 | `RANGE_INVALID` - 无效的区域地址 |
-| 5004 | `PROTECTED_SHEET` - 工作表受保护 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3009 | `RANGE_INVALID` - 无效的区域地址 |
+| 3003 | `DOCUMENT_READ_ONLY` - 工作表受保护（`details.scope:"worksheet"`） |
 
 ---
 
@@ -1109,8 +1117,8 @@ interface AddConditionalFormatResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5002 | `RANGE_INVALID` - 无效的区域地址 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3009 | `RANGE_INVALID` - 无效的区域地址 |
 | 4002 | `INVALID_PARAM` - 规则参数无效 |
 
 ---
@@ -1162,8 +1170,8 @@ interface ClearConditionalFormatResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5002 | `RANGE_INVALID` - 无效的区域地址 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3009 | `RANGE_INVALID` - 无效的区域地址 |
 
 ---
 
@@ -1216,10 +1224,10 @@ interface MergeCellsResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5002 | `RANGE_INVALID` - 无效的区域地址 |
-| 5003 | `MERGE_CONFLICT` - 与现有合并区域冲突 |
-| 5004 | `PROTECTED_SHEET` - 工作表受保护 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3009 | `RANGE_INVALID` - 无效的区域地址 |
+| 3014 | `ALREADY_MERGED` - 与现有合并区域冲突 |
+| 3003 | `DOCUMENT_READ_ONLY` - 工作表受保护（`details.scope:"worksheet"`） |
 
 ---
 
@@ -1270,9 +1278,9 @@ interface UnmergeCellsResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5002 | `RANGE_INVALID` - 无效的区域地址 |
-| 5004 | `PROTECTED_SHEET` - 工作表受保护 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3009 | `RANGE_INVALID` - 无效的区域地址 |
+| 3003 | `DOCUMENT_READ_ONLY` - 工作表受保护（`details.scope:"worksheet"`） |
 
 ---
 
@@ -1462,8 +1470,8 @@ interface DeleteWorksheetResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5004 | `PROTECTED_SHEET` - 工作表受保护 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3003 | `DOCUMENT_READ_ONLY` - 工作表受保护（`details.scope:"worksheet"`） |
 
 ---
 
@@ -1522,7 +1530,7 @@ interface RenameWorksheetResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
 | 3004 | `OPERATION_FAILED` - 操作失败（如新名称已存在） |
 
 ---
@@ -1579,7 +1587,7 @@ interface ActivateWorksheetResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
 
 ---
 
@@ -1671,9 +1679,9 @@ interface InsertTableResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5002 | `RANGE_INVALID` - 无效的区域地址 |
-| 5004 | `PROTECTED_SHEET` - 工作表受保护 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3009 | `RANGE_INVALID` - 无效的区域地址 |
+| 3003 | `DOCUMENT_READ_ONLY` - 工作表受保护（`details.scope:"worksheet"`） |
 
 ---
 
@@ -1758,8 +1766,8 @@ interface GetTableResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5006 | `TABLE_NOT_FOUND` - 指定的表格不存在 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3010 | `ELEMENT_NOT_FOUND` - 表格不存在（`details.kind:"table"`） |
 
 ---
 
@@ -1822,7 +1830,7 @@ interface GetTablesResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
 
 ---
 
@@ -1883,8 +1891,8 @@ interface AddTableRowResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5006 | `TABLE_NOT_FOUND` - 指定的表格不存在 |
-| 5009 | `DATA_TYPE_MISMATCH` - 数据类型不匹配 |
+| 3010 | `ELEMENT_NOT_FOUND` - 表格不存在（`details.kind:"table"`） |
+| 3018 | `DATA_TYPE_MISMATCH` - 数据类型不匹配 |
 
 ---
 
@@ -1945,7 +1953,7 @@ interface DeleteTableRowResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5006 | `TABLE_NOT_FOUND` - 指定的表格不存在 |
+| 3010 | `ELEMENT_NOT_FOUND` - 表格不存在（`details.kind:"table"`） |
 | 4004 | `PARAM_OUT_OF_RANGE` - 行索引超出范围 |
 
 ---
@@ -2015,7 +2023,7 @@ interface SortTableResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5006 | `TABLE_NOT_FOUND` - 指定的表格不存在 |
+| 3010 | `ELEMENT_NOT_FOUND` - 表格不存在（`details.kind:"table"`） |
 | 4004 | `PARAM_OUT_OF_RANGE` - 列索引超出范围 |
 
 ---
@@ -2117,8 +2125,8 @@ interface InsertChartResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5002 | `RANGE_INVALID` - 无效的数据源范围 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3009 | `RANGE_INVALID` - 无效的数据源范围 |
 | 4002 | `INVALID_PARAM` - 无效的图表类型 |
 
 ---
@@ -2193,7 +2201,7 @@ interface GetChartsResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
 
 ---
 
@@ -2267,8 +2275,8 @@ interface UpdateChartResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5007 | `CHART_NOT_FOUND` - 指定的图表不存在 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3010 | `ELEMENT_NOT_FOUND` - 图表不存在（`details.kind:"chart"`） |
 | 4002 | `INVALID_PARAM` - 无效的图表类型 |
 
 ---
@@ -2327,8 +2335,8 @@ interface DeleteChartResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5007 | `CHART_NOT_FOUND` - 指定的图表不存在 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3010 | `ELEMENT_NOT_FOUND` - 图表不存在（`details.kind:"chart"`） |
 
 ---
 
@@ -2406,9 +2414,9 @@ interface InsertPivotTableResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5002 | `RANGE_INVALID` - 无效的范围地址 |
-| 5010 | `NOT_SUPPORTED` - 当前平台不支持透视表操作 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3009 | `RANGE_INVALID` - 无效的范围地址 |
+| 3016 | `API_NOT_SUPPORTED` - 当前平台不支持透视表操作 |
 
 ---
 
@@ -2470,7 +2478,7 @@ interface GetPivotTablesResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
 
 ---
 
@@ -2528,8 +2536,8 @@ interface DeletePivotTableResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5008 | `PIVOT_NOT_FOUND` - 指定的透视表不存在 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3010 | `ELEMENT_NOT_FOUND` - 透视表不存在（`details.kind:"pivotTable"`） |
 
 ---
 
@@ -2618,8 +2626,8 @@ interface FindValuesResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5002 | `RANGE_INVALID` - 无效的搜索范围 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3009 | `RANGE_INVALID` - 无效的搜索范围 |
 
 ---
 
@@ -2689,8 +2697,8 @@ interface SetAutoFilterResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5002 | `RANGE_INVALID` - 无效的范围地址 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3009 | `RANGE_INVALID` - 无效的范围地址 |
 | 4004 | `PARAM_OUT_OF_RANGE` - 列索引超出范围 |
 
 ---
@@ -2740,7 +2748,7 @@ interface ClearAutoFilterResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
 
 ---
 
@@ -2815,7 +2823,7 @@ interface SetFormulaResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 5001 | `WORKSHEET_NOT_FOUND` - 指定的工作表不存在 |
-| 5002 | `RANGE_INVALID` - 无效的单元格地址 |
-| 5004 | `PROTECTED_SHEET` - 工作表受保护 |
-| 5005 | `FORMULA_ERROR` - 公式语法错误或引用无效 |
+| 3010 | `ELEMENT_NOT_FOUND` - 工作表不存在（`details.kind:"worksheet"`） |
+| 3009 | `RANGE_INVALID` - 无效的单元格地址 |
+| 3003 | `DOCUMENT_READ_ONLY` - 工作表受保护（`details.scope:"worksheet"`） |
+| 3017 | `FORMULA_ERROR` - 公式语法错误或引用无效 |

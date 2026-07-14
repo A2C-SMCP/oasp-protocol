@@ -4,7 +4,7 @@
 
 本章定义 OASP 协议中的通用约定，包括数据格式、命名规则和序列化规范。所有实现**必须**遵循这些约定。
 
-## 规范分层（Normative / Informative）
+## 规范分层（Normative / Informative） {#normative-layering}
 
 OASP 是一份**线缆协议（wire protocol）**规范：它约定通信双方在网络上交换什么，而**不约定**任何一端内部如何实现。为防止规范文本越界替消费方做实现决策，全协议内容分为两层。
 
