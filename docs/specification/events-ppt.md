@@ -69,6 +69,12 @@
 !!! info "关于 ppt:insert:video"
     PowerPoint JavaScript API **不支持**插入视频/音频元素。此功能标记为 🚫 Not Feasible，不在事件列表中定义。
 
+### 脚本执行类（Server → AddIn，请求-响应）
+
+| 事件名 | 状态 | 说明 |
+|--------|------|------|
+| [ppt:run:script](#pptrunscript) | 📋 Draft | 执行原始 Office.js 脚本（封装层逃生舱） |
+
 ---
 
 ## 事件报告类
@@ -2995,3 +3001,95 @@ interface InsertSlidesOoxmlResponse {
 | 3003 | `DOCUMENT_READ_ONLY` - 目标文档不可写入（只读或被锁定，无法应用修改） |
 | 3004 | `OPERATION_FAILED` - 插入/替换/复位失败 |
 | 3016 | `API_NOT_SUPPORTED` - 所需能力（插入需 PowerPointApi 1.2、finalSlideIndex 复位需 1.8）在当前客户端/平台不满足；调用方应降级到另一实现路径 |
+
+---
+
+## 脚本执行类
+
+### ppt:run:script
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: **封装层逃生舱**——对实时演示文稿执行一段原始 Office.js 脚本。**应优先使用 typed `ppt:*` 事件**，仅在其未覆盖某能力、或某 typed 事件有 Bug 阻塞时使用。共享执行语义、大小限制、超时、安全模型、非原子性与错误映射见[通用约定 · 脚本执行](conventions.md#run-script)。
+
+**请求数据**（共享 [`RunScriptRequest`](data-structures.md#script-execution)）:
+
+```typescript
+interface RunScriptRequest {
+  requestId: string;
+  documentUri: string;
+  timestamp?: number;
+  script: string;                    // async 函数体；注入 context(PowerPoint.RequestContext)/args/console，可 return
+  args?: Record<string, unknown>;    // 注入脚本，脚本内经 `args` 读取；必须可 JSON 序列化
+  timeoutMs?: number;                // 执行超时（毫秒），缺省「脚本执行」档 60000，无硬上限
+}
+```
+
+**字段说明**:
+
+| 字段 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `script` | string | ✅ | 待执行 JS 源码，async 函数体语义 |
+| `args` | Record<string, unknown> | ❌ | 注入脚本的参数，脚本内经 `args` 读取；必须可 JSON 序列化 |
+| `timeoutMs` | number | ❌ | 执行超时（毫秒），缺省 60000，无硬上限 |
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/deck.pptx",
+  "script": "const slides = context.presentation.slides;\nslides.load('items');\nawait context.sync();\nreturn slides.items.length;"
+}
+```
+
+**响应数据**（`data` 为共享 [`ScriptResult`](data-structures.md#script-execution)）:
+
+```typescript
+interface RunScriptResponse {
+  requestId: string;
+  success: boolean;
+  data?: ScriptResult;        // { result, logs, durationMs, logsTruncated }
+  error?: ErrorResponse;
+  timestamp: number;
+  duration?: number;
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "result": 12,
+    "logs": [],
+    "durationMs": 38,
+    "logsTruncated": false
+  },
+  "timestamp": 1704067200500,
+  "duration": 40
+}
+```
+
+!!! info "PPT 宿主能力自检（实现提示 / 非规范）"
+    `PowerPointApi` requirement set 起步较晚，脚本调用当前宿主**不存在**的 API 时，代理对象上的方法为 `undefined` → 抛 `TypeError`，会被错误映射记为 `fault:"script"`（而真因是宿主能力不足）。脚本**建议**先用全局 `Office.context.requirements.isSetSupported("PowerPointApi", "1.x")` 自检目标能力再调用，以获得更准确的失败归因。
+
+!!! danger "安全模型与非原子性"
+    `run:script` 以敞开全局对象的原生 JS 执行、**非沙箱**，信任边界即 Socket.IO 握手鉴权；失败时文档可能残留**部分修改**（无原子性 / 回滚）。执行前的人在环确认由**上层 Agent 层**承担，OASP 为纯能力提供方。完整规范见[通用约定 · 脚本执行](conventions.md#run-script)。
+
+**可能的错误**（完整映射见[通用约定 · 脚本执行 · 错误映射](conventions.md#run-script-errors)）:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `MISSING_PARAM` - 缺少 `script` |
+| 4003 | `INVALID_PARAM_TYPE` - `args` 不可 JSON 序列化 |
+| 4004 | `PARAM_OUT_OF_RANGE` - `timeoutMs` 越界 |
+| 4002 | `INVALID_PARAM` - 脚本语法错（`phase:"compile"`） |
+| 3016 | `API_NOT_SUPPORTED` - 宿主不支持动态代码构造（`phase:"compile"`） |
+| 3004 | `OPERATION_FAILED` - 脚本自身抛错（`fault:"script"`）或 Office.js 调用失败（`fault:"office"`） |
+| 1002 | `TIMEOUT` - 执行超时 |
+| 3006 | `CONTENT_TOO_LARGE` - result 过大（`phase:"serialize"`） |

@@ -7,7 +7,7 @@
 
 本章定义 `/excel` 命名空间下的所有事件。Excel 事件用于操作 Microsoft Excel 工作簿。
 
-共 **37 个事件**，覆盖状态感知、Range 操作、格式样式、合并单元格、工作表管理、表格操作、图表操作、透视表操作、查找筛选和公式设置。
+共 **38 个事件**，覆盖状态感知、Range 操作、格式样式、合并单元格、工作表管理、表格操作、图表操作、透视表操作、查找筛选、公式设置和脚本执行。
 
 ## 事件列表
 
@@ -97,6 +97,12 @@
 | 事件名 | 状态 | 说明 |
 |--------|------|------|
 | [excel:set:formula](#excelsetformula) | 📋 Draft | 设置单元格公式 |
+
+### 脚本执行类（Server → AddIn，请求-响应）
+
+| 事件名 | 状态 | 说明 |
+|--------|------|------|
+| [excel:run:script](#excelrunscript) | 📋 Draft | 执行原始 Office.js 脚本（封装层逃生舱） |
 
 ---
 
@@ -2827,3 +2833,93 @@ interface SetFormulaResponse {
 | 3009 | `RANGE_INVALID` - 无效的单元格地址 |
 | 3003 | `DOCUMENT_READ_ONLY` - 工作表受保护（`details.scope:"worksheet"`） |
 | 3017 | `FORMULA_ERROR` - 公式语法错误或引用无效 |
+
+---
+
+## 脚本执行类
+
+### excel:run:script
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+**说明**: **封装层逃生舱**——对实时工作簿执行一段原始 Office.js 脚本。**应优先使用 typed `excel:*` 事件**，仅在其未覆盖某能力、或某 typed 事件有 Bug 阻塞时使用。共享执行语义、大小限制、超时、安全模型、非原子性与错误映射见[通用约定 · 脚本执行](conventions.md#run-script)。
+
+**请求数据**（共享 [`RunScriptRequest`](data-structures.md#script-execution)）:
+
+```typescript
+interface RunScriptRequest {
+  requestId: string;
+  documentUri: string;
+  timestamp?: number;
+  script: string;                    // async 函数体；注入 context(Excel.RequestContext)/args/console，可 return
+  args?: Record<string, unknown>;    // 注入脚本，脚本内经 `args` 读取；必须可 JSON 序列化
+  timeoutMs?: number;                // 执行超时（毫秒），缺省「脚本执行」档 60000，无硬上限
+}
+```
+
+**字段说明**:
+
+| 字段 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `script` | string | ✅ | 待执行 JS 源码，async 函数体语义 |
+| `args` | Record<string, unknown> | ❌ | 注入脚本的参数，脚本内经 `args` 读取；必须可 JSON 序列化 |
+| `timeoutMs` | number | ❌ | 执行超时（毫秒），缺省 60000，无硬上限 |
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/data.xlsx",
+  "script": "const sheet = context.workbook.worksheets.getActiveWorksheet();\nconst range = sheet.getRange(args.address);\nrange.load('values');\nawait context.sync();\nreturn range.values;",
+  "args": { "address": "A1:B2" }
+}
+```
+
+**响应数据**（`data` 为共享 [`ScriptResult`](data-structures.md#script-execution)）:
+
+```typescript
+interface RunScriptResponse {
+  requestId: string;
+  success: boolean;
+  data?: ScriptResult;        // { result, logs, durationMs, logsTruncated }
+  error?: ErrorResponse;
+  timestamp: number;
+  duration?: number;
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "result": [["姓名", "年龄"], ["张三", 25]],
+    "logs": [],
+    "durationMs": 42,
+    "logsTruncated": false
+  },
+  "timestamp": 1704067200500,
+  "duration": 45
+}
+```
+
+!!! danger "安全模型与非原子性"
+    `run:script` 以敞开全局对象的原生 JS 执行、**非沙箱**，信任边界即 Socket.IO 握手鉴权；失败时文档可能残留**部分修改**（无原子性 / 回滚）。执行前的人在环确认由**上层 Agent 层**承担，OASP 为纯能力提供方。完整规范见[通用约定 · 脚本执行](conventions.md#run-script)。
+
+**可能的错误**（完整映射见[通用约定 · 脚本执行 · 错误映射](conventions.md#run-script-errors)）:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `MISSING_PARAM` - 缺少 `script` |
+| 4003 | `INVALID_PARAM_TYPE` - `args` 不可 JSON 序列化 |
+| 4004 | `PARAM_OUT_OF_RANGE` - `timeoutMs` 越界 |
+| 4002 | `INVALID_PARAM` - 脚本语法错（`phase:"compile"`） |
+| 3016 | `API_NOT_SUPPORTED` - 宿主不支持动态代码构造（`phase:"compile"`） |
+| 3004 | `OPERATION_FAILED` - 脚本自身抛错（`fault:"script"`）或 Office.js 调用失败（`fault:"office"`） |
+| 1002 | `TIMEOUT` - 执行超时 |
+| 3006 | `CONTENT_TOO_LARGE` - result 过大（`phase:"serialize"`） |

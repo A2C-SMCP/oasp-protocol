@@ -27,6 +27,26 @@
 
 **兼容性**：`/excel` 为 Draft（无稳定性承诺），退役 5xxx 属可接受的破坏性收敛；通用码描述扩容对 `/word`（Stable）/`/ppt` 向后兼容。跨仓跟进——office4ai e2e（`manual_tests/excel/test_excel_e2e.py`）按通用码 reassert（`*_NOT_FOUND` 以 `details.kind` 区分）；office-editor4ai（`packages/shared/src/error-codes.ts`）port 通用 3xxx 而非 5xxx。
 
+### `{excel,word,ppt}:run:script` —— 通用 Office.js 脚本执行接口（封装层逃生舱）
+
+裁决 [#18](https://github.com/A2C-SMCP/oasp-protocol/issues/18)：三命名空间各新增一个 `run:script` 事件——调用方下发 JS 源码，AddIn 注入宿主 `RequestContext` 后按 Office.js 语义执行，回传返回值 + 日志。定位是**封装层逃生舱**（typed 事件未覆盖某能力、或某 typed 事件有 Bug 阻塞时的止血路径 + 新能力孵化器），**不替代** typed 事件。
+
+| 变更类型 | 位置 | 说明 |
+|----------|------|------|
+| 新增（事件 ×3） | `events-{excel,word,ppt}.md` | `excel:run:script` / `word:run:script` / `ppt:run:script`，三端同构，📋 Draft |
+| 新增（共享数据结构） | `data-structures.md` | `RunScriptRequest`（`script`/`args?`/`timeoutMs?`）+ `ScriptResult`（`result`/`logs`/`durationMs`/`logsTruncated`）——**宿主无关执行信封**，三命名空间共享（对齐 `BaseRequest`/`BaseResponse`；含「有意跨命名空间相同」admonition） |
+| 新增（共享语义节） | `conventions.md` §脚本执行 | 执行语义（AsyncFunction / 注入 `context`·`args`·`console` / 补 `sync` / JSON 序列化）+ 大小限制（`result` ≤ 512KB、`logs` ≤ 100KB，**UTF-8 字节**）+ 超时 + 安全模型 + 非原子性 + 错误映射 |
+| 新增（超时档） | `conventions.md` §超时约定 | 新增「脚本执行」档：缺省 60000ms，`timeoutMs` 可覆盖，**无硬上限** |
+| 错误码 | —— | **零新增**：复用 `4001/4002/4003/4004`（参数）·`3016`（宿主禁动态代码，`phase:compile`）·`3004`（`fault:script`/`fault:office`）·`1002`（超时）·`3006`（`result` 过大） |
+
+**安全模型（规范正文，MUST 阅读）**：`run:script` 以 `AsyncFunction` 执行、**非沙箱**（沙箱与「直接调原生 Office.js」的目的在定义上互斥），全局对象敞开，信任边界 = Socket.IO 握手鉴权。如实记录**本事件独有的攻击面**（恶意文档提示词注入 → AI 生成含 `fetch` 的脚本 → 外泄，typed 事件不可达）。人在环「执行前确认」由**上层 Agent 层**的通用工具二次确认承担，OASP 为**纯能力提供方**，不自建确认门、不提供安全边界。
+
+**非原子性（规范正文）**：与 typed 事件不同，`run:script` **不保证原子性/回滚**——失败时文档可能处于任意中间状态（跨 sync 已落盘不可回滚 + 单 sync 内部半批执行）。Office.js 无事务 API；需对账的调用方应在脚本内自行 read-back。
+
+**待裁决收敛**（原 issue 6 项 → 3 项由架构判断消除）：确认门移至上层 Agent 层后，「用户拒绝执行」新码（原候选 `3019`）**取消**（拒绝发生在 Agent 层、请求不到线缆）、确认门握手能力位**取消**、「能力被关闭」码收敛为既有 `3016`（仅剩宿主真的跑不了这一种）。动作词取 `run`（对齐 Office.js `Excel.run`/`Word.run`）；错误码取「compile→`4002` / execute→`3004` 且 `details.fault` 区分」而非专用码（承 #17 收敛号段之势）；不引入 `dryRun`。
+
+**兼容性**：纯加法 MINOR。`/excel`·`/ppt` 为 Draft；`/word` 为 Stable 但本事件为**纯加法**（新增事件不改任何既有契约），符合 Stable 变更门槛。跨仓跟进——office4ai：每命名空间一个 MCP 工具（`{ns}_run_script`，ESCAPE HATCH 定位 + 优先 typed 的 description，与既有离线 `office_run_script` 互指）、`{ns}:run:script` 派生 `server_timeout=(timeoutMs??60s)+GRACE`；office-editor4ai：三端 `AsyncFunction` 执行器（宿主无关核心进 `shared`）、`client.ts` 双重 ack 修复、**发版前**补测 Windows/WebView2 + Office-on-web 探针。
+
 ## [0.4.0] - 2026-07-13
 
 ### /word 字体字段收敛为 WordFont + 修正 UnderlineStyle（含 Stable 破坏性变更）

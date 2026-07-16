@@ -68,6 +68,12 @@
 | [word:reply:comment](#wordreplycomment) | ✅ Stable | 回复已有批注 |
 | [word:resolve:comment](#wordresolvecomment) | ✅ Stable | 解决/取消解决批注 |
 
+### 脚本执行类（Server → AddIn，请求-响应）
+
+| 事件名 | 状态 | 说明 |
+|--------|------|------|
+| [word:run:script](#wordrunscript) | 📋 Draft | 执行原始 Office.js 脚本（封装层逃生舱） |
+
 ---
 
 ## 事件报告类
@@ -2630,3 +2636,95 @@ interface ResolveCommentResponse {
 |--------|------|
 | 4000 | `VALIDATION_ERROR` - 请求参数校验失败（commentId 为空） |
 | 3000 | `OFFICE_API_ERROR` - Office API 调用错误（批注不存在等） |
+
+---
+
+## 脚本执行类
+
+### word:run:script
+
+**方向**: Server → AddIn（请求-响应）
+
+**状态**: 📋 Draft
+
+!!! note "新增事件（纯加法）"
+    `/word` 命名空间为 ✅ Stable，但本事件为**纯加法**——新增事件**不修改**任何既有事件 / 字段 / 错误码的语义与契约，不影响 `/word` 既有 Stable 事件的兼容性承诺。事件本身以 📋 Draft 进入（接口可能在正式发布前微调）。
+
+**说明**: **封装层逃生舱**——对实时文档执行一段原始 Office.js 脚本。**应优先使用 typed `word:*` 事件**，仅在其未覆盖某能力、或某 typed 事件有 Bug 阻塞时使用。共享执行语义、大小限制、超时、安全模型、非原子性与错误映射见[通用约定 · 脚本执行](conventions.md#run-script)。
+
+**请求数据**（共享 [`RunScriptRequest`](data-structures.md#script-execution)）:
+
+```typescript
+interface RunScriptRequest {
+  requestId: string;
+  documentUri: string;
+  timestamp?: number;
+  script: string;                    // async 函数体；注入 context(Word.RequestContext)/args/console，可 return
+  args?: Record<string, unknown>;    // 注入脚本，脚本内经 `args` 读取；必须可 JSON 序列化
+  timeoutMs?: number;                // 执行超时（毫秒），缺省「脚本执行」档 60000，无硬上限
+}
+```
+
+**字段说明**:
+
+| 字段 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `script` | string | ✅ | 待执行 JS 源码，async 函数体语义 |
+| `args` | Record<string, unknown> | ❌ | 注入脚本的参数，脚本内经 `args` 读取；必须可 JSON 序列化 |
+| `timeoutMs` | number | ❌ | 执行超时（毫秒），缺省 60000，无硬上限 |
+
+**请求示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "documentUri": "file:///Users/john/Documents/report.docx",
+  "script": "const paras = context.document.body.paragraphs;\nparas.load('text');\nawait context.sync();\nreturn paras.items.map(p => p.text);"
+}
+```
+
+**响应数据**（`data` 为共享 [`ScriptResult`](data-structures.md#script-execution)）:
+
+```typescript
+interface RunScriptResponse {
+  requestId: string;
+  success: boolean;
+  data?: ScriptResult;        // { result, logs, durationMs, logsTruncated }
+  error?: ErrorResponse;
+  timestamp: number;
+  duration?: number;
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
+  "success": true,
+  "data": {
+    "result": ["标题", "第一段正文。"],
+    "logs": [],
+    "durationMs": 51,
+    "logsTruncated": false
+  },
+  "timestamp": 1704067200500,
+  "duration": 54
+}
+```
+
+!!! danger "安全模型与非原子性"
+    `run:script` 以敞开全局对象的原生 JS 执行、**非沙箱**，信任边界即 Socket.IO 握手鉴权；失败时文档可能残留**部分修改**（无原子性 / 回滚）。执行前的人在环确认由**上层 Agent 层**承担，OASP 为纯能力提供方。完整规范见[通用约定 · 脚本执行](conventions.md#run-script)。
+
+**可能的错误**（完整映射见[通用约定 · 脚本执行 · 错误映射](conventions.md#run-script-errors)）:
+
+| 错误码 | 说明 |
+|--------|------|
+| 4001 | `MISSING_PARAM` - 缺少 `script` |
+| 4003 | `INVALID_PARAM_TYPE` - `args` 不可 JSON 序列化 |
+| 4004 | `PARAM_OUT_OF_RANGE` - `timeoutMs` 越界 |
+| 4002 | `INVALID_PARAM` - 脚本语法错（`phase:"compile"`） |
+| 3016 | `API_NOT_SUPPORTED` - 宿主不支持动态代码构造（`phase:"compile"`） |
+| 3004 | `OPERATION_FAILED` - 脚本自身抛错（`fault:"script"`）或 Office.js 调用失败（`fault:"office"`） |
+| 1002 | `TIMEOUT` - 执行超时 |
+| 3006 | `CONTENT_TOO_LARGE` - result 过大（`phase:"serialize"`） |
