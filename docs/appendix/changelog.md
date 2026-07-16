@@ -9,6 +9,28 @@
 
 ## [Unreleased]
 
+### 事件表错误码与权威注册表对账 —— 退役 `OFFICE_API_ERROR` 与 `3999`（文档订正，线缆零变更）
+
+裁决 [#20](https://github.com/A2C-SMCP/oasp-protocol/issues/20)：`OFFICE_API_ERROR` 在 `events-word.md` 内部前半用 `3999`、后半用 `3000`，而权威注册表（`error-handling.md`）**两个号都不认**——`3000` 名为 `DOCUMENT_ERROR`，`3999` 从未定义。
+
+**根因**：规范从未声明 `| 3000 | DOCUMENT_ERROR |` 这个二元组里**哪一列是线缆值**（`ErrorResponse.code` 声明为 `string`；注册表表头把数字叫「错误码」；但 `error-handling.md` 全部 9 处示例把名称放进 `code`）。两列都不被声明为规范，于是**两列各自独立漂移**——[#17](https://github.com/A2C-SMCP/oasp-protocol/issues/17)（`RANGE_INVALID` 5002↔3009）是第一次复发，#20 是第二次。本次**只修行级配对**（在两种读法下都正确），线缆列裁决另开 issue 处理。
+
+排查中对全部事件表做了「(编号, 名称) 配对是否精确命中注册表」的机械对账，命中 **5 类 57 行**违规——#20 只点了前两类，故一并扫净：
+
+| 变更类型 | 位置 | 说明 |
+|----------|------|------|
+| **移除（名称退役）** | `events-{word,ppt}.md`（39 处） | `OFFICE_API_ERROR` → `3000 DOCUMENT_ERROR`，**不留别名**。该名称点名实现技术（Office API），违反注册表**设计原则 #2「与实现无关」**——不只是未注册，是**不可注册**。注册表不新增任何条目 |
+| **移除（编号退役）** | `events-word.md`（13 处） | `3999` 退役（注册表从未定义、无任何码占用，删除零风险） |
+| 订正（编号漂移） | `events-word.md`（10 处） | `4001 VALIDATION_ERROR` → `4000`（9 处）、`4002 MISSING_PARAM` → `4001`（1 处）。名称与描述本就自洽，漂的是编号 |
+| 收敛（语义订正） | `events-ppt.md`（8 处） | `3003 OPERATION_FAILED - 元素未找到` 系**三方打架**（编号 `3003` 实为 `DOCUMENT_READ_ONLY`、名称 `OPERATION_FAILED` 实为 `3004`、描述实为 `3010`）。按描述收敛为 `3010 ELEMENT_NOT_FOUND`；复合描述行拆为 `3010`（元素不存在）+ `3004`（元素类型不符）两条，承 #17「`ELEMENT_NOT_FOUND` 为该类收敛靶」之势 |
+| 新增（守护） | `scripts/docs/tasks.py` | `inv docs.check-error-codes`：解析注册表与事件表，断言每行 (编号, 名称) 精确命中注册表，违规则列出 `文件:行号` 并非零退出。本次修复前报 57、修复后报 0 |
+
+**漂移沿文件年龄边界分布**（可自证）：`events-word.md` 较新段落（2290+，批注类事件）用的是**正确**的 `4000 VALIDATION_ERROR`，较老段落（984–2163）用**过期**的 `4001`；`4001 MISSING_PARAM` 亦在 5 处正确、仅 1 处残留 `4002`。即老段落照着一份**旧注册表**写成，注册表后来重排过编号，事件表没跟。
+
+**兼容性**：**线缆零变更**。office-editor4ai 侧 `OFFICE_API_ERROR` 已是 `@deprecated` 别名常量、值即 `"3000"`，13 处标 `3999` 的事件（含 `word:merge:cells`）线上实收 `3000`——本次是**文档追认现实**，非改契约，故 `/word`（Stable）不受破坏。跨仓跟进——office-editor4ai：本次规范定稿后可删除 `OFFICE_API_ERROR` 别名常量（纯代码 churn）；office4ai：无需改动。
+
+**遗留**：`error.code` 究竟装「名称」还是「数字」这一根因未裁决（规范 9 处示例发名称、office-editor4ai 实测发数字字符串、注册表表头又管数字叫「错误码」，三者互斥；另有 `events-word.md` 一处示例为裸数字 `"code": 3001`，违反其自身 `string` 类型）。不裁决则该类漂移仍会复发，另开 issue 跨 3 仓对齐。
+
 ### /excel 错误码收敛回通用注册表（Draft 破坏性收敛）
 
 裁决 [#17](https://github.com/A2C-SMCP/oasp-protocol/issues/17)：`RANGE_INVALID` 在 `error-handling.md`（`3009`）与 `events-excel.md`（`5002`）间编号打架。全局排查发现根因不止于此——OASP 错误码的既定架构是「一张与应用无关的共享注册表（1xxx–4xxx）」（`error-handling.md` 设计原则 #1），`/word`（Stable）与 `/ppt` 连单命名空间语义都放进通用 3xxx 表；**唯 `/excel` 例外**开了 `5xxx` 专属块，且 10 码中 7 码重复了已有通用码。故**退役整个 `5xxx` 块**，逐码收敛回通用注册表，对齐 word/ppt。

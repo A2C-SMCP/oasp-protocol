@@ -262,7 +262,7 @@ interface SlideElement {
 | 错误码 | 说明 |
 |--------|------|
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -365,7 +365,7 @@ interface GetSlideElementsResponse {
 |--------|------|
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 !!! note "与 ppt:get:currentSlideElements 的关系"
     本事件与 `ppt:get:currentSlideElements` 返回相同的 `SlideElement` 结构。
@@ -454,7 +454,7 @@ interface GetSlideScreenshotResponse {
 |--------|------|
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -671,7 +671,7 @@ interface SlideElement {
 |--------|------|
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -777,7 +777,7 @@ interface SlideLayoutTemplate {
 | 错误码 | 说明 |
 |--------|------|
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -892,7 +892,7 @@ interface InsertTextResponse {
 | 4002 | `INVALID_PARAM` - slideIndex 超出范围，或 `font.underline` 不在枚举内 |
 | 3016 | `API_NOT_SUPPORTED` - `font` 所含属性所需 PowerPointApi requirement set（删除线/上下标/大写=1.8）在当前宿主不满足；`details.requiredApiSet` 标注所需版本 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -1047,7 +1047,7 @@ interface InsertShapeResponse {
 | 4002 | `INVALID_PARAM` - shapeType 不支持、slideIndex 超出范围、`font` / `text` 用于无文本框的形状（如 `Line`），或 `font.underline` 不在枚举内 |
 | 3016 | `API_NOT_SUPPORTED` - `font` 所含属性所需 PowerPointApi requirement set（删除线 / 上下标 / 大写 = 1.8）在当前宿主不满足；`details.requiredApiSet` 标注所需版本 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -1157,7 +1157,7 @@ interface InsertImageResponse {
 | 4001 | `MISSING_PARAM` - 缺少 image.base64 参数 |
 | 4002 | `INVALID_PARAM` - Base64 数据无效或 slideIndex 超出范围 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -1269,7 +1269,7 @@ interface InsertTableResponse {
 | 4001 | `MISSING_PARAM` - 缺少 rows 或 columns |
 | 4002 | `INVALID_PARAM` - rows 超过 100 或 columns 超过 50 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -1718,10 +1718,11 @@ interface UpdateTextBoxResponse {
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 elementId |
 | 4002 | `INVALID_PARAM` - `runs` / `paragraphs` 的 `start`/`length` 越界（`start < 0` 或 `start + length > text.length`），或 `underline` / `bulletFormat.type` 不在枚举内 |
-| 3003 | `OPERATION_FAILED` - 元素未找到或元素类型不支持文本编辑 |
+| 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在 |
+| 3004 | `OPERATION_FAILED` - 元素类型不支持文本编辑 |
 | 3016 | `API_NOT_SUPPORTED` - 本次请求所含字体/项目符号属性所需 PowerPointApi requirement set（删除线/上下标/大写=1.8、bullet type/style=1.10）在当前宿主不满足；`details.requiredApiSet` 标注所需版本，调用方应仅发送受支持的属性或提示用户 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -1816,10 +1817,10 @@ interface DeleteElementResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 elementId 或 elementIds |
-| 3003 | `OPERATION_FAILED` - 元素未找到 |
+| 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在 |
 | 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -1918,10 +1919,11 @@ interface UpdateImageResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 elementId 或 image.base64 |
-| 3003 | `OPERATION_FAILED` - 元素未找到或不是图片类型 |
+| 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在 |
+| 3004 | `OPERATION_FAILED` - 元素类型不是图片 |
 | 4002 | `INVALID_PARAM` - Base64 数据无效 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -2013,10 +2015,11 @@ interface UpdateTableCellResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 elementId 或 cells |
-| 3003 | `OPERATION_FAILED` - 元素未找到或不是表格类型 |
+| 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在 |
+| 3004 | `OPERATION_FAILED` - 元素类型不是表格 |
 | 4002 | `INVALID_PARAM` - rowIndex 或 columnIndex 超出范围 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -2114,10 +2117,11 @@ interface UpdateTableRowColumnResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 elementId，或 rows 和 columns 均未提供 |
-| 3003 | `OPERATION_FAILED` - 元素未找到或不是表格类型 |
+| 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在 |
+| 3004 | `OPERATION_FAILED` - 元素类型不是表格 |
 | 4002 | `INVALID_PARAM` - rowIndex/columnIndex 超出范围，或 values 长度不匹配 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -2232,11 +2236,12 @@ interface UpdateTableFormatResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 elementId |
-| 3003 | `OPERATION_FAILED` - 元素未找到或不是表格类型 |
+| 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在 |
+| 3004 | `OPERATION_FAILED` - 元素类型不是表格 |
 | 4002 | `INVALID_PARAM` - `rowIndex`/`columnIndex` 超出范围、命中合并单元格非左上格（空对象），或 `font.underline` / 对齐值不在枚举内 |
 | 3016 | `API_NOT_SUPPORTED` - 表格单元格字体 / 对齐 / 行高列宽需 PowerPointApi **1.9**，当前宿主不满足；`details.requiredApiSet` 标注所需版本 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -2347,10 +2352,10 @@ interface UpdateElementResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 elementId 或 updates |
-| 3003 | `OPERATION_FAILED` - 元素未找到 |
+| 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在 |
 | 4002 | `INVALID_PARAM` - slideIndex 超出范围或尺寸值无效 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -2440,10 +2445,10 @@ interface ReorderElementResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 elementId 或 action |
-| 3003 | `OPERATION_FAILED` - 元素未找到 |
+| 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在 |
 | 4002 | `INVALID_PARAM` - action 值无效或 slideIndex 超出范围 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -2529,7 +2534,7 @@ interface AddSlideResponse {
 |--------|------|
 | 4002 | `INVALID_PARAM` - insertIndex 超出范围或 layout 不存在 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -2621,7 +2626,7 @@ interface DeleteSlideResponse {
 | 4001 | `MISSING_PARAM` - 缺少 slideIndex |
 | 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -2722,7 +2727,7 @@ interface MoveSlideResponse {
 | 4001 | `MISSING_PARAM` - 缺少 fromIndex 或 toIndex |
 | 4002 | `INVALID_PARAM` - 索引超出范围或 fromIndex === toIndex |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -2798,7 +2803,7 @@ interface GotoSlideResponse {
 | 4001 | `MISSING_PARAM` - 缺少 slideIndex |
 | 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 

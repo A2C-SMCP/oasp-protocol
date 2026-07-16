@@ -3,6 +3,7 @@
 提供命令行接口来管理文档构建和部署。
 """
 
+import re
 import shlex
 import shutil
 import subprocess
@@ -310,6 +311,65 @@ def update_server_task(c: Context) -> None:
     print("✅ 更新完成")
 
 
+_SPEC_DIR = _PROJECT_ROOT / "docs" / "specification"
+_REGISTRY_FILE = _SPEC_DIR / "error-handling.md"
+
+# 注册表行：| `3000` | `DOCUMENT_ERROR` | 文档操作错误（通用） |
+_REGISTRY_ROW = re.compile(r"^\|\s*`(\d{4})`\s*\|\s*`([A-Z_]+)`\s*\|")
+# 事件表行：| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
+_CITATION_ROW = re.compile(r"^\|\s*(\d{4})\s*\|\s*`([A-Z_]+)`")
+
+
+def _load_registry() -> set[tuple[str, str]]:
+    """解析 error-handling.md 的权威错误码注册表，返回 (编号, 名称) 配对集合。"""
+    text = _REGISTRY_FILE.read_text(encoding="utf-8")
+    pairs = {
+        (m.group(1), m.group(2)) for line in text.splitlines() if (m := _REGISTRY_ROW.match(line))
+    }
+    if not pairs:
+        raise RuntimeError(f"未能从 {_REGISTRY_FILE} 解析出任何注册表条目——正则可能已与文档体例脱节")
+    return pairs
+
+
+@task
+def check_error_codes(c: Context) -> None:
+    """校验事件表引用的 (错误码, 名称) 配对精确命中 error-handling.md 权威注册表。
+
+    守护 #17 / #20 一类的历史漂移：注册表重排编号后事件表未跟进，
+    导致同一名称在不同文件/段落挂着不同编号。
+    """
+    registry = _load_registry()
+    by_code = {code: name for code, name in registry}
+    by_name = {name: code for code, name in registry}
+
+    violations: list[tuple[str, int, str, str, str]] = []
+    for path in sorted(_SPEC_DIR.glob("events-*.md")):
+        for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            m = _CITATION_ROW.match(line)
+            if not m:
+                continue
+            code, name = m.groups()
+            if (code, name) in registry:
+                continue
+            # 分别报出编号侧与名称侧的权威说法，便于判断哪一列漂了
+            if name not in by_name:
+                hint = f"注册表无名称 `{name}`" + (
+                    f"；编号 {code} 实为 `{by_code[code]}`" if code in by_code else f"；编号 {code} 亦未定义"
+                )
+            elif code not in by_code:
+                hint = f"编号 {code} 未定义；`{name}` 实为 {by_name[name]}"
+            else:
+                hint = f"编号 {code} 实为 `{by_code[code]}`；`{name}` 实为 {by_name[name]}"
+            violations.append((str(path.relative_to(_PROJECT_ROOT)), lineno, code, name, hint))
+
+    if violations:
+        print(f"❌ {len(violations)} 处事件表错误码与权威注册表不符：\n")
+        for rel, lineno, code, name, hint in violations:
+            print(f"  {rel}:{lineno}  | {code} | `{name}`  →  {hint}")
+        raise SystemExit(1)
+    print(f"✅ 事件表错误码全部命中注册表（{len(registry)} 个已注册码）")
+
+
 @task
 def clean(c: Context) -> None:
     """清理构建产物。"""
@@ -325,4 +385,5 @@ docs_tasks.add_task(deploy)
 docs_tasks.add_task(push_to_server, name="push-to-server")
 docs_tasks.add_task(serve_versioned, name="serve-versioned")
 docs_tasks.add_task(update_server_task, name="update-server")
+docs_tasks.add_task(check_error_codes, name="check-error-codes")
 docs_tasks.add_task(clean)

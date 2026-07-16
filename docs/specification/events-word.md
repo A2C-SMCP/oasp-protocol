@@ -981,8 +981,8 @@ interface ReplaceSelectionResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 3002 | `SELECTION_EMPTY` - 选区为空 |
-| 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 4000 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -1092,10 +1092,10 @@ interface ReplaceTextResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 4001 | `VALIDATION_ERROR` - Schema 校验失败 |
-| 4002 | `MISSING_PARAM` - 缺少必要参数 |
+| 4000 | `VALIDATION_ERROR` - Schema 校验失败 |
+| 4001 | `MISSING_PARAM` - 缺少必要参数 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - 通用 Office API 错误（兜底） |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用，兜底） |
 
 ---
 
@@ -1220,9 +1220,9 @@ interface SelectTextResult {
 
 | 错误码 | 说明 |
 |--------|------|
-| 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 4000 | `VALIDATION_ERROR` - 请求参数校验失败 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -1294,9 +1294,9 @@ interface AppendTextResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 4000 | `VALIDATION_ERROR` - 请求参数校验失败 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -1397,9 +1397,9 @@ interface InsertImageResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 4000 | `VALIDATION_ERROR` - 请求参数校验失败 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -1507,9 +1507,9 @@ interface InsertTableResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 4000 | `VALIDATION_ERROR` - 请求参数校验失败 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -1591,9 +1591,9 @@ interface InsertEquationResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 4000 | `VALIDATION_ERROR` - 请求参数校验失败 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -1692,7 +1692,7 @@ interface MergeCellsResponse {
 | 3013 | `NO_TABLE_AT_CURSOR` - 缺省 `tableId` 时光标未在任何表格内 |
 | 3014 | `ALREADY_MERGED` - 目标矩形与现有合并单元格冲突 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -1787,7 +1787,7 @@ interface UpdateTableCellResponse {
 | 3010 | `ELEMENT_NOT_FOUND` - 指定的 `tableId` 在文档中未找到 |
 | 3013 | `NO_TABLE_AT_CURSOR` - 缺省 `tableId` 时光标未在任何表格内 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -1880,7 +1880,7 @@ interface UpdateTableRowColumnResponse {
 | 3010 | `ELEMENT_NOT_FOUND` - 指定的 `tableId` 在文档中未找到 |
 | 3013 | `NO_TABLE_AT_CURSOR` - 缺省 `tableId` 时光标未在任何表格内 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -2005,7 +2005,7 @@ interface UpdateTableFormatResponse {
 | 3011 | `STYLE_NOT_FOUND` - `styleOptions.styleType` 在文档中不存在 |
 | 3013 | `NO_TABLE_AT_CURSOR` - 缺省 `tableId` 时光标未在任何表格内 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -2076,9 +2076,9 @@ interface InsertTOCResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 4000 | `VALIDATION_ERROR` - 请求参数校验失败 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -2160,9 +2160,9 @@ interface ExportContentResponse {
 
 | 错误码 | 说明 |
 |--------|------|
-| 4001 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 4000 | `VALIDATION_ERROR` - 请求参数校验失败 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
-| 3999 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -2288,7 +2288,7 @@ interface CommentReplyData {
 | 错误码 | 说明 |
 |--------|------|
 | 4000 | `VALIDATION_ERROR` - 请求参数校验失败 |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误 |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 
@@ -2397,7 +2397,7 @@ interface InsertCommentResponse {
 |--------|------|
 | 4000 | `VALIDATION_ERROR` - 请求参数校验失败（text 为空、searchText 超过 255 字符等） |
 | 3002 | `SELECTION_EMPTY` - 没有活动选区（`target` 为 `selection` 模式时） |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误或搜索文本未找到匹配（`target` 为 `searchText` 模式时） |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用）或搜索文本未找到匹配（`target` 为 `searchText` 模式时） |
 
 ---
 
@@ -2470,7 +2470,7 @@ interface DeleteCommentResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4000 | `VALIDATION_ERROR` - 请求参数校验失败（commentId 为空） |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误（批注不存在等） |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用）（批注不存在等） |
 
 ---
 
@@ -2546,7 +2546,7 @@ interface ReplyCommentResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4000 | `VALIDATION_ERROR` - 请求参数校验失败（commentId 或 text 为空） |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误（批注不存在等） |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用）（批注不存在等） |
 
 ---
 
@@ -2635,7 +2635,7 @@ interface ResolveCommentResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4000 | `VALIDATION_ERROR` - 请求参数校验失败（commentId 为空） |
-| 3000 | `OFFICE_API_ERROR` - Office API 调用错误（批注不存在等） |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用）（批注不存在等） |
 
 ---
 
