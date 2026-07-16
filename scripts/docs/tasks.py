@@ -344,8 +344,9 @@ _CELL_NAMES = re.compile(r"`([A-Z_]+)`")
 # 注意：不得排除前置反引号——(b)/(d) 体例的编号本就带反引号，排除即在那里开出盲区。
 _CODE_TOKEN = re.compile(r"(?<![\d.])[1-4]\d{3}(?![\d.])")
 
-# 引用处数下限：低于此值即认为体例已与正则脱节（当前实际约 330 处，留足编辑余量）
-_CITATION_FLOOR = 200
+# 引用处数下限：粗粒度兜底，仅用于捕获「体例整体脱节导致解析面坍塌」。
+# 主防线是下方的嗅探器——部分萎缩（如少数体例失配）靠下限拦不住，故此处不写死实际值。
+_CITATION_FLOOR = 300
 
 
 def _load_registry() -> set[tuple[str, str]]:
@@ -384,13 +385,54 @@ def _citations(line: str) -> list[tuple[str, str]]:
     return found
 
 
-@task
-def check_error_codes(c: Context) -> None:
+# 自检样本：(说明, 行, 期望解析出的配对数)。锁住各体例的解析行为，
+# 尤其是「体例变了必须大声失败、不得静默放行」——期望 0 即表示该行须落入嗅探器。
+_SELF_TEST: tuple[tuple[str, str, int], ...] = (
+    ("事件表行", "| 3000 | `DOCUMENT_ERROR` - 文档操作错误 |", 1),
+    ("事件表行·加粗名称", "| 3000 | **`DOCUMENT_ERROR`** - x |", 1),
+    ("规范层映射表·单码", "| 定位失败 | `3010` | `ELEMENT_NOT_FOUND` | kind | x |", 1),
+    ("规范层映射表·并列多码", "| 参数 | `4001`/`4002` | `MISSING_PARAM` / `INVALID_PARAM` | — |", 2),
+    ("同格写法", "| 缺 script | `4001 MISSING_PARAM` | — |", 1),
+    ("同格·码名分置同格", "| 条件 | `3004` `OPERATION_FAILED` | x |", 1),
+    ("名称+括号编号", "返回错误码 `SELECTION_EMPTY` (3002)。", 1),
+    ("锚点", "见 [错误处理](error-handling.md#element_not_found-3010)。", 1),
+    # 以下必须解析不出配对（→ 嗅探器接管、大声失败），不得静默放行
+    ("体例脱节·名称改链接", "| 3000 | [`DOCUMENT_ERROR`](x.md) - x |", 0),
+    ("体例脱节·码数≠名数", "| 参数 | `4001`/`4002` | `MISSING_PARAM` / `INVALID_PARAM` / `PARAM_OUT_OF_RANGE` | — |", 0),
+)
+
+
+def _run_self_test() -> None:
+    """用合成样本断言各体例的解析行为，与主逻辑共用同一组正则。"""
+    known = {n for _, n in _load_registry()}
+    failures = []
+    for label, line, expect in _SELF_TEST:
+        got = len(_citations(line))
+        if got != expect:
+            failures.append(f"  {label}：期望解析 {expect} 处，实际 {got} 处 —— {line}")
+            continue
+        # 期望 0 的样本，必须能被嗅探器接住（否则就是静默放行）
+        if expect == 0:
+            sniffed = _CODE_TOKEN.search(line) and any(n in line for n in known)
+            if not sniffed:
+                failures.append(f"  {label}：解析不出配对且嗅探器未触发 —— 会静默放行！{line}")
+    if failures:
+        print("❌ 守护器自检失败（正则行为已偏离预期）：\n" + "\n".join(failures))
+        raise SystemExit(1)
+    print(f"✅ 守护器自检通过（{len(_SELF_TEST)} 个体例样本）")
+
+
+@task(help={"self_test": "仅跑守护器自身的体例自检，不扫描文档"})
+def check_error_codes(c: Context, self_test: bool = False) -> None:
     """校验规范内引用的 (错误码, 名称) 配对精确命中 error-handling.md 权威注册表。
 
     守护 #17 / #20 一类的历史漂移：注册表重排编号后引用方未跟进，
     导致同一名称在不同文件/段落挂着不同编号。
     """
+    _run_self_test()
+    if self_test:
+        return
+
     registry = _load_registry()
     by_code = {code: name for code, name in registry}
     by_name = {name: code for code, name in registry}

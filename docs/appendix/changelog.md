@@ -9,7 +9,7 @@
 
 ## [Unreleased]
 
-### 事件表错误码与权威注册表对账 —— 退役 `OFFICE_API_ERROR` 与 `3999`（文档订正，线缆零变更）
+### 事件表错误码与权威注册表对账 —— 退役 `OFFICE_API_ERROR` 与 `3999`（文档订正，线缆影响取决于读法裁决）
 
 裁决 [#20](https://github.com/A2C-SMCP/oasp-protocol/issues/20)：`OFFICE_API_ERROR` 在 `events-word.md` 内部前半用 `3999`、后半用 `3000`，而权威注册表（`error-handling.md`）**两个号都不认**——`3000` 名为 `DOCUMENT_ERROR`，`3999` 从未定义。
 
@@ -24,7 +24,7 @@
 | 订正（编号漂移） | `events-word.md`（10 处） | `4001 VALIDATION_ERROR` → `4000`（9 处）、`4002 MISSING_PARAM` → `4001`（1 处）。名称与描述本就自洽，漂的是编号 |
 | 收敛（语义订正） | `events-ppt.md`（8 处） | `3003 OPERATION_FAILED - 元素未找到` 系**三方打架**（编号 `3003` 实为 `DOCUMENT_READ_ONLY`、名称 `OPERATION_FAILED` 实为 `3004`、描述实为 `3010`）。按描述收敛为 `3010 ELEMENT_NOT_FOUND`；复合描述行拆为 `3010`（元素不存在）+ `3004`（元素类型不符）两条，承 #17「`ELEMENT_NOT_FOUND` 为该类收敛靶」之势 |
 | 收敛（判法自洽） | `events-ppt.md`（2 处） | 图表事件原把「不存在**或不是图表元素**」揉进单个 `3010`（配对合法，故不在上述 57 行内）。若只拆上一行的 5 处，「元素类型不符」在 `/ppt` 内将分裂为两答案（图表判 `3010`、其余判 `3004`），故一并按同一判法拆分，使 `/ppt` 恢复自洽 |
-| 新增（守护） | `scripts/docs/tasks.py`、`.github/workflows/check.yml` | `inv docs.check-error-codes`：解析注册表与规范内**全部五种引用体例**（事件表行、规范层映射表、同格 `` `4001 MISSING_PARAM` ``、`名称 (编号)`、锚点 `#name-code`），断言每处 (编号, 名称) 精确命中注册表。含防脱节保护：解析处数低于下限、或出现「像配对却未被识别」的行时**大声失败**，不以「零违规」放行。接入 PR/push CI，并前置于 `docs.build` / `docs.deploy`（本仓发布走本地 inv，不经 CI）。本次修复前报 57、修复后 367 处引用全绿 |
+| 新增（守护） | `scripts/docs/tasks.py`、`.github/workflows/check.yml` | `inv docs.check-error-codes`：解析注册表与规范内**全部五种引用体例**（事件表行、规范层映射表、同格 `` `4001 MISSING_PARAM` ``、`名称 (编号)`、锚点 `#name-code`），断言每处 (编号, 名称) 精确命中注册表。含防脱节保护：解析处数低于下限、或出现「像配对却未被识别」的行时**大声失败**，不以「零违规」放行。接入 PR/push CI，并前置于 `docs.build` / `docs.deploy`（本仓发布走本地 inv，不经 CI）。另附 `--self-test` 自检（合成样本断言各体例「应解析/应失败」，与主逻辑共用同一组正则）。本次修复前报 57、修复后 369 处引用全绿 |
 
 **漂移沿文件年龄边界分布**（可自证）：`events-word.md` 较新段落（2290+，批注类事件）用的是**正确**的 `4000 VALIDATION_ERROR`，较老段落（984–2163）用**过期**的 `4001`；`4001 MISSING_PARAM` 亦在 5 处正确、仅 1 处残留 `4002`。即老段落照着一份**旧注册表**写成，注册表后来重排过编号，事件表没跟。
 
