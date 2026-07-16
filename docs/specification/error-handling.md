@@ -203,6 +203,12 @@ interface ErrorResponse {
 - 检查用户是否有编辑权限，或目标工作表是否受保护
 - 提示用户保存文档副本，或解除工作表保护后重试
 
+### OPERATION_FAILED (3004)
+
+**触发场景**: 操作在执行阶段失败。
+
+**`run:script` 的二级分流**: 承载 `{namespace}:run:script`（[通用约定 · 脚本执行](conventions.md#run-script)）的执行期失败时，`details.fault` 区分失败来源——`"script"`（脚本自身抛错：TypeError / ReferenceError / 主动 throw，附 `name` / `stack`）或 `"office"`（脚本调用 Office.js 失败，附 `officeCode` / `debugInfo?`）。AI 据此决定**重写脚本** vs **调整操作**。脚本各阶段（compile / execute / serialize）→ 错误码的完整映射见[通用约定 · 脚本执行 · 错误映射](conventions.md#run-script-errors)。
+
 ### API_NOT_SUPPORTED (3016)
 
 **触发场景**: 目标操作所依赖的能力在当前客户端或平台上不可用——例如所需的 requirement set 未满足（如 PowerPointApi、ExcelApi），或宿主环境（如移动端、Web 端、老版本永久授权 Office）不提供该能力（如部分平台不支持透视表 `excel:insert:pivotTable`）。

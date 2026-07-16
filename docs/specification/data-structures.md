@@ -656,3 +656,38 @@ type InsertLocation =
   | "End"                  // 在目标末尾
   | "Replace";             // 替换目标
 ```
+
+---
+
+## 脚本执行 {#script-execution}
+
+`{namespace}:run:script`（`excel:run:script` / `word:run:script` / `ppt:run:script`）是**封装层逃生舱**：调用方下发一段 JS 源码，AddIn 注入宿主 `RequestContext` 后按 Office.js 语义直接执行，回传返回值与日志。定位、执行语义、超时、大小限制、安全模型、非原子性与错误映射统一见[通用约定 · 脚本执行](conventions.md#run-script)。三命名空间的请求与结果结构**完全相同**，故在此共享。
+
+!!! note "有意的跨命名空间「相同」（非命名不一致）"
+    `RunScriptRequest` / `ScriptResult` 是**宿主无关的执行信封**——承载「一段代码 + 其产出」，宿主差异（`Excel` / `Word` / `PowerPoint` 各自的对象模型）全部落在脚本内部的 `context` 上、不进入信封。故它与 `BaseRequest` / `BaseResponse` 同属**传输层**，三命名空间**应当共享同一结构**；这与 [`WordFont`](#wordfont) ≠ `PptFont`（宿主语义层实体、有意零映射对齐各自宿主）方向相反、各自适用。后人**不应**将其拆成三份 per-namespace 结构。
+
+### RunScriptRequest
+
+```typescript
+interface RunScriptRequest {
+  requestId: string;
+  documentUri: string;
+  timestamp?: number;
+  script: string;                    // 待执行 JS 源码；以 async 函数体语义执行，可用 return 返回结果
+  args?: Record<string, unknown>;    // 注入脚本的参数，脚本内经全局 `args` 读取；必须可 JSON 序列化
+  timeoutMs?: number;                // 执行超时（毫秒）；缺省取「脚本执行」档默认值（60000），无硬上限
+}
+```
+
+### ScriptResult
+
+`run:script` 成功响应的 `data`。
+
+```typescript
+interface ScriptResult {
+  result: unknown;          // 脚本 return 的值，已序列化为纯 JSON；无返回值时为 null
+  logs: string[];           // 脚本内 console.* 的输出，按调用顺序
+  durationMs: number;       // 脚本执行耗时（毫秒）
+  logsTruncated: boolean;   // 日志是否因超限（见 conventions#run-script）被截断
+}
+```
