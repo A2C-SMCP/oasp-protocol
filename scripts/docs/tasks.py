@@ -341,7 +341,8 @@ _CELL_NAMES = re.compile(r"`([A-Z_]+)`")
 
 # 码段数字（1xxx–4xxx）。行内同时出现它与已知错误码名称，才可能是一处「配对」引用；
 # 只提名称不带号的散文（如 `"code": "HANDSHAKE_FAILED"`）无配对可对账，不在守护范围。
-_CODE_TOKEN = re.compile(r"(?<![\d.`])[1-4]\d{3}(?![\d.])")
+# 注意：不得排除前置反引号——(b)/(d) 体例的编号本就带反引号，排除即在那里开出盲区。
+_CODE_TOKEN = re.compile(r"(?<![\d.])[1-4]\d{3}(?![\d.])")
 
 # 引用处数下限：低于此值即认为体例已与正则脱节（当前实际约 330 处，留足编辑余量）
 _CITATION_FLOOR = 200
@@ -368,14 +369,18 @@ def _citations(line: str) -> list[tuple[str, str]]:
     found += [(m.group(2), m.group(1).upper()) for m in _CITE_ANCHOR.finditer(line)]
     found += [(m.group(1), m.group(2)) for m in _CITE_INLINE.finditer(line)]
 
-    # 相邻单元格：码格在前、名格紧随，个数相等则按位配对（覆盖单码与并列多码）
+    # 表格单元格按位配对，个数相等才配（覆盖单码、并列多码、码名同格三种）
     if line.lstrip().startswith("|"):
         cells = line.split("|")
         for cell, nxt in zip(cells, cells[1:]):
             codes = _CELL_CODES.findall(cell)
-            names = _CELL_NAMES.findall(nxt)
-            if codes and len(codes) == len(names):
-                found += list(zip(codes, names))
+            if not codes:
+                continue
+            # 码格在前、名格紧随；或码与名同格
+            for names in (_CELL_NAMES.findall(nxt), _CELL_NAMES.findall(cell)):
+                if len(codes) == len(names):
+                    found += list(zip(codes, names))
+                    break
     return found
 
 
