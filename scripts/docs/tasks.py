@@ -32,6 +32,9 @@ def serve(c: Context) -> None:
 @task
 def build(c: Context) -> None:
     """构建静态文档。"""
+    # 本仓发布走本地 inv docs.deploy（不经 CI），故在此前置对账，
+    # 避免错误码漂移绕过 check.yml 直接进入产物
+    check_error_codes(c)
     print("🔨 构建文档...")
     c.run("mkdocs build")
     print("✅ 文档构建完成")
@@ -257,6 +260,9 @@ def deploy(
         print(f"❌ 未知 sync_via: {sync_via}（可选: tar, git）")
         sys.exit(1)
 
+    # mike deploy 自行构建、不经 docs.build，故在此单独前置对账
+    check_error_codes(c)
+
     print(f"🚀 部署文档 (version={version}, alias={alias})")
 
     if sync:
@@ -314,10 +320,31 @@ def update_server_task(c: Context) -> None:
 _SPEC_DIR = _PROJECT_ROOT / "docs" / "specification"
 _REGISTRY_FILE = _SPEC_DIR / "error-handling.md"
 
-# 注册表行：| `3000` | `DOCUMENT_ERROR` | 文档操作错误（通用） |
+# 注册表行（权威）：| `3000` | `DOCUMENT_ERROR` | 文档操作错误（通用） |
 _REGISTRY_ROW = re.compile(r"^\|\s*`(\d{4})`\s*\|\s*`([A-Z_]+)`\s*\|")
-# 事件表行：| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
-_CITATION_ROW = re.compile(r"^\|\s*(\d{4})\s*\|\s*`([A-Z_]+)`")
+
+# 引用体例。规范内实际存在多种，缺一即留下不被对账的死角：
+# (a) 事件表「可能的错误」：| 3000 | `DOCUMENT_ERROR` - 说明 |
+_CITE_EVENT_ROW = re.compile(r"^\s*\|\s*(\d{4})\s*\|\s*\**`([A-Z_]+)`")
+# (b) 同格写法（conventions.md）：| 条件 | `4001 MISSING_PARAM` | details |
+_CITE_INLINE = re.compile(r"`(\d{4})\s+([A-Z_]+)`")
+# (c) 名称后紧跟括号编号：小节标题 `### TIMEOUT (1002)`、正文 `` `SELECTION_EMPTY` (3002) ``、
+#     `PROTOCOL_VERSION_MISMATCH（2006）`、`HANDSHAKE_FAILED（复用 2003）`
+_CITE_NAME_PAREN = re.compile(r"([A-Z_]{4,})`?\s*[(（][^)）]{0,4}?(\d{4})[)）]")
+# (e) 锚点：`error-handling.md#protocol_version_mismatch-2006`、`{#element_not_found-3010}`
+_CITE_ANCHOR = re.compile(r"#([a-z_]{4,})-(\d{4})\b")
+# (d) 规范层映射表（events-excel.md）按「相邻单元格」解析，兼容单码与并列多码：
+#     | 触发条件 | `3010` | `ELEMENT_NOT_FOUND` | kind | 事件 |
+#     | 参数缺失/非法/越界 | `4001`/`4002`/`4004` | `MISSING_PARAM` / `INVALID_PARAM` / … | — |
+_CELL_CODES = re.compile(r"`(\d{4})`")
+_CELL_NAMES = re.compile(r"`([A-Z_]+)`")
+
+# 码段数字（1xxx–4xxx）。行内同时出现它与已知错误码名称，才可能是一处「配对」引用；
+# 只提名称不带号的散文（如 `"code": "HANDSHAKE_FAILED"`）无配对可对账，不在守护范围。
+_CODE_TOKEN = re.compile(r"(?<![\d.`])[1-4]\d{3}(?![\d.])")
+
+# 引用处数下限：低于此值即认为体例已与正则脱节（当前实际约 330 处，留足编辑余量）
+_CITATION_FLOOR = 200
 
 
 def _load_registry() -> set[tuple[str, str]]:
@@ -331,43 +358,90 @@ def _load_registry() -> set[tuple[str, str]]:
     return pairs
 
 
+def _citations(line: str) -> list[tuple[str, str]]:
+    """从一行中提取全部 (编号, 名称) 引用，覆盖规范内各种体例。"""
+    found: list[tuple[str, str]] = []
+
+    if m := _CITE_EVENT_ROW.match(line):
+        found.append((m.group(1), m.group(2)))
+    found += [(m.group(2), m.group(1)) for m in _CITE_NAME_PAREN.finditer(line)]
+    found += [(m.group(2), m.group(1).upper()) for m in _CITE_ANCHOR.finditer(line)]
+    found += [(m.group(1), m.group(2)) for m in _CITE_INLINE.finditer(line)]
+
+    # 相邻单元格：码格在前、名格紧随，个数相等则按位配对（覆盖单码与并列多码）
+    if line.lstrip().startswith("|"):
+        cells = line.split("|")
+        for cell, nxt in zip(cells, cells[1:]):
+            codes = _CELL_CODES.findall(cell)
+            names = _CELL_NAMES.findall(nxt)
+            if codes and len(codes) == len(names):
+                found += list(zip(codes, names))
+    return found
+
+
 @task
 def check_error_codes(c: Context) -> None:
-    """校验事件表引用的 (错误码, 名称) 配对精确命中 error-handling.md 权威注册表。
+    """校验规范内引用的 (错误码, 名称) 配对精确命中 error-handling.md 权威注册表。
 
-    守护 #17 / #20 一类的历史漂移：注册表重排编号后事件表未跟进，
+    守护 #17 / #20 一类的历史漂移：注册表重排编号后引用方未跟进，
     导致同一名称在不同文件/段落挂着不同编号。
     """
     registry = _load_registry()
     by_code = {code: name for code, name in registry}
     by_name = {name: code for code, name in registry}
+    known_names = set(by_name)
 
-    violations: list[tuple[str, int, str, str, str]] = []
-    for path in sorted(_SPEC_DIR.glob("events-*.md")):
+    violations: list[tuple[str, int, str]] = []
+    unparsed: list[tuple[str, int, str]] = []
+    seen = 0
+
+    for path in sorted(_SPEC_DIR.glob("*.md")):
+        rel = str(path.relative_to(_PROJECT_ROOT))
+        registry_file = path == _REGISTRY_FILE
         for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-            m = _CITATION_ROW.match(line)
-            if not m:
+            # 注册表自身的定义行是权威，不是对它的引用
+            if registry_file and _REGISTRY_ROW.match(line):
                 continue
-            code, name = m.groups()
-            if (code, name) in registry:
-                continue
-            # 分别报出编号侧与名称侧的权威说法，便于判断哪一列漂了
-            if name not in by_name:
-                hint = f"注册表无名称 `{name}`" + (
-                    f"；编号 {code} 实为 `{by_code[code]}`" if code in by_code else f"；编号 {code} 亦未定义"
-                )
-            elif code not in by_code:
-                hint = f"编号 {code} 未定义；`{name}` 实为 {by_name[name]}"
-            else:
-                hint = f"编号 {code} 实为 `{by_code[code]}`；`{name}` 实为 {by_name[name]}"
-            violations.append((str(path.relative_to(_PROJECT_ROOT)), lineno, code, name, hint))
+            cites = _citations(line)
+            seen += len(cites)
+            for code, name in cites:
+                if (code, name) in registry:
+                    continue
+                if name not in by_name:
+                    hint = f"注册表无名称 `{name}`" + (
+                        f"；编号 {code} 实为 `{by_code[code]}`"
+                        if code in by_code
+                        else f"；编号 {code} 亦未定义"
+                    )
+                elif code not in by_code:
+                    hint = f"编号 {code} 未定义；`{name}` 实为 {by_name[name]}"
+                else:
+                    hint = f"编号 {code} 实为 `{by_code[code]}`；`{name}` 实为 {by_name[name]}"
+                violations.append((rel, lineno, f"{code} `{name}`  →  {hint}"))
+            # 嗅探：行内同时出现已知名称与码段数字（即像一处配对），却一处也没解析出来
+            # —— 多半是体例变了而正则没跟，此时必须大声失败，不能以「零违规」放行
+            if not cites and _CODE_TOKEN.search(line) and any(n in line for n in known_names):
+                unparsed.append((rel, lineno, line.strip()[:110]))
+
+    if unparsed:
+        print(f"❌ {len(unparsed)} 行疑似错误码引用但未被任何体例正则识别（正则可能已与文档体例脱节）：\n")
+        for rel, lineno, text in unparsed:
+            print(f"  {rel}:{lineno}  {text}")
+        raise SystemExit(1)
+
+    if seen < _CITATION_FLOOR:
+        raise RuntimeError(
+            f"仅解析出 {seen} 处错误码引用，低于下限 {_CITATION_FLOOR}——"
+            "正则可能已与文档体例脱节，拒绝以「零违规」放行"
+        )
 
     if violations:
-        print(f"❌ {len(violations)} 处事件表错误码与权威注册表不符：\n")
-        for rel, lineno, code, name, hint in violations:
-            print(f"  {rel}:{lineno}  | {code} | `{name}`  →  {hint}")
+        print(f"❌ {len(violations)} 处错误码引用与权威注册表不符：\n")
+        for rel, lineno, detail in violations:
+            print(f"  {rel}:{lineno}  {detail}")
         raise SystemExit(1)
-    print(f"✅ 事件表错误码全部命中注册表（{len(registry)} 个已注册码）")
+
+    print(f"✅ {seen} 处错误码引用全部命中注册表（{len(registry)} 个已注册码）")
 
 
 @task

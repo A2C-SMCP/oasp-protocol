@@ -1470,7 +1470,8 @@ interface GetChartResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 elementId |
-| 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在或不是图表元素 |
+| 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在 |
+| 3004 | `OPERATION_FAILED` - 元素类型不是图表 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3016 | `API_NOT_SUPPORTED` - 读取所需能力（PowerPointApi 1.8）在当前客户端/平台不可用；调用方应降级到另一实现路径或提示用户 |
 
@@ -1584,7 +1585,8 @@ interface UpdateChartResponse {
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 `elementId` 或 `chart.chartType` |
 | 4002 | `INVALID_PARAM` - `chartType` 不在枚举内，或字段形状与所选 variant 不匹配 |
-| 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在或不是图表元素 |
+| 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在 |
+| 3004 | `OPERATION_FAILED` - 元素类型不是图表 |
 | 3015 | `INVALID_CHART_DATA` - 跨 variant 切换未补齐 `series`；或更新后 categorical 维度不一致 / scatter `points` 含非法值 |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3003 | `DOCUMENT_READ_ONLY` - 目标文档不可写入（只读或被锁定，无法应用修改） |

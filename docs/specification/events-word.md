@@ -2470,7 +2470,7 @@ interface DeleteCommentResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4000 | `VALIDATION_ERROR` - 请求参数校验失败（commentId 为空） |
-| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用）（批注不存在等） |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（如批注不存在） |
 
 ---
 
@@ -2546,7 +2546,7 @@ interface ReplyCommentResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4000 | `VALIDATION_ERROR` - 请求参数校验失败（commentId 或 text 为空） |
-| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用）（批注不存在等） |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（如批注不存在） |
 
 ---
 
@@ -2635,7 +2635,7 @@ interface ResolveCommentResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4000 | `VALIDATION_ERROR` - 请求参数校验失败（commentId 为空） |
-| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用）（批注不存在等） |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（如批注不存在） |
 
 ---
 
