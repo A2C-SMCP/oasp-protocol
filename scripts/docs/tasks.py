@@ -3,6 +3,7 @@
 提供命令行接口来管理文档构建和部署。
 """
 
+import re
 import shlex
 import shutil
 import subprocess
@@ -31,6 +32,9 @@ def serve(c: Context) -> None:
 @task
 def build(c: Context) -> None:
     """构建静态文档。"""
+    # 本仓发布走本地 inv docs.deploy（不经 CI），故在此前置对账，
+    # 避免错误码漂移绕过 check.yml 直接进入产物
+    check_error_codes(c)
     print("🔨 构建文档...")
     c.run("mkdocs build")
     print("✅ 文档构建完成")
@@ -256,6 +260,9 @@ def deploy(
         print(f"❌ 未知 sync_via: {sync_via}（可选: tar, git）")
         sys.exit(1)
 
+    # mike deploy 自行构建、不经 docs.build，故在此单独前置对账
+    check_error_codes(c)
+
     print(f"🚀 部署文档 (version={version}, alias={alias})")
 
     if sync:
@@ -310,6 +317,180 @@ def update_server_task(c: Context) -> None:
     print("✅ 更新完成")
 
 
+_SPEC_DIR = _PROJECT_ROOT / "docs" / "specification"
+_REGISTRY_FILE = _SPEC_DIR / "error-handling.md"
+
+# 注册表行（权威）：| `3000` | `DOCUMENT_ERROR` | 文档操作错误（通用） |
+_REGISTRY_ROW = re.compile(r"^\|\s*`(\d{4})`\s*\|\s*`([A-Z_]+)`\s*\|")
+
+# 引用体例。规范内实际存在多种，缺一即留下不被对账的死角：
+# (a) 事件表「可能的错误」：| 3000 | `DOCUMENT_ERROR` - 说明 |
+_CITE_EVENT_ROW = re.compile(r"^\s*\|\s*(\d{4})\s*\|\s*\**`([A-Z_]+)`")
+# (b) 同格写法（conventions.md）：| 条件 | `4001 MISSING_PARAM` | details |
+_CITE_INLINE = re.compile(r"`(\d{4})\s+([A-Z_]+)`")
+# (c) 名称后紧跟括号编号：小节标题 `### TIMEOUT (1002)`、正文 `` `SELECTION_EMPTY` (3002) ``、
+#     `PROTOCOL_VERSION_MISMATCH（2006）`、`HANDSHAKE_FAILED（复用 2003）`
+_CITE_NAME_PAREN = re.compile(r"([A-Z_]{4,})`?\s*[(（][^)）]{0,4}?(\d{4})[)）]")
+# (e) 锚点：`error-handling.md#protocol_version_mismatch-2006`、`{#element_not_found-3010}`
+_CITE_ANCHOR = re.compile(r"#([a-z_]{4,})-(\d{4})\b")
+# (d) 规范层映射表（events-excel.md）按「相邻单元格」解析，兼容单码与并列多码：
+#     | 触发条件 | `3010` | `ELEMENT_NOT_FOUND` | kind | 事件 |
+#     | 参数缺失/非法/越界 | `4001`/`4002`/`4004` | `MISSING_PARAM` / `INVALID_PARAM` / … | — |
+_CELL_CODES = re.compile(r"`(\d{4})`")
+_CELL_NAMES = re.compile(r"`([A-Z_]+)`")
+
+# 码段数字（1xxx–4xxx）。行内同时出现它与已知错误码名称，才可能是一处「配对」引用；
+# 只提名称不带号的散文（如 `"code": "HANDSHAKE_FAILED"`）无配对可对账，不在守护范围。
+# 注意：不得排除前置反引号——(b)/(d) 体例的编号本就带反引号，排除即在那里开出盲区。
+_CODE_TOKEN = re.compile(r"(?<![\d.])[1-4]\d{3}(?![\d.])")
+
+# 引用处数下限：粗粒度兜底，仅用于捕获「体例整体脱节导致解析面坍塌」。
+# 主防线是下方的嗅探器——部分萎缩（如少数体例失配）靠下限拦不住，故此处不写死实际值。
+_CITATION_FLOOR = 300
+
+
+def _load_registry() -> set[tuple[str, str]]:
+    """解析 error-handling.md 的权威错误码注册表，返回 (编号, 名称) 配对集合。"""
+    text = _REGISTRY_FILE.read_text(encoding="utf-8")
+    pairs = {
+        (m.group(1), m.group(2)) for line in text.splitlines() if (m := _REGISTRY_ROW.match(line))
+    }
+    if not pairs:
+        raise RuntimeError(f"未能从 {_REGISTRY_FILE} 解析出任何注册表条目——正则可能已与文档体例脱节")
+    return pairs
+
+
+def _citations(line: str) -> list[tuple[str, str]]:
+    """从一行中提取全部 (编号, 名称) 引用，覆盖规范内各种体例。"""
+    found: list[tuple[str, str]] = []
+
+    if m := _CITE_EVENT_ROW.match(line):
+        found.append((m.group(1), m.group(2)))
+    found += [(m.group(2), m.group(1)) for m in _CITE_NAME_PAREN.finditer(line)]
+    found += [(m.group(2), m.group(1).upper()) for m in _CITE_ANCHOR.finditer(line)]
+    found += [(m.group(1), m.group(2)) for m in _CITE_INLINE.finditer(line)]
+
+    # 表格单元格按位配对，个数相等才配（覆盖单码、并列多码、码名同格三种）
+    if line.lstrip().startswith("|"):
+        cells = line.split("|")
+        for cell, nxt in zip(cells, cells[1:]):
+            codes = _CELL_CODES.findall(cell)
+            if not codes:
+                continue
+            # 码格在前、名格紧随；或码与名同格
+            for names in (_CELL_NAMES.findall(nxt), _CELL_NAMES.findall(cell)):
+                if len(codes) == len(names):
+                    found += list(zip(codes, names))
+                    break
+    return found
+
+
+# 自检样本：(说明, 行, 期望解析出的配对数)。锁住各体例的解析行为，
+# 尤其是「体例变了必须大声失败、不得静默放行」——期望 0 即表示该行须落入嗅探器。
+_SELF_TEST: tuple[tuple[str, str, int], ...] = (
+    ("事件表行", "| 3000 | `DOCUMENT_ERROR` - 文档操作错误 |", 1),
+    ("事件表行·加粗名称", "| 3000 | **`DOCUMENT_ERROR`** - x |", 1),
+    ("规范层映射表·单码", "| 定位失败 | `3010` | `ELEMENT_NOT_FOUND` | kind | x |", 1),
+    ("规范层映射表·并列多码", "| 参数 | `4001`/`4002` | `MISSING_PARAM` / `INVALID_PARAM` | — |", 2),
+    ("同格写法", "| 缺 script | `4001 MISSING_PARAM` | — |", 1),
+    ("同格·码名分置同格", "| 条件 | `3004` `OPERATION_FAILED` | x |", 1),
+    ("名称+括号编号", "返回错误码 `SELECTION_EMPTY` (3002)。", 1),
+    ("锚点", "见 [错误处理](error-handling.md#element_not_found-3010)。", 1),
+    # 以下必须解析不出配对（→ 嗅探器接管、大声失败），不得静默放行
+    ("体例脱节·名称改链接", "| 3000 | [`DOCUMENT_ERROR`](x.md) - x |", 0),
+    ("体例脱节·码数≠名数", "| 参数 | `4001`/`4002` | `MISSING_PARAM` / `INVALID_PARAM` / `PARAM_OUT_OF_RANGE` | — |", 0),
+)
+
+
+def _run_self_test() -> None:
+    """用合成样本断言各体例的解析行为，与主逻辑共用同一组正则。"""
+    known = {n for _, n in _load_registry()}
+    failures = []
+    for label, line, expect in _SELF_TEST:
+        got = len(_citations(line))
+        if got != expect:
+            failures.append(f"  {label}：期望解析 {expect} 处，实际 {got} 处 —— {line}")
+            continue
+        # 期望 0 的样本，必须能被嗅探器接住（否则就是静默放行）
+        if expect == 0:
+            sniffed = _CODE_TOKEN.search(line) and any(n in line for n in known)
+            if not sniffed:
+                failures.append(f"  {label}：解析不出配对且嗅探器未触发 —— 会静默放行！{line}")
+    if failures:
+        print("❌ 守护器自检失败（正则行为已偏离预期）：\n" + "\n".join(failures))
+        raise SystemExit(1)
+    print(f"✅ 守护器自检通过（{len(_SELF_TEST)} 个体例样本）")
+
+
+@task(help={"self_test": "仅跑守护器自身的体例自检，不扫描文档"})
+def check_error_codes(c: Context, self_test: bool = False) -> None:
+    """校验规范内引用的 (错误码, 名称) 配对精确命中 error-handling.md 权威注册表。
+
+    守护 #17 / #20 一类的历史漂移：注册表重排编号后引用方未跟进，
+    导致同一名称在不同文件/段落挂着不同编号。
+    """
+    _run_self_test()
+    if self_test:
+        return
+
+    registry = _load_registry()
+    by_code = {code: name for code, name in registry}
+    by_name = {name: code for code, name in registry}
+    known_names = set(by_name)
+
+    violations: list[tuple[str, int, str]] = []
+    unparsed: list[tuple[str, int, str]] = []
+    seen = 0
+
+    for path in sorted(_SPEC_DIR.glob("*.md")):
+        rel = str(path.relative_to(_PROJECT_ROOT))
+        registry_file = path == _REGISTRY_FILE
+        for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            # 注册表自身的定义行是权威，不是对它的引用
+            if registry_file and _REGISTRY_ROW.match(line):
+                continue
+            cites = _citations(line)
+            seen += len(cites)
+            for code, name in cites:
+                if (code, name) in registry:
+                    continue
+                if name not in by_name:
+                    hint = f"注册表无名称 `{name}`" + (
+                        f"；编号 {code} 实为 `{by_code[code]}`"
+                        if code in by_code
+                        else f"；编号 {code} 亦未定义"
+                    )
+                elif code not in by_code:
+                    hint = f"编号 {code} 未定义；`{name}` 实为 {by_name[name]}"
+                else:
+                    hint = f"编号 {code} 实为 `{by_code[code]}`；`{name}` 实为 {by_name[name]}"
+                violations.append((rel, lineno, f"{code} `{name}`  →  {hint}"))
+            # 嗅探：行内同时出现已知名称与码段数字（即像一处配对），却一处也没解析出来
+            # —— 多半是体例变了而正则没跟，此时必须大声失败，不能以「零违规」放行
+            if not cites and _CODE_TOKEN.search(line) and any(n in line for n in known_names):
+                unparsed.append((rel, lineno, line.strip()[:110]))
+
+    if unparsed:
+        print(f"❌ {len(unparsed)} 行疑似错误码引用但未被任何体例正则识别（正则可能已与文档体例脱节）：\n")
+        for rel, lineno, text in unparsed:
+            print(f"  {rel}:{lineno}  {text}")
+        raise SystemExit(1)
+
+    if seen < _CITATION_FLOOR:
+        raise RuntimeError(
+            f"仅解析出 {seen} 处错误码引用，低于下限 {_CITATION_FLOOR}——"
+            "正则可能已与文档体例脱节，拒绝以「零违规」放行"
+        )
+
+    if violations:
+        print(f"❌ {len(violations)} 处错误码引用与权威注册表不符：\n")
+        for rel, lineno, detail in violations:
+            print(f"  {rel}:{lineno}  {detail}")
+        raise SystemExit(1)
+
+    print(f"✅ {seen} 处错误码引用全部命中注册表（{len(registry)} 个已注册码）")
+
+
 @task
 def clean(c: Context) -> None:
     """清理构建产物。"""
@@ -325,4 +506,5 @@ docs_tasks.add_task(deploy)
 docs_tasks.add_task(push_to_server, name="push-to-server")
 docs_tasks.add_task(serve_versioned, name="serve-versioned")
 docs_tasks.add_task(update_server_task, name="update-server")
+docs_tasks.add_task(check_error_codes, name="check-error-codes")
 docs_tasks.add_task(clean)

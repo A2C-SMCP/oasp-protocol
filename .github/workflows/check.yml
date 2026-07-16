@@ -1,0 +1,28 @@
+name: Check Specification
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --extra docs
+
+      # 守护 #17 / #20 一类的错误码漂移：事件表/映射表引用的 (编号, 名称)
+      # 必须精确命中 error-handling.md 权威注册表
+      - name: Check error code registry
+        run: uv run inv docs.check-error-codes
+
+      - name: Build docs
+        run: uv run mkdocs build --strict
