@@ -292,18 +292,18 @@ interface ErrorResponse {
 
 **`details.kind` 取值**（规范层，双端据此对齐断言）:
 
-| `kind` | 命名空间 | 含义 |
-|--------|----------|------|
-| `element` | `/word`、`/ppt` | 按 `elementId` 定位的内容元素 |
-| `slide` | `/ppt` | 按 `slideId` 定位的幻灯片 |
-| `worksheet` | `/excel` | 按名称定位的工作表 |
-| `table` | `/excel` | 按名称/id 定位的表格 |
-| `chart` | `/excel` | 按名称定位的图表 |
-| `pivotTable` | `/excel` | 按名称定位的透视表 |
+| `kind` | 命名空间 | 对象类型 | 本码语境下的定位方式 |
+|--------|----------|----------|----------------------|
+| `element` | `/word`、`/ppt` | 内容元素 | 按 `elementId` |
+| `slide` | `/ppt` | 幻灯片 | 按 `slideId` |
+| `worksheet` | `/excel` | 工作表 | 按名称 |
+| `table` | `/excel` | 表格 | 按名称 / id |
+| `chart` | `/excel` | 图表 | 按名称 |
+| `pivotTable` | `/excel` | 透视表 | 按名称 |
 
 `details` 另可回带被查标识（如 `id` / `name`）便于定位。取值集合随命名空间演进而扩充，但已列值语义固定、不复用。
 
-token 标明的是**对象类型**；上表「含义」列描述的是 `3010` 语境下的定位方式（本码必为按 id / 名称查找）。同一批 token 由 [`3008 POSITION_INVALID`](#position_invalid-3008) 复用以标明**被索引**的对象类型——**定位方式由错误码本身区分**，故词表跨两码同名同义、不分叉。
+token 承载的是**对象类型**，**定位方式则由错误码本身承载**（故末列限定「本码语境下」——`3010` 必为按 id / 名称查找）。同一批 token 由 [`3008 POSITION_INVALID`](#position_invalid-3008) 复用以标明**被索引**的对象类型（其定位方式必为按序号），两码下 `slide` 都指「幻灯片」这一对象类型，故词表**同名同义、不分叉**。
 
 **处理建议**:
 
