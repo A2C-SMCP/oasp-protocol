@@ -1398,6 +1398,8 @@ interface InsertImageResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4000 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 4002 | `INVALID_PARAM` - `image.base64` 无法解码（线缆层） |
+| 3007 | `FORMAT_NOT_SUPPORTED` - 图片可解码但格式不受支持（见[判法划界](error-handling.md#format_not_supported-3007)） |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
@@ -2161,6 +2163,7 @@ interface ExportContentResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4000 | `VALIDATION_ERROR` - 请求参数校验失败 |
+| 3007 | `FORMAT_NOT_SUPPORTED` - `format` 枚举合法但当前宿主无法产出该格式（见[判法划界](error-handling.md#format_not_supported-3007)） |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
@@ -2397,7 +2400,8 @@ interface InsertCommentResponse {
 |--------|------|
 | 4000 | `VALIDATION_ERROR` - 请求参数校验失败（text 为空、searchText 超过 255 字符等） |
 | 3002 | `SELECTION_EMPTY` - 没有活动选区（`target` 为 `selection` 模式时） |
-| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用）或搜索文本未找到匹配（`target` 为 `searchText` 模式时） |
+| 3012 | `SEARCH_NO_MATCH` - 搜索文本未找到匹配（`target` 为 `searchText` 模式时，见[判法划界](error-handling.md#search_no_match-3012)） |
+| 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
 

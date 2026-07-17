@@ -454,6 +454,7 @@ interface GetSlideScreenshotResponse {
 |--------|------|
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
+| 3007 | `FORMAT_NOT_SUPPORTED` - `options.format` 枚举合法但当前宿主无法渲染该格式（见[判法划界](error-handling.md#format_not_supported-3007)） |
 | 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
@@ -1155,7 +1156,8 @@ interface InsertImageResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 image.base64 参数 |
-| 4002 | `INVALID_PARAM` - Base64 数据无效或 slideIndex 超出范围 |
+| 4002 | `INVALID_PARAM` - Base64 数据无法解码（线缆层）或 slideIndex 超出范围 |
+| 3007 | `FORMAT_NOT_SUPPORTED` - 图片可解码但格式不受支持（见[判法划界](error-handling.md#format_not_supported-3007)） |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
@@ -1923,7 +1925,8 @@ interface UpdateImageResponse {
 | 4001 | `MISSING_PARAM` - 缺少 elementId 或 image.base64 |
 | 3010 | `ELEMENT_NOT_FOUND` - 指定 elementId 不存在 |
 | 3004 | `OPERATION_FAILED` - 元素类型不是图片 |
-| 4002 | `INVALID_PARAM` - Base64 数据无效 |
+| 4002 | `INVALID_PARAM` - Base64 数据无法解码（线缆层） |
+| 3007 | `FORMAT_NOT_SUPPORTED` - 图片可解码但格式不受支持（见[判法划界](error-handling.md#format_not_supported-3007)） |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
@@ -2614,8 +2617,13 @@ interface DeleteSlideResponse {
   "requestId": "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
   "success": false,
   "error": {
-    "code": "4002",
-    "message": "Slide index 15 out of range, total slides: 10"
+    "code": "3008",
+    "message": "Slide index 15 out of range, total slides: 10",
+    "details": {
+      "index": 15,
+      "total": 10,
+      "kind": "slide"
+    }
   },
   "timestamp": 1704067200500
 }
@@ -2626,7 +2634,7 @@ interface DeleteSlideResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 slideIndex |
-| 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
+| 3008 | `POSITION_INVALID` - slideIndex 超出当前演示文稿的实际页数（见[判法划界](error-handling.md#position_invalid-3008)） |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
@@ -2803,7 +2811,7 @@ interface GotoSlideResponse {
 | 错误码 | 说明 |
 |--------|------|
 | 4001 | `MISSING_PARAM` - 缺少 slideIndex |
-| 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
+| 3008 | `POSITION_INVALID` - slideIndex 超出当前演示文稿的实际页数（见[判法划界](error-handling.md#position_invalid-3008)） |
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 

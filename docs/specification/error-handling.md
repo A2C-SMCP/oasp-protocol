@@ -89,10 +89,9 @@ interface ErrorResponse {
 | `3002` | `SELECTION_EMPTY` | 选区为空（需要非空选区的操作） |
 | `3003` | `DOCUMENT_READ_ONLY` | 目标不可写入（文档只读、被锁定，或其中的工作表/区域受保护） |
 | `3004` | `OPERATION_FAILED` | 操作执行失败 |
-| `3005` | `RESOURCE_NOT_ACCESSIBLE` | 资源不可访问 |
 | `3006` | `CONTENT_TOO_LARGE` | 内容超过大小限制 |
-| `3007` | `FORMAT_NOT_SUPPORTED` | 格式不支持 |
-| `3008` | `POSITION_INVALID` | 位置无效 |
+| `3007` | `FORMAT_NOT_SUPPORTED` | 载荷/目标格式可识别但不受支持（apply-time，区别于载荷不可解码 `4002`） |
+| `3008` | `POSITION_INVALID` | 序号位置相对当前文档状态无效（apply-time，区别于静态越界 `4004`） |
 | `3009` | `RANGE_INVALID` | 范围/区域地址无效（如非法的 A1 表示法、越界区域） |
 | `3010` | `ELEMENT_NOT_FOUND` | 具名/具 id 对象未找到（元素、幻灯片、工作表、表格、图表、透视表等，按 id 或名称定位失败；具体类型见 `details.kind`） |
 | `3011` | `STYLE_NOT_FOUND` | 样式未找到 |
@@ -209,6 +208,51 @@ interface ErrorResponse {
 
 **`run:script` 的二级分流**: 承载 `{namespace}:run:script`（[通用约定 · 脚本执行](conventions.md#run-script)）的执行期失败时，`details.fault` 区分失败来源——`"script"`（脚本自身抛错：TypeError / ReferenceError / 主动 throw，附 `name` / `stack`）或 `"office"`（脚本调用 Office.js 失败，附 `officeCode` / `debugInfo?`）。AI 据此决定**重写脚本** vs **调整操作**。脚本各阶段（compile / execute / serialize）→ 错误码的完整映射见[通用约定 · 脚本执行 · 错误映射](conventions.md#run-script-errors)。
 
+### FORMAT_NOT_SUPPORTED (3007)
+
+**触发场景**: 载荷或目标格式**可识别但不受支持**——线缆上的数据完整、可解码，但其格式无法被目标接受（如图片解码后是宿主拒绝嵌入的格式，或导出的目标格式宿主无法产出）。
+
+**判法划界**（三码易混用，按**失败发生在哪一层**区分）:
+
+| 条件（线缆可观测） | 错误码 | 调用方应做 |
+|---|---|---|
+| 载荷在线缆层即不合法（base64 无法解码、字段缺失） | `4002 INVALID_PARAM` | 修正参数后重发 |
+| 载荷可解码，但格式不受支持 | `3007 FORMAT_NOT_SUPPORTED` | **转码**后重发（同一路径仍可成功） |
+| 该能力在当前宿主/平台整体不可用 | `3016 API_NOT_SUPPORTED` | 换路径或换平台（同路径重试无意义） |
+
+`3007` 与 `3016` 的分界是**成因归属**：格式不受支持是**载荷属性**（同一份 TIFF 在哪个宿主都失败，转码即可解决），而 `3016` 是**宿主能力缺失**（换个环境同一请求就能成）。误报后者会把调用方引向「换平台」这条对格式问题无效的路。
+
+本码承 `4003 INVALID_PARAM_TYPE` ↔ `3018 DATA_TYPE_MISMATCH` 的「线缆层 / apply-time」配对先例——`4002` / `3007` 是同一划分在**格式**轴上的应用。
+
+**处理建议**:
+
+- 转码到通用格式（如图片转 PNG）后重发
+- `details` 可回带被拒格式与宿主可接受的格式列表，便于调用方一次选对
+
+### POSITION_INVALID (3008)
+
+**触发场景**: 按**序号**定位的位置相对**当前文档状态**无效——如 `slideIndex: 15` 发往一个 10 页的演示文稿。该值在线缆上完全合法（非负整数、类型正确），仅因文档此刻的状态而不可用。
+
+**判法划界**:
+
+| 条件（线缆可观测） | 错误码 | 调用方应做 |
+|---|---|---|
+| 参数值本身非法（枚举外取值、类型错） | `4002 INVALID_PARAM` / `4003 INVALID_PARAM_TYPE` | 修正参数后重发 |
+| 超出**静态声明**的边界（如 `timeoutMs` 上限） | `4004 PARAM_OUT_OF_RANGE` | 修正参数后重发 |
+| 序号超出**当前文档**的实际范围 | `3008 POSITION_INVALID` | **重读文档状态**后重发 |
+| 按 id / 名称定位对象失败 | `3010 ELEMENT_NOT_FOUND` | 先列举可用对象再重发 |
+| A1 表示法的区域地址非法或越界 | `3009 RANGE_INVALID` | 修正地址后重发 |
+
+`3008` 与 `4004` 的分界是**边界从哪来**：`4004` 的边界由规范**静态声明**（改参数即可），`3008` 的边界是**文档运行时状态**（参数本身可能没错，须重读状态）。归入 4xxx 会让调用方按本文「错误处理最佳实践 · AddIn 端」的「参数错误 → 不可重试」处理，而正确恢复恰是**重读后以原值重试**（文档增长后同一序号即有效）。
+
+`3008` 是 `3009 RANGE_INVALID` 在**序号**轴上的对应物——后者管 A1 区域地址，前者管 `slideIndex` / `rowIndex` / `columnIndex` / `insertIndex` 一类序数。
+
+**details**: 回带请求序号与实时边界，如 `{ "index": 15, "total": 10, "kind": "slide" }`。
+
+**处理建议**:
+
+- 先用对应的 `get:*` 读取当前实际数量，再以有效序号重发
+
 ### API_NOT_SUPPORTED (3016)
 
 **触发场景**: 目标操作所依赖的能力在当前客户端或平台上不可用——例如所需的 requirement set 未满足（如 PowerPointApi、ExcelApi），或宿主环境（如移动端、Web 端、老版本永久授权 Office）不提供该能力（如部分平台不支持透视表 `excel:insert:pivotTable`）。
@@ -277,6 +321,26 @@ interface ErrorResponse {
   }
 }
 ```
+
+### SEARCH_NO_MATCH (3012)
+
+**触发场景**: 以**搜索文本定位目标范围**的操作未找到任何匹配，操作因而失去锚点、无法执行。
+
+!!! warning "规范层（Normative）"
+    本节为**规范层**（见[通用约定 · 规范分层](conventions.md#normative-layering)）。搜索在协议中承担**两种角色**，`3012` **只适用于前者**——实现须按下表判定，**不得**混用。
+
+| 角色 | 搜索结果的地位 | 无匹配时 | 事件 |
+|---|---|---|---|
+| **定位**（locator） | 变更操作的**锚点** | 操作无法进行 → **MUST** 返回 `3012` | `word:insert:comment`（`target.type: "searchText"`） |
+| **查询**（query） | **本身**即返回值 | 是**正常空结果** → `success: true`，**不得**返回 `3012` | `word:replace:text`（`replaceCount: 0`）、`word:select:text`（`matchCount: 0`）、`excel:find:values`（`matches: []`） |
+
+**为何分**：查询类事件「没找到」是一个**有效答案**而非失败——报成错误会迫使调用方从错误处理路径消费正常结果。定位类事件「没找到」则是**前置条件不满足**，必须报错；而降级为通用 `3000 DOCUMENT_ERROR` 会让调用方无法区分「文档操作失败」与「搜索无匹配」——前者通常应上报，后者应改搜索词重试或改用选区模式，恢复动作完全不同。
+
+**处理建议**:
+
+- 放宽搜索选项（如关闭 `matchCase` / `matchWholeWord`）后重试
+- 或改用 `type: "selection"` 模式，由用户先选中目标范围
+- `details` 可回带 `searchText` 与实际生效的搜索选项
 
 ### NO_TABLE_AT_CURSOR (3013)
 
