@@ -348,6 +348,12 @@ _CODE_TOKEN = re.compile(r"(?<![\d.])[1-4]\d{3}(?![\d.])")
 # 主防线是下方的嗅探器——部分萎缩（如少数体例失配）靠下限拦不住，故此处不写死实际值。
 _CITATION_FLOOR = 300
 
+# 可达性豁免码段。1xxx（通用失败）适用于**所有**操作、2xxx 属**连接生命周期**（不在请求-响应
+# 事件的错误面内），二者均非事件表可枚举项——要求它们被引用只会逼出噪声引用。
+# 对齐注册表自身的分节语义（error-handling.md「1xxx - 通用错误」/「2xxx - 连接与认证错误」）。
+# 3xxx/4xxx 描述具体的、事件可触发的条件，无引用即**无人可发出** —— 是缺陷，不是风格问题。
+_REACHABILITY_EXEMPT_BANDS = ("1", "2")
+
 
 def _load_registry() -> set[tuple[str, str]]:
     """解析 error-handling.md 的权威错误码注册表，返回 (编号, 名称) 配对集合。"""
@@ -402,8 +408,27 @@ _SELF_TEST: tuple[tuple[str, str, int], ...] = (
 )
 
 
+def _orphans(registry: set[tuple[str, str]], reachable: set[str]) -> list[tuple[str, str]]:
+    """注册了却无人引用的 3xxx/4xxx 码。`reachable` 只应含注册表**之外**的引用。"""
+    return sorted(
+        (code, name)
+        for code, name in registry
+        if code[0] not in _REACHABILITY_EXEMPT_BANDS and code not in reachable
+    )
+
+
+# 可达性自检样本：(说明, 注册表, 注册表外引用, 期望孤儿数)
+_REACH_SELF_TEST: tuple[tuple[str, set[tuple[str, str]], set[str], int], ...] = (
+    ("3xxx 有引用 → 不是孤儿", {("3012", "SEARCH_NO_MATCH")}, {"3012"}, 0),
+    ("3xxx 零引用 → 孤儿", {("3012", "SEARCH_NO_MATCH")}, set(), 1),
+    ("4xxx 零引用 → 孤儿", {("4004", "PARAM_OUT_OF_RANGE")}, set(), 1),
+    ("1xxx 零引用 → 豁免（通用失败，跨切面）", {("1000", "UNKNOWN")}, set(), 0),
+    ("2xxx 零引用 → 豁免（连接生命周期）", {("2005", "CONNECTION_LOST")}, set(), 0),
+)
+
+
 def _run_self_test() -> None:
-    """用合成样本断言各体例的解析行为，与主逻辑共用同一组正则。"""
+    """用合成样本断言各体例的解析行为与可达性判法，与主逻辑共用同一组正则/函数。"""
     known = {n for _, n in _load_registry()}
     failures = []
     for label, line, expect in _SELF_TEST:
@@ -416,10 +441,14 @@ def _run_self_test() -> None:
             sniffed = _CODE_TOKEN.search(line) and any(n in line for n in known)
             if not sniffed:
                 failures.append(f"  {label}：解析不出配对且嗅探器未触发 —— 会静默放行！{line}")
+    for label, reg, reach, expect in _REACH_SELF_TEST:
+        got = len(_orphans(reg, reach))
+        if got != expect:
+            failures.append(f"  可达性·{label}：期望 {expect} 个孤儿，实际 {got} 个")
     if failures:
-        print("❌ 守护器自检失败（正则行为已偏离预期）：\n" + "\n".join(failures))
+        print("❌ 守护器自检失败（判法已偏离预期）：\n" + "\n".join(failures))
         raise SystemExit(1)
-    print(f"✅ 守护器自检通过（{len(_SELF_TEST)} 个体例样本）")
+    print(f"✅ 守护器自检通过（{len(_SELF_TEST)} 个体例样本 + {len(_REACH_SELF_TEST)} 个可达性样本）")
 
 
 @task(help={"self_test": "仅跑守护器自身的体例自检，不扫描文档"})
@@ -440,6 +469,7 @@ def check_error_codes(c: Context, self_test: bool = False) -> None:
 
     violations: list[tuple[str, int, str]] = []
     unparsed: list[tuple[str, int, str]] = []
+    reachable: set[str] = set()
     seen = 0
 
     for path in sorted(_SPEC_DIR.glob("*.md")):
@@ -451,6 +481,10 @@ def check_error_codes(c: Context, self_test: bool = False) -> None:
                 continue
             cites = _citations(line)
             seen += len(cites)
+            # 可达性只认注册表**之外**的引用：error-handling.md 内的详解小节标题
+            # （`### TIMEOUT (1002)`）是对该码的解释，不是「有事件会发出它」的证据
+            if not registry_file:
+                reachable.update(code for code, _ in cites)
             for code, name in cites:
                 if (code, name) in registry:
                     continue
@@ -488,7 +522,22 @@ def check_error_codes(c: Context, self_test: bool = False) -> None:
             print(f"  {rel}:{lineno}  {detail}")
         raise SystemExit(1)
 
-    print(f"✅ {seen} 处错误码引用全部命中注册表（{len(registry)} 个已注册码）")
+    orphans = _orphans(registry, reachable)
+    if orphans:
+        print(f"❌ {len(orphans)} 个孤儿错误码：已在注册表定义，但无任何事件/规范引用（调用方永远收不到）：\n")
+        for code, name in orphans:
+            print(f"  {code} `{name}`")
+        print(
+            "\n  每个 3xxx/4xxx 码都须至少被一处事件表或规范层映射表引用。"
+            "\n  要么接上（补引用），要么退役（从注册表删除）——不得两头挂空。"
+        )
+        raise SystemExit(1)
+
+    exempt = sum(1 for code, _ in registry if code[0] in _REACHABILITY_EXEMPT_BANDS)
+    print(
+        f"✅ {seen} 处错误码引用全部命中注册表（{len(registry)} 个已注册码）"
+        f"；{len(registry) - exempt} 个 3xxx/4xxx 码均可达（{exempt} 个 1xxx/2xxx 跨切面码豁免）"
+    )
 
 
 @task
