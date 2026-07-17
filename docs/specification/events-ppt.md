@@ -454,7 +454,7 @@ interface GetSlideScreenshotResponse {
 |--------|------|
 | 3001 | `DOCUMENT_NOT_FOUND` - 文档未找到 |
 | 4002 | `INVALID_PARAM` - slideIndex 超出范围 |
-| 3007 | `FORMAT_NOT_SUPPORTED` - `options.format` 枚举合法但当前宿主无法渲染该格式（见[判法划界](error-handling.md#format_not_supported-3007)） |
+| 3007 | `FORMAT_NOT_SUPPORTED` - `options.format` 枚举合法但目标不支持渲染该格式；改请求另一格式重发（整个事件不可用时应报 `3016 API_NOT_SUPPORTED`，见[判法划界](error-handling.md#format_not_supported-3007)） |
 | 3000 | `DOCUMENT_ERROR` - 文档操作错误（通用） |
 
 ---
