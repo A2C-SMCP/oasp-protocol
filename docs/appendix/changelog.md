@@ -10,7 +10,7 @@
 ## [0.4.0] - 2026-07-18
 
 !!! note "0.4.0 于 2026-07-18 原地重切"
-    0.4.0 首次切版于 2026-07-13，仅含本节末尾三条字体类变更。此后合入的 [#20](https://github.com/A2C-SMCP/oasp-protocol/issues/20)、[#17](https://github.com/A2C-SMCP/oasp-protocol/issues/17)、[#18](https://github.com/A2C-SMCP/oasp-protocol/issues/18)（`run:script` 逃生舱）原定随 `0.5.0` 发布；因截至重切时**无任何实现声明过 0.4.0**（office4ai 线上 `0.2.0`、office-editor4ai 未发版），不存在「同为 0.4.0 但事件集不同」的握手分叉风险，故取消 `0.5.0`、原地重切 0.4.0 并入三者。`v0.4.0` tag 与文档站 0.4.0 一并重新指向本次内容。
+    0.4.0 首次切版于 2026-07-13，仅含本节末尾三条字体类变更。其后合入的四条——[#23](https://github.com/A2C-SMCP/oasp-protocol/issues/23)（四个 3xxx 孤儿码裁决，含 `3005` 退役）、[#20](https://github.com/A2C-SMCP/oasp-protocol/issues/20)（错误码对账）、[#17](https://github.com/A2C-SMCP/oasp-protocol/issues/17)（`/excel` 错误码收敛）、[#18](https://github.com/A2C-SMCP/oasp-protocol/issues/18)（`run:script` 逃生舱）——原定随 `0.5.0` 发布；因截至重切时**无任何实现声明过 0.4.0**（office4ai 线上 `0.2.0`、office-editor4ai 未发版），不存在「同为 0.4.0 但事件集不同」的握手分叉风险，故取消 `0.5.0`、原地重切 0.4.0 并入四者。`v0.4.0` tag 与文档站 0.4.0 一并重新指向本次内容。
 
 ### 裁决四个 3xxx 孤儿错误码 —— `3012` 收敛 / `3007`·`3008` 接线 / `3005` 退役（订正非合规降级）
 
