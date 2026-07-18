@@ -9,6 +9,56 @@
 
 ## [Unreleased]
 
+### 裁决四个 3xxx 孤儿错误码 —— `3012` 收敛 / `3007`·`3008` 接线 / `3005` 退役（订正非合规降级）
+
+裁决 [#23](https://github.com/A2C-SMCP/oasp-protocol/issues/23)：`3012 SEARCH_NO_MATCH` 注册表已定义但**全规范零引用**，而 `word:insert:comment` 反把「搜索文本未找到匹配」判给通用 `3000`——正是 `events-excel.md` 规范层「**不得**降级为通用 `3000 DOCUMENT_ERROR`」所禁止的模式。
+
+**根因**：守护器**只校验配对、不校验可达性**。#21 引入的 `inv docs.check-error-codes` 断言每处 `(编号, 名称)` 精确命中注册表，但注册表里「**有码无人引用**」它抓不到——`3000` / `DOCUMENT_ERROR` 是合法配对，故守护器放行合理，#23 系人工审查**偶然**发现。排查证实问题比 #23 描述的更系统：**注册表 37 码中 14 码零引用**，其中 3xxx 有 `3005` / `3007` / `3008` / `3012` 四码，各需独立裁决（1xxx 通用失败 / 2xxx 连接生命周期属跨切面，非事件表可枚举项，豁免合理）。
+
+| 码 | 裁决 | 依据 |
+|---|---|---|
+| `3012` `SEARCH_NO_MATCH` | **收敛**（#23 本体） | 有且仅有一个合法归属：`word:insert:comment` 的 `searchText` **定位**模式。`3000` 行恢复为纯通用兜底 |
+| `3007` `FORMAT_NOT_SUPPORTED` | **接上** | 有真实触发点，现被降级进 `4002`（"Base64 数据无效"）或 `3000` 兜底。确立**输入/输出对称**的判法：`3007` = 事件可用但**这一种格式变体**不受支持（换格式即可成功），`3016` = **整个能力**不可用（换格式无用）——分界是**失败的粒度**而非「谁的锅」。承 `4003`↔`3018` 已确立的「线缆层 / apply-time」配对先例，在**格式**轴上的应用 |
+| `3008` `POSITION_INVALID` | **接上**（本次立规 + `/ppt` 样板） | 「apply-time 序号位置无效」真空位：`slideIndex: 15` 对 10 页片**线缆上完全合法**，仅相对文档状态无效；正确恢复是「重读状态后原值重试」，而 4xxx 暗示的是「改参数」。`4002` / `4004` / `3010` / `3009` 表达它都要对成因说谎 |
+| `3005` `RESOURCE_NOT_ACCESSIBLE` | **退役** | **无指涉对象**：全协议无任何请求参数引用可拉取的外部资源——`documentUri` 是唯一 URI 参数且已由 `3001`/`3003` 覆盖；图片等载荷一律 inline base64（自包含，无需解引用）；所有 URL / 链接字段均为**响应**字段，不可能触发请求错误 |
+
+**新增规范层判法——零匹配是否仍是良定义的结果**（`error-handling.md` §`SEARCH_NO_MATCH (3012)`）：
+
+| 零匹配时 | 判定 | 事件 |
+|---|---|---|
+| 仍是**良定义的零元结果**（0 次替换 / 0 个匹配 / 空列表） | 正常结果 → `success: true`，**不得**返回 `3012` | `word:replace:text`（`replaceCount: 0`）、`word:select:text`（`matchCount: 0`）、`excel:find:values`（`matches: []`） |
+| 使操作**无法产生所请求的效果**（批注无处可附） | **MUST** 返回 `3012` | `word:insert:comment`（`target.type: "searchText"`） |
+
+判据**不是**「搜索是否为变更的锚点」——`word:replace:text` 的搜索同样是变更锚点，但「替换了 0 处」是完整、可消费的答案；而「把批注附到 0 个范围上」没有对应的良定义结果。
+
+故 #23 建议方向 2（其余搜索事件是否也列 `3012`）判**否**且有原则支撑，方向 3（退役 `3012`）判**否**。方向 4（`/cross-ask office-editor4ai` 确认宿主侧能否区分「无匹配」与「操作失败」）**无需执行**——`word:select:text` 规范早已把 `matchCount: 0` 写成**正常成功响应**，即仓内自证该区分在线缆上可观测。
+
+| 变更类型 | 位置 | 说明 |
+|----------|------|------|
+| 收敛（语义订正） | `events-word.md` | `word:insert:comment` 的「搜索文本未找到匹配」`3000` → `3012`；`3000` 行恢复为纯通用兜底 |
+| **移除（码退役）** | `error-handling.md` | 删除 `3005 RESOURCE_NOT_ACCESSIBLE`，**不留别名** |
+| 新增（判法立规） | `error-handling.md` | 三个触发场景小节：`3012`（零元结果良定义性，规范层）、`3007`（与 `4002` 载荷不可解码、`3016` 整个能力不可用的划界）、`3008`（与 `4004` 静态边界、`3010` 具名查找的划界；`details` 带 `{ index, total, kind }`）。均为**散文体、不含 JSON 示例**——绕开尚未裁决的 [#22](https://github.com/A2C-SMCP/oasp-protocol/issues/22)（`error.code` 装名称还是数字），不新增线缆读法债务 |
+| 澄清（词表归属） | `error-handling.md` | `3010` 的 `details.kind` 词表拆列为「**对象类型**」+「**本码语境下的定位方式**」，明确 token 承载对象类型、定位方式由错误码本身承载；故 `3008` **复用同一词表**（标明被索引的对象类型，定位方式必为按序号）而非另起——两码下 `slide` 同指「幻灯片」，避免同名字段跨码分叉 |
+| 接线（`3007` / `3016`） | `events-{word,ppt}.md`（5 + 2 处） | **输入侧**（`word:insert:image`、`ppt:insert:image`、`ppt:update:image`）：拆 `4002`（base64 不可解码，线缆层）+ `3007`（可解码但格式不受支持，转码重发）；**输出侧**（`word:export:content`、`ppt:get:slideScreenshot`）：补 `3007`（`format` 枚举合法但目标不支持产出/渲染该格式，改请求另一格式重发），原落 `3000` 兜底。两个输出侧事件同时补 `3016` **独立行**——截图/导出高度依赖宿主能力，`3016` 是其降级路由，按本仓既有体例（`/excel`、`/ppt` 共 8+ 处）不应只藏在 `3007` 行的括号里 |
+| 接线（`3008` 样板） | `events-ppt.md`（2 处） | `ppt:delete:slide`、`ppt:goto:slide` 的 `slideIndex 超出范围` `4002` → `3008`（并补 `details`）。**仅取 `/ppt`（Draft）两处样板验证判法**，纯序号行与复合行（夹带枚举校验，须先拆分）的全量清扫见 [#24](https://github.com/A2C-SMCP/oasp-protocol/issues/24)。§`POSITION_INVALID (3008)` 同步加**过渡期 admonition**：清扫完成前，本码规范层效力仅及于显式列出它的事件，其余沿用表内现码——避免规范正文自相矛盾 |
+| 新增（守护） | `scripts/docs/tasks.py` | `check_error_codes` 补**可达性闸口**：3xxx/4xxx 码**必须**被 `error-handling.md` **之外的表格行**引用，否则报孤儿；1xxx/2xxx **按码段豁免**（跨切面，强求引用只会逼出噪声）。两处排除各自承重——排除注册表内引用，否则 `### TIMEOUT (1002)` 这类详解小节标题会让码**自我满足**；只认表格行，因为「有事件会发出它」的证据只存在于事件×码表里，一条锚点链接不构成该证据。判据抽为 `_reachable_from()` / `_orphans()` 两个可测函数并补 11 个自检样本（含变异测试验证：删任一处排除，自检**立即失败**而非静默放行）。**无白名单**——四码裁决后 3xxx/4xxx 全部可达，以硬闸口落地。修复前报 4 个孤儿、修复后 405 处引用全绿 + 23 个 3xxx/4xxx 码均可达（13 个 1xxx/2xxx 豁免） |
+
+**兼容性**：定性为**订正非合规降级**，非破坏性契约变更——
+
+- `3012`：`word:insert:comment`（✅ Stable）「搜索无匹配」由 `3000` → `3012`。向 `3000` 降级本就违反 `events-excel.md` 规范层 **MUST**，属订正不合规实现；调用方原先**无法**区分该条件与「文档操作失败」，收敛后信号严格增强
+- `3007`：多为**新增行**（该条件原落 `3000` 兜底）；`/ppt` 图片事件属 `4002` 拆分，Draft 无稳定性承诺
+- `3008`：本次仅动 `/ppt`（Draft）。`/word`（Stable）3 处与 `/excel` 3 处横扫重指留待专项 issue，届时逐条评估
+- `3005`：退役零风险——`git log -S` 证实该码自初始提交 `069a2d8` 起**从未被任何事件引用**，无实现可能发出它。对齐 #20 退役 `3999`、#17 退役 `5xxx` 先例
+
+跨仓跟进——office-editor4ai：`word:insert:comment` 的 searchText 无匹配分支改发 `3012`；图片事件按「不可解码 / 格式不受支持」二分 `4002` / `3007`；`ppt:{delete,goto}:slide` 越界改发 `3008`（带 `details`）。office4ai：同步 `SEARCH_NO_MATCH` / `FORMAT_NOT_SUPPORTED` / `POSITION_INVALID`，移除 `RESOURCE_NOT_ACCESSIBLE`。
+
+**遗留**（均已开 issue，不在本次范围）：
+
+1. **[#24](https://github.com/A2C-SMCP/oasp-protocol/issues/24) —— `3008` 全量接线**：余 ~22 行「序号越界」仍判 `4002`（`/ppt` 16 处、`/word` Stable 3 处）或 `4004`（`/excel` 3 处），另有 ~7 处静默缺口；同时裁决「同条件跨命名空间判法不一致」（`/ppt`+`/word` 判 `4002` vs `/excel` 判 `4004`，规范未陈述理由）、`events-excel.md` 规范层映射表的「越界」行、以及 `details.kind` 词表扩充。含两处**保留区**：`ppt:update:textBox` 的 `start`/`length`（针对载荷自身文本的字符偏移，**线缆层即可校验** → 应留 `4002`）、`word:insert:image` 的 `bookmarkName`（属**具名查找** → 宜 `3010` 新增 `kind:"bookmark"`，非 `3008`）
+2. **[#25](https://github.com/A2C-SMCP/oasp-protocol/issues/25) —— `ImageData` 重复定义且语义分叉**：`events-word.md` 为 `word:insert:image` 本地重声明 `ImageData` 并**丢掉 `mimeType`**，与权威 `data-structures.md` 冲突（同款先例：#12 的 `TextFormat`）
+3. **[#26](https://github.com/A2C-SMCP/oasp-protocol/issues/26) —— `imageInfo.data` 不可达**：`events-ppt.md` 标注「需显式请求」，但 `GetSlideInfoRequest` 无对应参数。**该 issue 是 `3005` 退役前提的唯一潜在反例**——若补齐参数且需 materialize 外链图片，可能须重新引入 `3005`
+4. **[#27](https://github.com/A2C-SMCP/oasp-protocol/issues/27) —— `excel:set:rangeFormat` 的 `numberFormat`**：非法/不受支持归 `3007` 还是 `4002` 待裁决（属格式**字符串**而非格式**种类**，与 `3007` 判法正交）。故本次未接线，`events-excel.md` 规范层映射表暂不加 `3007` 行——`/excel` 现无 base64 图片或 `export:content` 类事件，无其他 `3007` 触发面
+
 ### 事件表错误码与权威注册表对账 —— 退役 `OFFICE_API_ERROR` 与 `3999`（文档订正，线缆影响取决于读法裁决）
 
 裁决 [#20](https://github.com/A2C-SMCP/oasp-protocol/issues/20)：`OFFICE_API_ERROR` 在 `events-word.md` 内部前半用 `3999`、后半用 `3000`，而权威注册表（`error-handling.md`）**两个号都不认**——`3000` 名为 `DOCUMENT_ERROR`，`3999` 从未定义。
@@ -38,7 +88,7 @@
 **遗留**（均另开 issue，不在本次范围）：
 
 1. **线缆读法未裁决（根因，高优）**：`error.code` 究竟装「名称」还是「数字」（规范 9 处示例发名称、office-editor4ai 实测发数字字符串、注册表表头又管数字叫「错误码」，三者互斥；另有 `events-word.md` 一处示例为裸数字 `"code": 3001`，违反其自身 `string` 类型）。不裁决则该类漂移仍会复发，须跨 3 仓对齐。
-2. **`3012 SEARCH_NO_MATCH` 系孤儿码**：注册表已定义但全规范零引用，而 `word:insert:comment` 把「搜索文本未找到匹配」判给通用 `3000`——与 `events-excel.md` 规范层「不得降级为通用 `3000`」的原则相悖，宜收敛到 `3012`。属既存问题（配对合法，守护器放行合理）。
+2. ~~**`3012 SEARCH_NO_MATCH` 系孤儿码**~~ —— 已由 [#23](https://github.com/A2C-SMCP/oasp-protocol/issues/23) 裁决，见上「裁决四个 3xxx 孤儿错误码」。
 
 ### /excel 错误码收敛回通用注册表（Draft 破坏性收敛）
 
