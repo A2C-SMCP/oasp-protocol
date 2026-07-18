@@ -692,6 +692,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#server-addin-_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        脚本执行类（Server → AddIn，请求-响应）
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1102,6 +1113,34 @@
     <span class="md-ellipsis">
       
         word:resolve:comment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        脚本执行类
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="脚本执行类">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#wordrunscript" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        word:run:script
       
     </span>
   </a>
@@ -1520,6 +1559,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#server-addin-_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        脚本执行类（Server → AddIn，请求-响应）
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1941,6 +1991,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        脚本执行类
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="脚本执行类">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#wordrunscript" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        word:run:script
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2178,6 +2256,23 @@
 <td><a href="#wordresolvecomment">word:resolve:comment</a></td>
 <td>✅ Stable</td>
 <td>解决/取消解决批注</td>
+</tr>
+</tbody>
+</table>
+<h3 id="server-addin-_6">脚本执行类（Server → AddIn，请求-响应）<a class="headerlink" href="#server-addin-_6" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>事件名</th>
+<th>状态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#wordrunscript">word:run:script</a></td>
+<td>📋 Draft</td>
+<td>执行原始 Office.js 脚本（封装层逃生舱）</td>
 </tr>
 </tbody>
 </table>
@@ -3129,12 +3224,12 @@
 <td><code>SELECTION_EMPTY</code> - 选区为空</td>
 </tr>
 <tr>
-<td>4001</td>
+<td>4000</td>
 <td><code>VALIDATION_ERROR</code> - 请求参数校验失败</td>
 </tr>
 <tr>
-<td>3999</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td>3000</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -3253,11 +3348,11 @@
 </thead>
 <tbody>
 <tr>
-<td>4001</td>
+<td>4000</td>
 <td><code>VALIDATION_ERROR</code> - Schema 校验失败</td>
 </tr>
 <tr>
-<td>4002</td>
+<td>4001</td>
 <td><code>MISSING_PARAM</code> - 缺少必要参数</td>
 </tr>
 <tr>
@@ -3265,8 +3360,8 @@
 <td><code>DOCUMENT_NOT_FOUND</code> - 文档未找到</td>
 </tr>
 <tr>
-<td>3999</td>
-<td><code>OFFICE_API_ERROR</code> - 通用 Office API 错误（兜底）</td>
+<td>3000</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用，兜底）</td>
 </tr>
 </tbody>
 </table>
@@ -3395,7 +3490,7 @@
 </thead>
 <tbody>
 <tr>
-<td>4001</td>
+<td>4000</td>
 <td><code>VALIDATION_ERROR</code> - 请求参数校验失败</td>
 </tr>
 <tr>
@@ -3403,8 +3498,8 @@
 <td><code>DOCUMENT_NOT_FOUND</code> - 文档未找到</td>
 </tr>
 <tr>
-<td>3999</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td>3000</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -3467,7 +3562,7 @@
 </thead>
 <tbody>
 <tr>
-<td>4001</td>
+<td>4000</td>
 <td><code>VALIDATION_ERROR</code> - 请求参数校验失败</td>
 </tr>
 <tr>
@@ -3475,8 +3570,8 @@
 <td><code>DOCUMENT_NOT_FOUND</code> - 文档未找到</td>
 </tr>
 <tr>
-<td>3999</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td>3000</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -3588,16 +3683,24 @@
 </thead>
 <tbody>
 <tr>
-<td>4001</td>
+<td>4000</td>
 <td><code>VALIDATION_ERROR</code> - 请求参数校验失败</td>
+</tr>
+<tr>
+<td>4002</td>
+<td><code>INVALID_PARAM</code> - <code>image.base64</code> 无法解码（线缆层）</td>
+</tr>
+<tr>
+<td>3007</td>
+<td><code>FORMAT_NOT_SUPPORTED</code> - 图片可解码但格式不受支持（见<a href="../error-handling/#format_not_supported-3007">判法划界</a>）</td>
 </tr>
 <tr>
 <td>3001</td>
 <td><code>DOCUMENT_NOT_FOUND</code> - 文档未找到</td>
 </tr>
 <tr>
-<td>3999</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td>3000</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -3717,7 +3820,7 @@
 </thead>
 <tbody>
 <tr>
-<td>4001</td>
+<td>4000</td>
 <td><code>VALIDATION_ERROR</code> - 请求参数校验失败</td>
 </tr>
 <tr>
@@ -3725,8 +3828,8 @@
 <td><code>DOCUMENT_NOT_FOUND</code> - 文档未找到</td>
 </tr>
 <tr>
-<td>3999</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td>3000</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -3834,7 +3937,7 @@
 </thead>
 <tbody>
 <tr>
-<td>4001</td>
+<td>4000</td>
 <td><code>VALIDATION_ERROR</code> - 请求参数校验失败</td>
 </tr>
 <tr>
@@ -3842,8 +3945,8 @@
 <td><code>DOCUMENT_NOT_FOUND</code> - 文档未找到</td>
 </tr>
 <tr>
-<td>3999</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td>3000</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -3951,8 +4054,8 @@
 <td><code>DOCUMENT_NOT_FOUND</code> - 文档未找到</td>
 </tr>
 <tr>
-<td>3999</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td>3000</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -4052,8 +4155,8 @@
 <td><code>DOCUMENT_NOT_FOUND</code> - 文档未找到</td>
 </tr>
 <tr>
-<td>3999</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td>3000</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -4154,8 +4257,8 @@
 <td><code>DOCUMENT_NOT_FOUND</code> - 文档未找到</td>
 </tr>
 <tr>
-<td>3999</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td>3000</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -4295,8 +4398,8 @@
 <td><code>DOCUMENT_NOT_FOUND</code> - 文档未找到</td>
 </tr>
 <tr>
-<td>3999</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td>3000</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -4357,7 +4460,7 @@
 </thead>
 <tbody>
 <tr>
-<td>4001</td>
+<td>4000</td>
 <td><code>VALIDATION_ERROR</code> - 请求参数校验失败</td>
 </tr>
 <tr>
@@ -4365,8 +4468,8 @@
 <td><code>DOCUMENT_NOT_FOUND</code> - 文档未找到</td>
 </tr>
 <tr>
-<td>3999</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td>3000</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -4454,16 +4557,24 @@
 </thead>
 <tbody>
 <tr>
-<td>4001</td>
+<td>4000</td>
 <td><code>VALIDATION_ERROR</code> - 请求参数校验失败</td>
+</tr>
+<tr>
+<td>3007</td>
+<td><code>FORMAT_NOT_SUPPORTED</code> - <code>format</code> 枚举合法但目标不支持产出该格式；改请求另一格式重发（见<a href="../error-handling/#format_not_supported-3007">判法划界</a>）</td>
+</tr>
+<tr>
+<td>3016</td>
+<td><code>API_NOT_SUPPORTED</code> - 该事件在当前宿主/平台整体不可用（换格式无用，须换路径或平台）</td>
 </tr>
 <tr>
 <td>3001</td>
 <td><code>DOCUMENT_NOT_FOUND</code> - 文档未找到</td>
 </tr>
 <tr>
-<td>3999</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td>3000</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -4626,7 +4737,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -4777,8 +4888,12 @@
 <td><code>SELECTION_EMPTY</code> - 没有活动选区（<code>target</code> 为 <code>selection</code> 模式时）</td>
 </tr>
 <tr>
+<td>3012</td>
+<td><code>SEARCH_NO_MATCH</code> - 搜索文本未找到匹配（<code>target</code> 为 <code>searchText</code> 模式时，见<a href="../error-handling/#search_no_match-3012">判法划界</a>）</td>
+</tr>
+<tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误或搜索文本未找到匹配（<code>target</code> 为 <code>searchText</code> 模式时）</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -4869,7 +4984,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误（批注不存在等）</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（如批注不存在）</td>
 </tr>
 </tbody>
 </table>
@@ -4968,7 +5083,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误（批注不存在等）</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（如批注不存在）</td>
 </tr>
 </tbody>
 </table>
@@ -5077,7 +5192,136 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误（批注不存在等）</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（如批注不存在）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_10">脚本执行类<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h2>
+<h3 id="wordrunscript">word:run:script<a class="headerlink" href="#wordrunscript" title="Permanent link">&para;</a></h3>
+<p><strong>方向</strong>: Server → AddIn（请求-响应）</p>
+<p><strong>状态</strong>: 📋 Draft</p>
+<div class="admonition note">
+<p class="admonition-title">新增事件（纯加法）</p>
+<p><code>/word</code> 命名空间为 ✅ Stable，但本事件为<strong>纯加法</strong>——新增事件<strong>不修改</strong>任何既有事件 / 字段 / 错误码的语义与契约，不影响 <code>/word</code> 既有 Stable 事件的兼容性承诺。事件本身以 📋 Draft 进入（接口可能在正式发布前微调）。</p>
+</div>
+<p><strong>说明</strong>: <strong>封装层逃生舱</strong>——对实时文档执行一段原始 Office.js 脚本。<strong>应优先使用 typed <code>word:*</code> 事件</strong>，仅在其未覆盖某能力、或某 typed 事件有 Bug 阻塞时使用。共享执行语义、大小限制、超时、安全模型、非原子性与错误映射见<a href="../conventions/#run-script">通用约定 · 脚本执行</a>。</p>
+<p><strong>请求数据</strong>（共享 <a href="../data-structures/#script-execution"><code>RunScriptRequest</code></a>）:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-112-1" name="__codelineno-112-1" href="#__codelineno-112-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">RunScriptRequest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-112-2" name="__codelineno-112-2" href="#__codelineno-112-2"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-112-3" name="__codelineno-112-3" href="#__codelineno-112-3"></a><span class="w">  </span><span class="nx">documentUri</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-112-4" name="__codelineno-112-4" href="#__codelineno-112-4"></a><span class="w">  </span><span class="nx">timestamp?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-112-5" name="__codelineno-112-5" href="#__codelineno-112-5"></a><span class="w">  </span><span class="nx">script</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">                    </span><span class="c1">// async 函数体；注入 context(Word.RequestContext)/args/console，可 return</span>
+<a id="__codelineno-112-6" name="__codelineno-112-6" href="#__codelineno-112-6"></a><span class="w">  </span><span class="nx">args?</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">unknown</span><span class="o">&gt;</span><span class="p">;</span><span class="w">    </span><span class="c1">// 注入脚本，脚本内经 `args` 读取；必须可 JSON 序列化</span>
+<a id="__codelineno-112-7" name="__codelineno-112-7" href="#__codelineno-112-7"></a><span class="w">  </span><span class="nx">timeoutMs?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">                </span><span class="c1">// 执行超时（毫秒），缺省「脚本执行」档 60000，无硬上限</span>
+<a id="__codelineno-112-8" name="__codelineno-112-8" href="#__codelineno-112-8"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>字段说明</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>必需</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>script</code></td>
+<td>string</td>
+<td>✅</td>
+<td>待执行 JS 源码，async 函数体语义</td>
+</tr>
+<tr>
+<td><code>args</code></td>
+<td>Record<string, unknown></td>
+<td>❌</td>
+<td>注入脚本的参数，脚本内经 <code>args</code> 读取；必须可 JSON 序列化</td>
+</tr>
+<tr>
+<td><code>timeoutMs</code></td>
+<td>number</td>
+<td>❌</td>
+<td>执行超时（毫秒），缺省 60000，无硬上限</td>
+</tr>
+</tbody>
+</table>
+<p><strong>请求示例</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-113-1" name="__codelineno-113-1" href="#__codelineno-113-1"></a><span class="p">{</span>
+<a id="__codelineno-113-2" name="__codelineno-113-2" href="#__codelineno-113-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d&quot;</span><span class="p">,</span>
+<a id="__codelineno-113-3" name="__codelineno-113-3" href="#__codelineno-113-3"></a><span class="w">  </span><span class="nt">&quot;documentUri&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;file:///Users/john/Documents/report.docx&quot;</span><span class="p">,</span>
+<a id="__codelineno-113-4" name="__codelineno-113-4" href="#__codelineno-113-4"></a><span class="w">  </span><span class="nt">&quot;script&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;const paras = context.document.body.paragraphs;\nparas.load(&#39;text&#39;);\nawait context.sync();\nreturn paras.items.map(p =&gt; p.text);&quot;</span>
+<a id="__codelineno-113-5" name="__codelineno-113-5" href="#__codelineno-113-5"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>响应数据</strong>（<code>data</code> 为共享 <a href="../data-structures/#script-execution"><code>ScriptResult</code></a>）:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-114-1" name="__codelineno-114-1" href="#__codelineno-114-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">RunScriptResponse</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-114-2" name="__codelineno-114-2" href="#__codelineno-114-2"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-114-3" name="__codelineno-114-3" href="#__codelineno-114-3"></a><span class="w">  </span><span class="nx">success</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
+<a id="__codelineno-114-4" name="__codelineno-114-4" href="#__codelineno-114-4"></a><span class="w">  </span><span class="nx">data?</span><span class="o">:</span><span class="w"> </span><span class="kt">ScriptResult</span><span class="p">;</span><span class="w">        </span><span class="c1">// { result, logs, durationMs, logsTruncated }</span>
+<a id="__codelineno-114-5" name="__codelineno-114-5" href="#__codelineno-114-5"></a><span class="w">  </span><span class="nx">error?</span><span class="o">:</span><span class="w"> </span><span class="kt">ErrorResponse</span><span class="p">;</span>
+<a id="__codelineno-114-6" name="__codelineno-114-6" href="#__codelineno-114-6"></a><span class="w">  </span><span class="nx">timestamp</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-114-7" name="__codelineno-114-7" href="#__codelineno-114-7"></a><span class="w">  </span><span class="nx">duration?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-114-8" name="__codelineno-114-8" href="#__codelineno-114-8"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>响应示例</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-115-1" name="__codelineno-115-1" href="#__codelineno-115-1"></a><span class="p">{</span>
+<a id="__codelineno-115-2" name="__codelineno-115-2" href="#__codelineno-115-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d&quot;</span><span class="p">,</span>
+<a id="__codelineno-115-3" name="__codelineno-115-3" href="#__codelineno-115-3"></a><span class="w">  </span><span class="nt">&quot;success&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-115-4" name="__codelineno-115-4" href="#__codelineno-115-4"></a><span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-115-5" name="__codelineno-115-5" href="#__codelineno-115-5"></a><span class="w">    </span><span class="nt">&quot;result&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;标题&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;第一段正文。&quot;</span><span class="p">],</span>
+<a id="__codelineno-115-6" name="__codelineno-115-6" href="#__codelineno-115-6"></a><span class="w">    </span><span class="nt">&quot;logs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+<a id="__codelineno-115-7" name="__codelineno-115-7" href="#__codelineno-115-7"></a><span class="w">    </span><span class="nt">&quot;durationMs&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">51</span><span class="p">,</span>
+<a id="__codelineno-115-8" name="__codelineno-115-8" href="#__codelineno-115-8"></a><span class="w">    </span><span class="nt">&quot;logsTruncated&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-115-9" name="__codelineno-115-9" href="#__codelineno-115-9"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-115-10" name="__codelineno-115-10" href="#__codelineno-115-10"></a><span class="w">  </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1704067200500</span><span class="p">,</span>
+<a id="__codelineno-115-11" name="__codelineno-115-11" href="#__codelineno-115-11"></a><span class="w">  </span><span class="nt">&quot;duration&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">54</span>
+<a id="__codelineno-115-12" name="__codelineno-115-12" href="#__codelineno-115-12"></a><span class="p">}</span>
+</code></pre></div>
+<div class="admonition danger">
+<p class="admonition-title">安全模型与非原子性</p>
+<p><code>run:script</code> 以敞开全局对象的原生 JS 执行、<strong>非沙箱</strong>，信任边界即 Socket.IO 握手鉴权；失败时文档可能残留<strong>部分修改</strong>（无原子性 / 回滚）。执行前的人在环确认由<strong>上层 Agent 层</strong>承担，OASP 为纯能力提供方。完整规范见<a href="../conventions/#run-script">通用约定 · 脚本执行</a>。</p>
+</div>
+<p><strong>可能的错误</strong>（完整映射见<a href="../conventions/#run-script-errors">通用约定 · 脚本执行 · 错误映射</a>）:</p>
+<table>
+<thead>
+<tr>
+<th>错误码</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4001</td>
+<td><code>MISSING_PARAM</code> - 缺少 <code>script</code></td>
+</tr>
+<tr>
+<td>4003</td>
+<td><code>INVALID_PARAM_TYPE</code> - <code>args</code> 不可 JSON 序列化</td>
+</tr>
+<tr>
+<td>4004</td>
+<td><code>PARAM_OUT_OF_RANGE</code> - <code>timeoutMs</code> 越界</td>
+</tr>
+<tr>
+<td>4002</td>
+<td><code>INVALID_PARAM</code> - 脚本语法错（<code>phase:"compile"</code>）</td>
+</tr>
+<tr>
+<td>3016</td>
+<td><code>API_NOT_SUPPORTED</code> - 宿主不支持动态代码构造（<code>phase:"compile"</code>）</td>
+</tr>
+<tr>
+<td>3004</td>
+<td><code>OPERATION_FAILED</code> - 脚本自身抛错（<code>fault:"script"</code>）或 Office.js 调用失败（<code>fault:"office"</code>）</td>
+</tr>
+<tr>
+<td>1002</td>
+<td><code>TIMEOUT</code> - 执行超时</td>
+</tr>
+<tr>
+<td>3006</td>
+<td><code>CONTENT_TOO_LARGE</code> - result 过大（<code>phase:"serialize"</code>）</td>
 </tr>
 </tbody>
 </table>

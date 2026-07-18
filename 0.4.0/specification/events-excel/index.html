@@ -781,6 +781,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#server-addin-_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        脚本执行类（Server → AddIn，请求-响应）
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -790,7 +801,7 @@
   <a href="#excel_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Excel 专属错误码
+        Excel 错误码映射（规范层）
       
     </span>
   </a>
@@ -1402,6 +1413,34 @@
     <span class="md-ellipsis">
       
         excel:set:formula
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        脚本执行类
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="脚本执行类">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#excelrunscript" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        excel:run:script
       
     </span>
   </a>
@@ -1797,6 +1836,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#server-addin-_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        脚本执行类（Server → AddIn，请求-响应）
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1806,7 +1856,7 @@
   <a href="#excel_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Excel 专属错误码
+        Excel 错误码映射（规范层）
       
     </span>
   </a>
@@ -2429,6 +2479,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        脚本执行类
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="脚本执行类">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#excelrunscript" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        excel:run:script
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2453,7 +2531,7 @@
 </div>
 <h2 id="_1">概述<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <p>本章定义 <code>/excel</code> 命名空间下的所有事件。Excel 事件用于操作 Microsoft Excel 工作簿。</p>
-<p>共 <strong>37 个事件</strong>，覆盖状态感知、Range 操作、格式样式、合并单元格、工作表管理、表格操作、图表操作、透视表操作、查找筛选和公式设置。</p>
+<p>共 <strong>38 个事件</strong>，覆盖状态感知、Range 操作、格式样式、合并单元格、工作表管理、表格操作、图表操作、透视表操作、查找筛选、公式设置和脚本执行。</p>
 <h2 id="_2">事件列表<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <h3 id="server-addin-">状态感知类（Server → AddIn，请求-响应）<a class="headerlink" href="#server-addin-" title="Permanent link">&para;</a></h3>
 <table>
@@ -2626,7 +2704,7 @@
 </thead>
 <tbody>
 <tr>
-<td><a href="#excelInserttable">excel:insert:table</a></td>
+<td><a href="#excelinserttable">excel:insert:table</a></td>
 <td>📋 Draft</td>
 <td>创建结构化表格</td>
 </tr>
@@ -2760,70 +2838,131 @@
 </tr>
 </tbody>
 </table>
-<hr />
-<h2 id="excel_1">Excel 专属错误码<a class="headerlink" href="#excel_1" title="Permanent link">&para;</a></h2>
-<p>除通用错误码（1xxx ~ 4xxx）外，Excel 命名空间定义以下专属错误码：</p>
+<h3 id="server-addin-_6">脚本执行类（Server → AddIn，请求-响应）<a class="headerlink" href="#server-addin-_6" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>错误码</th>
-<th>名称</th>
+<th>事件名</th>
+<th>状态</th>
 <th>说明</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>5001</code></td>
-<td><code>WORKSHEET_NOT_FOUND</code></td>
-<td>指定的工作表不存在</td>
-</tr>
-<tr>
-<td><code>5002</code></td>
-<td><code>RANGE_INVALID</code></td>
-<td>无效的区域地址</td>
-</tr>
-<tr>
-<td><code>5003</code></td>
-<td><code>MERGE_CONFLICT</code></td>
-<td>合并操作与现有合并区域冲突</td>
-</tr>
-<tr>
-<td><code>5004</code></td>
-<td><code>PROTECTED_SHEET</code></td>
-<td>工作表受保护，无法修改</td>
-</tr>
-<tr>
-<td><code>5005</code></td>
-<td><code>FORMULA_ERROR</code></td>
-<td>公式语法错误或引用无效</td>
-</tr>
-<tr>
-<td><code>5006</code></td>
-<td><code>TABLE_NOT_FOUND</code></td>
-<td>指定的表格不存在</td>
-</tr>
-<tr>
-<td><code>5007</code></td>
-<td><code>CHART_NOT_FOUND</code></td>
-<td>指定的图表不存在</td>
-</tr>
-<tr>
-<td><code>5008</code></td>
-<td><code>PIVOT_NOT_FOUND</code></td>
-<td>指定的透视表不存在</td>
-</tr>
-<tr>
-<td><code>5009</code></td>
-<td><code>DATA_TYPE_MISMATCH</code></td>
-<td>写入值的数据类型不匹配</td>
-</tr>
-<tr>
-<td><code>5010</code></td>
-<td><code>NOT_SUPPORTED</code></td>
-<td>当前平台不支持此功能</td>
+<td><a href="#excelrunscript">excel:run:script</a></td>
+<td>📋 Draft</td>
+<td>执行原始 Office.js 脚本（封装层逃生舱）</td>
 </tr>
 </tbody>
 </table>
+<hr />
+<h2 id="excel_1">Excel 错误码映射（规范层）<a class="headerlink" href="#excel_1" title="Permanent link">&para;</a></h2>
+<p><code>/excel</code> <strong>不使用命名空间专属错误码块</strong>，与 <code>/word</code>、<code>/ppt</code> 一致，全部复用<a href="../error-handling/">错误处理</a>定义的共享注册表（1xxx ~ 4xxx）。错误码描述的是<strong>线缆可观测的失败条件</strong>，与具体应用无关（见<a href="../error-handling/#design-principles">错误处理 · 设计原则</a>）。</p>
+<div class="admonition warning">
+<p class="admonition-title">规范层（Normative）</p>
+<p>本节为<strong>规范层</strong>（见<a href="../conventions/#normative-layering">通用约定 · 规范分层</a>）。当出现下表所列<strong>线缆可观测条件</strong>时，实现 <strong>MUST</strong> 返回对应错误码，<strong>不得</strong>降级为通用 <code>3000 DOCUMENT_ERROR</code>。多个同类对象（工作表 / 表格 / 图表 / 透视表）共用 <code>3010</code>，由 <a href="../error-handling/#element_not_found-3010"><code>details.kind</code></a> 区分（取值集合见该处规范定义）。</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>触发条件（线缆可观测）</th>
+<th>错误码</th>
+<th>名称</th>
+<th><code>details</code></th>
+<th>典型事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>按名称/id 定位工作表失败</td>
+<td><code>3010</code></td>
+<td><code>ELEMENT_NOT_FOUND</code></td>
+<td><code>kind:"worksheet"</code></td>
+<td>所有工作表作用域事件（<code>get:worksheetInfo</code>、<code>delete:worksheet</code>、<code>get:range</code> …）</td>
+</tr>
+<tr>
+<td>按名称/id 定位表格失败</td>
+<td><code>3010</code></td>
+<td><code>ELEMENT_NOT_FOUND</code></td>
+<td><code>kind:"table"</code></td>
+<td><code>get:table</code>、<code>add:tableRow</code>、<code>delete:tableRow</code>、<code>sort:table</code></td>
+</tr>
+<tr>
+<td>按名称定位图表失败</td>
+<td><code>3010</code></td>
+<td><code>ELEMENT_NOT_FOUND</code></td>
+<td><code>kind:"chart"</code></td>
+<td><code>update:chart</code>、<code>delete:chart</code></td>
+</tr>
+<tr>
+<td>按名称定位透视表失败</td>
+<td><code>3010</code></td>
+<td><code>ELEMENT_NOT_FOUND</code></td>
+<td><code>kind:"pivotTable"</code></td>
+<td><code>delete:pivotTable</code></td>
+</tr>
+<tr>
+<td>区域/单元格地址非法（语法或越界）</td>
+<td><code>3009</code></td>
+<td><code>RANGE_INVALID</code></td>
+<td>—</td>
+<td><code>get:range</code>、<code>set:range</code>、<code>insert:chart</code>(source)、<code>insert:pivotTable</code>(source/target)、<code>find:values</code>、<code>set:formula</code> …</td>
+</tr>
+<tr>
+<td>合并区域与现有合并冲突</td>
+<td><code>3014</code></td>
+<td><code>ALREADY_MERGED</code></td>
+<td>—</td>
+<td><code>merge:cells</code></td>
+</tr>
+<tr>
+<td>目标工作表/区域受保护不可写</td>
+<td><code>3003</code></td>
+<td><code>DOCUMENT_READ_ONLY</code></td>
+<td><code>scope:"worksheet"</code></td>
+<td><code>set:range</code>、<code>clear:range</code>、<code>delete:range</code>、<code>insert:range</code>、<code>set:rangeFormat</code>、<code>merge:cells</code>、<code>insert:table</code>、<code>delete:worksheet</code>、<code>set:formula</code> …</td>
+</tr>
+<tr>
+<td>公式语法错误或引用无效</td>
+<td><code>3017</code></td>
+<td><code>FORMULA_ERROR</code></td>
+<td>—</td>
+<td><code>set:formula</code></td>
+</tr>
+<tr>
+<td>写入值与目标类型不兼容（apply-time）</td>
+<td><code>3018</code></td>
+<td><code>DATA_TYPE_MISMATCH</code></td>
+<td>—</td>
+<td><code>set:range</code>、<code>add:tableRow</code></td>
+</tr>
+<tr>
+<td>平台不提供该功能（如透视表）</td>
+<td><code>3016</code></td>
+<td><code>API_NOT_SUPPORTED</code></td>
+<td><code>requiredApiSet</code> / 平台</td>
+<td><code>insert:pivotTable</code></td>
+</tr>
+<tr>
+<td>文档未打开/找不到</td>
+<td><code>3001</code></td>
+<td><code>DOCUMENT_NOT_FOUND</code></td>
+<td>—</td>
+<td><code>get:workbookInfo</code>、<code>get:worksheets</code> …</td>
+</tr>
+<tr>
+<td>参数缺失/非法/越界</td>
+<td><code>4001</code>/<code>4002</code>/<code>4004</code></td>
+<td><code>MISSING_PARAM</code> / <code>INVALID_PARAM</code> / <code>PARAM_OUT_OF_RANGE</code></td>
+<td>—</td>
+<td><code>add:conditionalFormat</code>、<code>insert:chart</code>(type)、<code>sort:table</code>、<code>delete:tableRow</code>、<code>set:autoFilter</code></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">从早期 5xxx 草案迁移</p>
+<p>早期草案曾为 <code>/excel</code> 定义 <code>5001</code>~<code>5010</code> 专属码，现已全部收敛至上述通用码（对齐 <code>/word</code>、<code>/ppt</code>）：<code>5001/5006/5007/5008 → 3010</code>（<code>details.kind</code>）、<code>5002 → 3009</code>、<code>5003 → 3014</code>、<code>5004 → 3003</code>、<code>5005 → 3017</code>、<code>5009 → 3018</code>、<code>5010 → 3016</code>。<code>5xxx</code> 不再使用。</p>
+</div>
 <hr />
 <h2 id="_3">通用说明<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <h3 id="worksheetname">worksheetName 参数<a class="headerlink" href="#worksheetname" title="Permanent link">&para;</a></h3>
@@ -3083,8 +3222,8 @@
 <td><code>DOCUMENT_NOT_FOUND</code> - 文档未找到</td>
 </tr>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 </tbody>
 </table>
@@ -3317,11 +3456,11 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5002</td>
+<td>3009</td>
 <td><code>RANGE_INVALID</code> - 无效的区域地址</td>
 </tr>
 </tbody>
@@ -3425,19 +3564,19 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5002</td>
+<td>3009</td>
 <td><code>RANGE_INVALID</code> - 无效的区域地址</td>
 </tr>
 <tr>
-<td>5004</td>
-<td><code>PROTECTED_SHEET</code> - 工作表受保护</td>
+<td>3003</td>
+<td><code>DOCUMENT_READ_ONLY</code> - 工作表受保护（<code>details.scope:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5009</td>
+<td>3018</td>
 <td><code>DATA_TYPE_MISMATCH</code> - 数据类型不匹配</td>
 </tr>
 </tbody>
@@ -3516,16 +3655,16 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5002</td>
+<td>3009</td>
 <td><code>RANGE_INVALID</code> - 无效的区域地址</td>
 </tr>
 <tr>
-<td>5004</td>
-<td><code>PROTECTED_SHEET</code> - 工作表受保护</td>
+<td>3003</td>
+<td><code>DOCUMENT_READ_ONLY</code> - 工作表受保护（<code>details.scope:"worksheet"</code>）</td>
 </tr>
 </tbody>
 </table>
@@ -3603,16 +3742,16 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5002</td>
+<td>3009</td>
 <td><code>RANGE_INVALID</code> - 无效的区域地址</td>
 </tr>
 <tr>
-<td>5004</td>
-<td><code>PROTECTED_SHEET</code> - 工作表受保护</td>
+<td>3003</td>
+<td><code>DOCUMENT_READ_ONLY</code> - 工作表受保护（<code>details.scope:"worksheet"</code>）</td>
 </tr>
 </tbody>
 </table>
@@ -3690,16 +3829,16 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5002</td>
+<td>3009</td>
 <td><code>RANGE_INVALID</code> - 无效的区域地址</td>
 </tr>
 <tr>
-<td>5004</td>
-<td><code>PROTECTED_SHEET</code> - 工作表受保护</td>
+<td>3003</td>
+<td><code>DOCUMENT_READ_ONLY</code> - 工作表受保护（<code>details.scope:"worksheet"</code>）</td>
 </tr>
 </tbody>
 </table>
@@ -3777,16 +3916,16 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5002</td>
+<td>3009</td>
 <td><code>RANGE_INVALID</code> - 无效的区域地址</td>
 </tr>
 <tr>
-<td>5004</td>
-<td><code>PROTECTED_SHEET</code> - 工作表受保护</td>
+<td>3003</td>
+<td><code>DOCUMENT_READ_ONLY</code> - 工作表受保护（<code>details.scope:"worksheet"</code>）</td>
 </tr>
 </tbody>
 </table>
@@ -3861,11 +4000,11 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5002</td>
+<td>3009</td>
 <td><code>RANGE_INVALID</code> - 无效的区域地址</td>
 </tr>
 </tbody>
@@ -3949,16 +4088,16 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5002</td>
+<td>3009</td>
 <td><code>RANGE_INVALID</code> - 无效的区域地址</td>
 </tr>
 <tr>
-<td>5004</td>
-<td><code>PROTECTED_SHEET</code> - 工作表受保护</td>
+<td>3003</td>
+<td><code>DOCUMENT_READ_ONLY</code> - 工作表受保护（<code>details.scope:"worksheet"</code>）</td>
 </tr>
 </tbody>
 </table>
@@ -4050,11 +4189,11 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5002</td>
+<td>3009</td>
 <td><code>RANGE_INVALID</code> - 无效的区域地址</td>
 </tr>
 <tr>
@@ -4104,11 +4243,11 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5002</td>
+<td>3009</td>
 <td><code>RANGE_INVALID</code> - 无效的区域地址</td>
 </tr>
 </tbody>
@@ -4155,20 +4294,20 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5002</td>
+<td>3009</td>
 <td><code>RANGE_INVALID</code> - 无效的区域地址</td>
 </tr>
 <tr>
-<td>5003</td>
-<td><code>MERGE_CONFLICT</code> - 与现有合并区域冲突</td>
+<td>3014</td>
+<td><code>ALREADY_MERGED</code> - 与现有合并区域冲突</td>
 </tr>
 <tr>
-<td>5004</td>
-<td><code>PROTECTED_SHEET</code> - 工作表受保护</td>
+<td>3003</td>
+<td><code>DOCUMENT_READ_ONLY</code> - 工作表受保护（<code>details.scope:"worksheet"</code>）</td>
 </tr>
 </tbody>
 </table>
@@ -4213,16 +4352,16 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5002</td>
+<td>3009</td>
 <td><code>RANGE_INVALID</code> - 无效的区域地址</td>
 </tr>
 <tr>
-<td>5004</td>
-<td><code>PROTECTED_SHEET</code> - 工作表受保护</td>
+<td>3003</td>
+<td><code>DOCUMENT_READ_ONLY</code> - 工作表受保护（<code>details.scope:"worksheet"</code>）</td>
 </tr>
 </tbody>
 </table>
@@ -4418,12 +4557,12 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5004</td>
-<td><code>PROTECTED_SHEET</code> - 工作表受保护</td>
+<td>3003</td>
+<td><code>DOCUMENT_READ_ONLY</code> - 工作表受保护（<code>details.scope:"worksheet"</code>）</td>
 </tr>
 </tbody>
 </table>
@@ -4494,8 +4633,8 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
 <td>3004</td>
@@ -4562,8 +4701,8 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 </tbody>
 </table>
@@ -4678,16 +4817,16 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5002</td>
+<td>3009</td>
 <td><code>RANGE_INVALID</code> - 无效的区域地址</td>
 </tr>
 <tr>
-<td>5004</td>
-<td><code>PROTECTED_SHEET</code> - 工作表受保护</td>
+<td>3003</td>
+<td><code>DOCUMENT_READ_ONLY</code> - 工作表受保护（<code>details.scope:"worksheet"</code>）</td>
 </tr>
 </tbody>
 </table>
@@ -4784,12 +4923,12 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5006</td>
-<td><code>TABLE_NOT_FOUND</code> - 指定的表格不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 表格不存在（<code>details.kind:"table"</code>）</td>
 </tr>
 </tbody>
 </table>
@@ -4846,8 +4985,8 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 </tbody>
 </table>
@@ -4925,11 +5064,11 @@
 </thead>
 <tbody>
 <tr>
-<td>5006</td>
-<td><code>TABLE_NOT_FOUND</code> - 指定的表格不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 表格不存在（<code>details.kind:"table"</code>）</td>
 </tr>
 <tr>
-<td>5009</td>
+<td>3018</td>
 <td><code>DATA_TYPE_MISMATCH</code> - 数据类型不匹配</td>
 </tr>
 </tbody>
@@ -5008,8 +5147,8 @@
 </thead>
 <tbody>
 <tr>
-<td>5006</td>
-<td><code>TABLE_NOT_FOUND</code> - 指定的表格不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 表格不存在（<code>details.kind:"table"</code>）</td>
 </tr>
 <tr>
 <td>4004</td>
@@ -5109,8 +5248,8 @@
 </thead>
 <tbody>
 <tr>
-<td>5006</td>
-<td><code>TABLE_NOT_FOUND</code> - 指定的表格不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 表格不存在（<code>details.kind:"table"</code>）</td>
 </tr>
 <tr>
 <td>4004</td>
@@ -5274,11 +5413,11 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5002</td>
+<td>3009</td>
 <td><code>RANGE_INVALID</code> - 无效的数据源范围</td>
 </tr>
 <tr>
@@ -5351,8 +5490,8 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 </tbody>
 </table>
@@ -5443,12 +5582,12 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5007</td>
-<td><code>CHART_NOT_FOUND</code> - 指定的图表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 图表不存在（<code>details.kind:"chart"</code>）</td>
 </tr>
 <tr>
 <td>4002</td>
@@ -5522,12 +5661,12 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5007</td>
-<td><code>CHART_NOT_FOUND</code> - 指定的图表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 图表不存在（<code>details.kind:"chart"</code>）</td>
 </tr>
 </tbody>
 </table>
@@ -5623,16 +5762,16 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5002</td>
+<td>3009</td>
 <td><code>RANGE_INVALID</code> - 无效的范围地址</td>
 </tr>
 <tr>
-<td>5010</td>
-<td><code>NOT_SUPPORTED</code> - 当前平台不支持透视表操作</td>
+<td>3016</td>
+<td><code>API_NOT_SUPPORTED</code> - 当前平台不支持透视表操作</td>
 </tr>
 </tbody>
 </table>
@@ -5688,8 +5827,8 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 </tbody>
 </table>
@@ -5759,12 +5898,12 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5008</td>
-<td><code>PIVOT_NOT_FOUND</code> - 指定的透视表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 透视表不存在（<code>details.kind:"pivotTable"</code>）</td>
 </tr>
 </tbody>
 </table>
@@ -5876,11 +6015,11 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5002</td>
+<td>3009</td>
 <td><code>RANGE_INVALID</code> - 无效的搜索范围</td>
 </tr>
 </tbody>
@@ -5983,11 +6122,11 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5002</td>
+<td>3009</td>
 <td><code>RANGE_INVALID</code> - 无效的范围地址</td>
 </tr>
 <tr>
@@ -6035,8 +6174,8 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 </tbody>
 </table>
@@ -6124,20 +6263,146 @@
 </thead>
 <tbody>
 <tr>
-<td>5001</td>
-<td><code>WORKSHEET_NOT_FOUND</code> - 指定的工作表不存在</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 工作表不存在（<code>details.kind:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5002</td>
+<td>3009</td>
 <td><code>RANGE_INVALID</code> - 无效的单元格地址</td>
 </tr>
 <tr>
-<td>5004</td>
-<td><code>PROTECTED_SHEET</code> - 工作表受保护</td>
+<td>3003</td>
+<td><code>DOCUMENT_READ_ONLY</code> - 工作表受保护（<code>details.scope:"worksheet"</code>）</td>
 </tr>
 <tr>
-<td>5005</td>
+<td>3017</td>
 <td><code>FORMULA_ERROR</code> - 公式语法错误或引用无效</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_10">脚本执行类<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h2>
+<h3 id="excelrunscript">excel:run:script<a class="headerlink" href="#excelrunscript" title="Permanent link">&para;</a></h3>
+<p><strong>方向</strong>: Server → AddIn（请求-响应）</p>
+<p><strong>状态</strong>: 📋 Draft</p>
+<p><strong>说明</strong>: <strong>封装层逃生舱</strong>——对实时工作簿执行一段原始 Office.js 脚本。<strong>应优先使用 typed <code>excel:*</code> 事件</strong>，仅在其未覆盖某能力、或某 typed 事件有 Bug 阻塞时使用。共享执行语义、大小限制、超时、安全模型、非原子性与错误映射见<a href="../conventions/#run-script">通用约定 · 脚本执行</a>。</p>
+<p><strong>请求数据</strong>（共享 <a href="../data-structures/#script-execution"><code>RunScriptRequest</code></a>）:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-123-1" name="__codelineno-123-1" href="#__codelineno-123-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">RunScriptRequest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-123-2" name="__codelineno-123-2" href="#__codelineno-123-2"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-123-3" name="__codelineno-123-3" href="#__codelineno-123-3"></a><span class="w">  </span><span class="nx">documentUri</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-123-4" name="__codelineno-123-4" href="#__codelineno-123-4"></a><span class="w">  </span><span class="nx">timestamp?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-123-5" name="__codelineno-123-5" href="#__codelineno-123-5"></a><span class="w">  </span><span class="nx">script</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">                    </span><span class="c1">// async 函数体；注入 context(Excel.RequestContext)/args/console，可 return</span>
+<a id="__codelineno-123-6" name="__codelineno-123-6" href="#__codelineno-123-6"></a><span class="w">  </span><span class="nx">args?</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">unknown</span><span class="o">&gt;</span><span class="p">;</span><span class="w">    </span><span class="c1">// 注入脚本，脚本内经 `args` 读取；必须可 JSON 序列化</span>
+<a id="__codelineno-123-7" name="__codelineno-123-7" href="#__codelineno-123-7"></a><span class="w">  </span><span class="nx">timeoutMs?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">                </span><span class="c1">// 执行超时（毫秒），缺省「脚本执行」档 60000，无硬上限</span>
+<a id="__codelineno-123-8" name="__codelineno-123-8" href="#__codelineno-123-8"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>字段说明</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>必需</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>script</code></td>
+<td>string</td>
+<td>✅</td>
+<td>待执行 JS 源码，async 函数体语义</td>
+</tr>
+<tr>
+<td><code>args</code></td>
+<td>Record<string, unknown></td>
+<td>❌</td>
+<td>注入脚本的参数，脚本内经 <code>args</code> 读取；必须可 JSON 序列化</td>
+</tr>
+<tr>
+<td><code>timeoutMs</code></td>
+<td>number</td>
+<td>❌</td>
+<td>执行超时（毫秒），缺省 60000，无硬上限</td>
+</tr>
+</tbody>
+</table>
+<p><strong>请求示例</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-124-1" name="__codelineno-124-1" href="#__codelineno-124-1"></a><span class="p">{</span>
+<a id="__codelineno-124-2" name="__codelineno-124-2" href="#__codelineno-124-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d&quot;</span><span class="p">,</span>
+<a id="__codelineno-124-3" name="__codelineno-124-3" href="#__codelineno-124-3"></a><span class="w">  </span><span class="nt">&quot;documentUri&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;file:///Users/john/Documents/data.xlsx&quot;</span><span class="p">,</span>
+<a id="__codelineno-124-4" name="__codelineno-124-4" href="#__codelineno-124-4"></a><span class="w">  </span><span class="nt">&quot;script&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;const sheet = context.workbook.worksheets.getActiveWorksheet();\nconst range = sheet.getRange(args.address);\nrange.load(&#39;values&#39;);\nawait context.sync();\nreturn range.values;&quot;</span><span class="p">,</span>
+<a id="__codelineno-124-5" name="__codelineno-124-5" href="#__codelineno-124-5"></a><span class="w">  </span><span class="nt">&quot;args&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;address&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;A1:B2&quot;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-124-6" name="__codelineno-124-6" href="#__codelineno-124-6"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>响应数据</strong>（<code>data</code> 为共享 <a href="../data-structures/#script-execution"><code>ScriptResult</code></a>）:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-125-1" name="__codelineno-125-1" href="#__codelineno-125-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">RunScriptResponse</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-125-2" name="__codelineno-125-2" href="#__codelineno-125-2"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-125-3" name="__codelineno-125-3" href="#__codelineno-125-3"></a><span class="w">  </span><span class="nx">success</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
+<a id="__codelineno-125-4" name="__codelineno-125-4" href="#__codelineno-125-4"></a><span class="w">  </span><span class="nx">data?</span><span class="o">:</span><span class="w"> </span><span class="kt">ScriptResult</span><span class="p">;</span><span class="w">        </span><span class="c1">// { result, logs, durationMs, logsTruncated }</span>
+<a id="__codelineno-125-5" name="__codelineno-125-5" href="#__codelineno-125-5"></a><span class="w">  </span><span class="nx">error?</span><span class="o">:</span><span class="w"> </span><span class="kt">ErrorResponse</span><span class="p">;</span>
+<a id="__codelineno-125-6" name="__codelineno-125-6" href="#__codelineno-125-6"></a><span class="w">  </span><span class="nx">timestamp</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-125-7" name="__codelineno-125-7" href="#__codelineno-125-7"></a><span class="w">  </span><span class="nx">duration?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-125-8" name="__codelineno-125-8" href="#__codelineno-125-8"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>响应示例</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-126-1" name="__codelineno-126-1" href="#__codelineno-126-1"></a><span class="p">{</span>
+<a id="__codelineno-126-2" name="__codelineno-126-2" href="#__codelineno-126-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d&quot;</span><span class="p">,</span>
+<a id="__codelineno-126-3" name="__codelineno-126-3" href="#__codelineno-126-3"></a><span class="w">  </span><span class="nt">&quot;success&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-126-4" name="__codelineno-126-4" href="#__codelineno-126-4"></a><span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-126-5" name="__codelineno-126-5" href="#__codelineno-126-5"></a><span class="w">    </span><span class="nt">&quot;result&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[[</span><span class="s2">&quot;姓名&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;年龄&quot;</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;张三&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">25</span><span class="p">]],</span>
+<a id="__codelineno-126-6" name="__codelineno-126-6" href="#__codelineno-126-6"></a><span class="w">    </span><span class="nt">&quot;logs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+<a id="__codelineno-126-7" name="__codelineno-126-7" href="#__codelineno-126-7"></a><span class="w">    </span><span class="nt">&quot;durationMs&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span>
+<a id="__codelineno-126-8" name="__codelineno-126-8" href="#__codelineno-126-8"></a><span class="w">    </span><span class="nt">&quot;logsTruncated&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-126-9" name="__codelineno-126-9" href="#__codelineno-126-9"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-126-10" name="__codelineno-126-10" href="#__codelineno-126-10"></a><span class="w">  </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1704067200500</span><span class="p">,</span>
+<a id="__codelineno-126-11" name="__codelineno-126-11" href="#__codelineno-126-11"></a><span class="w">  </span><span class="nt">&quot;duration&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">45</span>
+<a id="__codelineno-126-12" name="__codelineno-126-12" href="#__codelineno-126-12"></a><span class="p">}</span>
+</code></pre></div>
+<div class="admonition danger">
+<p class="admonition-title">安全模型与非原子性</p>
+<p><code>run:script</code> 以敞开全局对象的原生 JS 执行、<strong>非沙箱</strong>，信任边界即 Socket.IO 握手鉴权；失败时文档可能残留<strong>部分修改</strong>（无原子性 / 回滚）。执行前的人在环确认由<strong>上层 Agent 层</strong>承担，OASP 为纯能力提供方。完整规范见<a href="../conventions/#run-script">通用约定 · 脚本执行</a>。</p>
+</div>
+<p><strong>可能的错误</strong>（完整映射见<a href="../conventions/#run-script-errors">通用约定 · 脚本执行 · 错误映射</a>）:</p>
+<table>
+<thead>
+<tr>
+<th>错误码</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4001</td>
+<td><code>MISSING_PARAM</code> - 缺少 <code>script</code></td>
+</tr>
+<tr>
+<td>4003</td>
+<td><code>INVALID_PARAM_TYPE</code> - <code>args</code> 不可 JSON 序列化</td>
+</tr>
+<tr>
+<td>4004</td>
+<td><code>PARAM_OUT_OF_RANGE</code> - <code>timeoutMs</code> 越界</td>
+</tr>
+<tr>
+<td>4002</td>
+<td><code>INVALID_PARAM</code> - 脚本语法错（<code>phase:"compile"</code>）</td>
+</tr>
+<tr>
+<td>3016</td>
+<td><code>API_NOT_SUPPORTED</code> - 宿主不支持动态代码构造（<code>phase:"compile"</code>）</td>
+</tr>
+<tr>
+<td>3004</td>
+<td><code>OPERATION_FAILED</code> - 脚本自身抛错（<code>fault:"script"</code>）或 Office.js 调用失败（<code>fault:"office"</code>）</td>
+</tr>
+<tr>
+<td>1002</td>
+<td><code>TIMEOUT</code> - 执行超时</td>
+</tr>
+<tr>
+<td>3006</td>
+<td><code>CONTENT_TOO_LARGE</code> - result 过大（<code>phase:"serialize"</code>）</td>
 </tr>
 </tbody>
 </table>

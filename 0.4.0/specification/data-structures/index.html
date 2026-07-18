@@ -1290,6 +1290,45 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#script-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        脚本执行
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="脚本执行">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#runscriptrequest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RunScriptRequest
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scriptresult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScriptResult
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2111,6 +2150,45 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#script-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        脚本执行
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="脚本执行">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#runscriptrequest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RunScriptRequest
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scriptresult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScriptResult
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2742,6 +2820,32 @@
 <a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Start&quot;</span><span class="w">                </span><span class="c1">// 在目标开头</span>
 <a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;End&quot;</span><span class="w">                  </span><span class="c1">// 在目标末尾</span>
 <a id="__codelineno-32-6" name="__codelineno-32-6" href="#__codelineno-32-6"></a><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Replace&quot;</span><span class="p">;</span><span class="w">             </span><span class="c1">// 替换目标</span>
+</code></pre></div>
+<hr />
+<h2 id="script-execution">脚本执行<a class="headerlink" href="#script-execution" title="Permanent link">&para;</a></h2>
+<p><code>{namespace}:run:script</code>（<code>excel:run:script</code> / <code>word:run:script</code> / <code>ppt:run:script</code>）是<strong>封装层逃生舱</strong>：调用方下发一段 JS 源码，AddIn 注入宿主 <code>RequestContext</code> 后按 Office.js 语义直接执行，回传返回值与日志。定位、执行语义、超时、大小限制、安全模型、非原子性与错误映射统一见<a href="../conventions/#run-script">通用约定 · 脚本执行</a>。三命名空间的请求与结果结构<strong>完全相同</strong>，故在此共享。</p>
+<div class="admonition note">
+<p class="admonition-title">有意的跨命名空间「相同」（非命名不一致）</p>
+<p><code>RunScriptRequest</code> / <code>ScriptResult</code> 是<strong>宿主无关的执行信封</strong>——承载「一段代码 + 其产出」，宿主差异（<code>Excel</code> / <code>Word</code> / <code>PowerPoint</code> 各自的对象模型）全部落在脚本内部的 <code>context</code> 上、不进入信封。故它与 <code>BaseRequest</code> / <code>BaseResponse</code> 同属<strong>传输层</strong>，三命名空间<strong>应当共享同一结构</strong>；这与 <a href="#wordfont"><code>WordFont</code></a> ≠ <code>PptFont</code>（宿主语义层实体、有意零映射对齐各自宿主）方向相反、各自适用。后人<strong>不应</strong>将其拆成三份 per-namespace 结构。</p>
+</div>
+<h3 id="runscriptrequest">RunScriptRequest<a class="headerlink" href="#runscriptrequest" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">RunScriptRequest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a><span class="w">  </span><span class="nx">documentUri</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a><span class="w">  </span><span class="nx">timestamp?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-33-5" name="__codelineno-33-5" href="#__codelineno-33-5"></a><span class="w">  </span><span class="nx">script</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">                    </span><span class="c1">// 待执行 JS 源码；以 async 函数体语义执行，可用 return 返回结果</span>
+<a id="__codelineno-33-6" name="__codelineno-33-6" href="#__codelineno-33-6"></a><span class="w">  </span><span class="nx">args?</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">unknown</span><span class="o">&gt;</span><span class="p">;</span><span class="w">    </span><span class="c1">// 注入脚本的参数，脚本内经全局 `args` 读取；必须可 JSON 序列化</span>
+<a id="__codelineno-33-7" name="__codelineno-33-7" href="#__codelineno-33-7"></a><span class="w">  </span><span class="nx">timeoutMs?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">                </span><span class="c1">// 执行超时（毫秒）；缺省取「脚本执行」档默认值（60000），无硬上限</span>
+<a id="__codelineno-33-8" name="__codelineno-33-8" href="#__codelineno-33-8"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="scriptresult">ScriptResult<a class="headerlink" href="#scriptresult" title="Permanent link">&para;</a></h3>
+<p><code>run:script</code> 成功响应的 <code>data</code>。</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">ScriptResult</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a><span class="w">  </span><span class="nx">result</span><span class="o">:</span><span class="w"> </span><span class="kt">unknown</span><span class="p">;</span><span class="w">          </span><span class="c1">// 脚本 return 的值，已序列化为纯 JSON；无返回值时为 null</span>
+<a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a><span class="w">  </span><span class="nx">logs</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span><span class="w">           </span><span class="c1">// 脚本内 console.* 的输出，按调用顺序</span>
+<a id="__codelineno-34-4" name="__codelineno-34-4" href="#__codelineno-34-4"></a><span class="w">  </span><span class="nx">durationMs</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">       </span><span class="c1">// 脚本执行耗时（毫秒）</span>
+<a id="__codelineno-34-5" name="__codelineno-34-5" href="#__codelineno-34-5"></a><span class="w">  </span><span class="nx">logsTruncated</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w">   </span><span class="c1">// 日志是否因超限（见 conventions#run-script）被截断</span>
+<a id="__codelineno-34-6" name="__codelineno-34-6" href="#__codelineno-34-6"></a><span class="p">}</span>
 </code></pre></div>
 
 

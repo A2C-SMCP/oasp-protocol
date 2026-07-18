@@ -709,6 +709,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#server-addin-_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        脚本执行类（Server → AddIn，请求-响应）
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1119,6 +1130,34 @@
     <span class="md-ellipsis">
       
         ppt:insert:slidesOoxml
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        脚本执行类
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="脚本执行类">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pptrunscript" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ppt:run:script
       
     </span>
   </a>
@@ -1498,6 +1537,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#server-addin-_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        脚本执行类（Server → AddIn，请求-响应）
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1919,6 +1969,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        脚本执行类
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="脚本执行类">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pptrunscript" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ppt:run:script
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2155,6 +2233,23 @@
 <p class="admonition-title">关于 ppt:insert:video</p>
 <p>PowerPoint JavaScript API <strong>不支持</strong>插入视频/音频元素。此功能标记为 🚫 Not Feasible，不在事件列表中定义。</p>
 </div>
+<h3 id="server-addin-_5">脚本执行类（Server → AddIn，请求-响应）<a class="headerlink" href="#server-addin-_5" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>事件名</th>
+<th>状态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#pptrunscript">ppt:run:script</a></td>
+<td>📋 Draft</td>
+<td>执行原始 Office.js 脚本（封装层逃生舱）</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h2 id="_3">事件报告类<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <h3 id="ppteventslidechanged">ppt:event:slideChanged<a class="headerlink" href="#ppteventslidechanged" title="Permanent link">&para;</a></h3>
@@ -2408,7 +2503,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -2547,7 +2642,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -2657,8 +2752,16 @@
 <td><code>INVALID_PARAM</code> - slideIndex 超出范围</td>
 </tr>
 <tr>
+<td>3007</td>
+<td><code>FORMAT_NOT_SUPPORTED</code> - <code>options.format</code> 枚举合法但目标不支持渲染该格式；改请求另一格式重发（见<a href="../error-handling/#format_not_supported-3007">判法划界</a>）</td>
+</tr>
+<tr>
+<td>3016</td>
+<td><code>API_NOT_SUPPORTED</code> - 该事件在当前宿主/平台整体不可用（换格式无用，须换路径或平台）</td>
+</tr>
+<tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -2881,7 +2984,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -2997,7 +3100,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -3173,7 +3276,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -3439,7 +3542,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -3587,7 +3690,11 @@
 </tr>
 <tr>
 <td>4002</td>
-<td><code>INVALID_PARAM</code> - Base64 数据无效或 slideIndex 超出范围</td>
+<td><code>INVALID_PARAM</code> - Base64 数据无法解码（线缆层）或 slideIndex 超出范围</td>
+</tr>
+<tr>
+<td>3007</td>
+<td><code>FORMAT_NOT_SUPPORTED</code> - 图片可解码但格式不受支持（见<a href="../error-handling/#format_not_supported-3007">判法划界</a>）</td>
 </tr>
 <tr>
 <td>3001</td>
@@ -3595,7 +3702,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -3757,7 +3864,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -3976,7 +4083,11 @@
 </tr>
 <tr>
 <td>3010</td>
-<td><code>ELEMENT_NOT_FOUND</code> - 指定 elementId 不存在或不是图表元素</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 指定 elementId 不存在</td>
+</tr>
+<tr>
+<td>3004</td>
+<td><code>OPERATION_FAILED</code> - 元素类型不是图表</td>
 </tr>
 <tr>
 <td>3001</td>
@@ -4099,7 +4210,11 @@
 </tr>
 <tr>
 <td>3010</td>
-<td><code>ELEMENT_NOT_FOUND</code> - 指定 elementId 不存在或不是图表元素</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 指定 elementId 不存在</td>
+</tr>
+<tr>
+<td>3004</td>
+<td><code>OPERATION_FAILED</code> - 元素类型不是图表</td>
 </tr>
 <tr>
 <td>3015</td>
@@ -4284,8 +4399,12 @@
 <td><code>INVALID_PARAM</code> - <code>runs</code> / <code>paragraphs</code> 的 <code>start</code>/<code>length</code> 越界（<code>start &lt; 0</code> 或 <code>start + length &gt; text.length</code>），或 <code>underline</code> / <code>bulletFormat.type</code> 不在枚举内</td>
 </tr>
 <tr>
-<td>3003</td>
-<td><code>OPERATION_FAILED</code> - 元素未找到或元素类型不支持文本编辑</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 指定 elementId 不存在</td>
+</tr>
+<tr>
+<td>3004</td>
+<td><code>OPERATION_FAILED</code> - 元素类型不支持文本编辑</td>
 </tr>
 <tr>
 <td>3016</td>
@@ -4297,7 +4416,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -4408,8 +4527,8 @@
 <td><code>MISSING_PARAM</code> - 缺少 elementId 或 elementIds</td>
 </tr>
 <tr>
-<td>3003</td>
-<td><code>OPERATION_FAILED</code> - 元素未找到</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 指定 elementId 不存在</td>
 </tr>
 <tr>
 <td>4002</td>
@@ -4421,7 +4540,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -4553,12 +4672,20 @@
 <td><code>MISSING_PARAM</code> - 缺少 elementId 或 image.base64</td>
 </tr>
 <tr>
-<td>3003</td>
-<td><code>OPERATION_FAILED</code> - 元素未找到或不是图片类型</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 指定 elementId 不存在</td>
+</tr>
+<tr>
+<td>3004</td>
+<td><code>OPERATION_FAILED</code> - 元素类型不是图片</td>
 </tr>
 <tr>
 <td>4002</td>
-<td><code>INVALID_PARAM</code> - Base64 数据无效</td>
+<td><code>INVALID_PARAM</code> - Base64 数据无法解码（线缆层）</td>
+</tr>
+<tr>
+<td>3007</td>
+<td><code>FORMAT_NOT_SUPPORTED</code> - 图片可解码但格式不受支持（见<a href="../error-handling/#format_not_supported-3007">判法划界</a>）</td>
 </tr>
 <tr>
 <td>3001</td>
@@ -4566,7 +4693,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -4685,8 +4812,12 @@
 <td><code>MISSING_PARAM</code> - 缺少 elementId 或 cells</td>
 </tr>
 <tr>
-<td>3003</td>
-<td><code>OPERATION_FAILED</code> - 元素未找到或不是表格类型</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 指定 elementId 不存在</td>
+</tr>
+<tr>
+<td>3004</td>
+<td><code>OPERATION_FAILED</code> - 元素类型不是表格</td>
 </tr>
 <tr>
 <td>4002</td>
@@ -4698,7 +4829,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -4834,8 +4965,12 @@
 <td><code>MISSING_PARAM</code> - 缺少 elementId，或 rows 和 columns 均未提供</td>
 </tr>
 <tr>
-<td>3003</td>
-<td><code>OPERATION_FAILED</code> - 元素未找到或不是表格类型</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 指定 elementId 不存在</td>
+</tr>
+<tr>
+<td>3004</td>
+<td><code>OPERATION_FAILED</code> - 元素类型不是表格</td>
 </tr>
 <tr>
 <td>4002</td>
@@ -4847,7 +4982,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -4986,8 +5121,12 @@
 <td><code>MISSING_PARAM</code> - 缺少 elementId</td>
 </tr>
 <tr>
-<td>3003</td>
-<td><code>OPERATION_FAILED</code> - 元素未找到或不是表格类型</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 指定 elementId 不存在</td>
+</tr>
+<tr>
+<td>3004</td>
+<td><code>OPERATION_FAILED</code> - 元素类型不是表格</td>
 </tr>
 <tr>
 <td>4002</td>
@@ -5003,7 +5142,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -5151,8 +5290,8 @@
 <td><code>MISSING_PARAM</code> - 缺少 elementId 或 updates</td>
 </tr>
 <tr>
-<td>3003</td>
-<td><code>OPERATION_FAILED</code> - 元素未找到</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 指定 elementId 不存在</td>
 </tr>
 <tr>
 <td>4002</td>
@@ -5164,7 +5303,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -5289,8 +5428,8 @@
 <td><code>MISSING_PARAM</code> - 缺少 elementId 或 action</td>
 </tr>
 <tr>
-<td>3003</td>
-<td><code>OPERATION_FAILED</code> - 元素未找到</td>
+<td>3010</td>
+<td><code>ELEMENT_NOT_FOUND</code> - 指定 elementId 不存在</td>
 </tr>
 <tr>
 <td>4002</td>
@@ -5302,7 +5441,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -5407,7 +5546,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -5482,11 +5621,16 @@
 <a id="__codelineno-92-2" name="__codelineno-92-2" href="#__codelineno-92-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d&quot;</span><span class="p">,</span>
 <a id="__codelineno-92-3" name="__codelineno-92-3" href="#__codelineno-92-3"></a><span class="w">  </span><span class="nt">&quot;success&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
 <a id="__codelineno-92-4" name="__codelineno-92-4" href="#__codelineno-92-4"></a><span class="w">  </span><span class="nt">&quot;error&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-92-5" name="__codelineno-92-5" href="#__codelineno-92-5"></a><span class="w">    </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;4002&quot;</span><span class="p">,</span>
-<a id="__codelineno-92-6" name="__codelineno-92-6" href="#__codelineno-92-6"></a><span class="w">    </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Slide index 15 out of range, total slides: 10&quot;</span>
-<a id="__codelineno-92-7" name="__codelineno-92-7" href="#__codelineno-92-7"></a><span class="w">  </span><span class="p">},</span>
-<a id="__codelineno-92-8" name="__codelineno-92-8" href="#__codelineno-92-8"></a><span class="w">  </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1704067200500</span>
-<a id="__codelineno-92-9" name="__codelineno-92-9" href="#__codelineno-92-9"></a><span class="p">}</span>
+<a id="__codelineno-92-5" name="__codelineno-92-5" href="#__codelineno-92-5"></a><span class="w">    </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3008&quot;</span><span class="p">,</span>
+<a id="__codelineno-92-6" name="__codelineno-92-6" href="#__codelineno-92-6"></a><span class="w">    </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Slide index 15 out of range, total slides: 10&quot;</span><span class="p">,</span>
+<a id="__codelineno-92-7" name="__codelineno-92-7" href="#__codelineno-92-7"></a><span class="w">    </span><span class="nt">&quot;details&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-92-8" name="__codelineno-92-8" href="#__codelineno-92-8"></a><span class="w">      </span><span class="nt">&quot;index&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span>
+<a id="__codelineno-92-9" name="__codelineno-92-9" href="#__codelineno-92-9"></a><span class="w">      </span><span class="nt">&quot;total&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
+<a id="__codelineno-92-10" name="__codelineno-92-10" href="#__codelineno-92-10"></a><span class="w">      </span><span class="nt">&quot;kind&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;slide&quot;</span>
+<a id="__codelineno-92-11" name="__codelineno-92-11" href="#__codelineno-92-11"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-92-12" name="__codelineno-92-12" href="#__codelineno-92-12"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-92-13" name="__codelineno-92-13" href="#__codelineno-92-13"></a><span class="w">  </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1704067200500</span>
+<a id="__codelineno-92-14" name="__codelineno-92-14" href="#__codelineno-92-14"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong>可能的错误</strong>:</p>
 <table>
@@ -5502,8 +5646,8 @@
 <td><code>MISSING_PARAM</code> - 缺少 slideIndex</td>
 </tr>
 <tr>
-<td>4002</td>
-<td><code>INVALID_PARAM</code> - slideIndex 超出范围</td>
+<td>3008</td>
+<td><code>POSITION_INVALID</code> - slideIndex 超出当前演示文稿的实际页数（见<a href="../error-handling/#position_invalid-3008">判法划界</a>）</td>
 </tr>
 <tr>
 <td>3001</td>
@@ -5511,7 +5655,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -5632,7 +5776,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -5714,8 +5858,8 @@
 <td><code>MISSING_PARAM</code> - 缺少 slideIndex</td>
 </tr>
 <tr>
-<td>4002</td>
-<td><code>INVALID_PARAM</code> - slideIndex 超出范围</td>
+<td>3008</td>
+<td><code>POSITION_INVALID</code> - slideIndex 超出当前演示文稿的实际页数（见<a href="../error-handling/#position_invalid-3008">判法划界</a>）</td>
 </tr>
 <tr>
 <td>3001</td>
@@ -5723,7 +5867,7 @@
 </tr>
 <tr>
 <td>3000</td>
-<td><code>OFFICE_API_ERROR</code> - Office API 调用错误</td>
+<td><code>DOCUMENT_ERROR</code> - 文档操作错误（通用）</td>
 </tr>
 </tbody>
 </table>
@@ -5988,6 +6132,135 @@
 <tr>
 <td>3016</td>
 <td><code>API_NOT_SUPPORTED</code> - 所需能力（插入需 PowerPointApi 1.2、finalSlideIndex 复位需 1.8）在当前客户端/平台不满足；调用方应降级到另一实现路径</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_9">脚本执行类<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h2>
+<h3 id="pptrunscript">ppt:run:script<a class="headerlink" href="#pptrunscript" title="Permanent link">&para;</a></h3>
+<p><strong>方向</strong>: Server → AddIn（请求-响应）</p>
+<p><strong>状态</strong>: 📋 Draft</p>
+<p><strong>说明</strong>: <strong>封装层逃生舱</strong>——对实时演示文稿执行一段原始 Office.js 脚本。<strong>应优先使用 typed <code>ppt:*</code> 事件</strong>，仅在其未覆盖某能力、或某 typed 事件有 Bug 阻塞时使用。共享执行语义、大小限制、超时、安全模型、非原子性与错误映射见<a href="../conventions/#run-script">通用约定 · 脚本执行</a>。</p>
+<p><strong>请求数据</strong>（共享 <a href="../data-structures/#script-execution"><code>RunScriptRequest</code></a>）:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-110-1" name="__codelineno-110-1" href="#__codelineno-110-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">RunScriptRequest</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-110-2" name="__codelineno-110-2" href="#__codelineno-110-2"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-110-3" name="__codelineno-110-3" href="#__codelineno-110-3"></a><span class="w">  </span><span class="nx">documentUri</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-110-4" name="__codelineno-110-4" href="#__codelineno-110-4"></a><span class="w">  </span><span class="nx">timestamp?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-110-5" name="__codelineno-110-5" href="#__codelineno-110-5"></a><span class="w">  </span><span class="nx">script</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">                    </span><span class="c1">// async 函数体；注入 context(PowerPoint.RequestContext)/args/console，可 return</span>
+<a id="__codelineno-110-6" name="__codelineno-110-6" href="#__codelineno-110-6"></a><span class="w">  </span><span class="nx">args?</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">unknown</span><span class="o">&gt;</span><span class="p">;</span><span class="w">    </span><span class="c1">// 注入脚本，脚本内经 `args` 读取；必须可 JSON 序列化</span>
+<a id="__codelineno-110-7" name="__codelineno-110-7" href="#__codelineno-110-7"></a><span class="w">  </span><span class="nx">timeoutMs?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">                </span><span class="c1">// 执行超时（毫秒），缺省「脚本执行」档 60000，无硬上限</span>
+<a id="__codelineno-110-8" name="__codelineno-110-8" href="#__codelineno-110-8"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>字段说明</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>必需</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>script</code></td>
+<td>string</td>
+<td>✅</td>
+<td>待执行 JS 源码，async 函数体语义</td>
+</tr>
+<tr>
+<td><code>args</code></td>
+<td>Record<string, unknown></td>
+<td>❌</td>
+<td>注入脚本的参数，脚本内经 <code>args</code> 读取；必须可 JSON 序列化</td>
+</tr>
+<tr>
+<td><code>timeoutMs</code></td>
+<td>number</td>
+<td>❌</td>
+<td>执行超时（毫秒），缺省 60000，无硬上限</td>
+</tr>
+</tbody>
+</table>
+<p><strong>请求示例</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-111-1" name="__codelineno-111-1" href="#__codelineno-111-1"></a><span class="p">{</span>
+<a id="__codelineno-111-2" name="__codelineno-111-2" href="#__codelineno-111-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d&quot;</span><span class="p">,</span>
+<a id="__codelineno-111-3" name="__codelineno-111-3" href="#__codelineno-111-3"></a><span class="w">  </span><span class="nt">&quot;documentUri&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;file:///Users/john/Documents/deck.pptx&quot;</span><span class="p">,</span>
+<a id="__codelineno-111-4" name="__codelineno-111-4" href="#__codelineno-111-4"></a><span class="w">  </span><span class="nt">&quot;script&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;const slides = context.presentation.slides;\nslides.load(&#39;items&#39;);\nawait context.sync();\nreturn slides.items.length;&quot;</span>
+<a id="__codelineno-111-5" name="__codelineno-111-5" href="#__codelineno-111-5"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>响应数据</strong>（<code>data</code> 为共享 <a href="../data-structures/#script-execution"><code>ScriptResult</code></a>）:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-112-1" name="__codelineno-112-1" href="#__codelineno-112-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">RunScriptResponse</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-112-2" name="__codelineno-112-2" href="#__codelineno-112-2"></a><span class="w">  </span><span class="nx">requestId</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-112-3" name="__codelineno-112-3" href="#__codelineno-112-3"></a><span class="w">  </span><span class="nx">success</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
+<a id="__codelineno-112-4" name="__codelineno-112-4" href="#__codelineno-112-4"></a><span class="w">  </span><span class="nx">data?</span><span class="o">:</span><span class="w"> </span><span class="kt">ScriptResult</span><span class="p">;</span><span class="w">        </span><span class="c1">// { result, logs, durationMs, logsTruncated }</span>
+<a id="__codelineno-112-5" name="__codelineno-112-5" href="#__codelineno-112-5"></a><span class="w">  </span><span class="nx">error?</span><span class="o">:</span><span class="w"> </span><span class="kt">ErrorResponse</span><span class="p">;</span>
+<a id="__codelineno-112-6" name="__codelineno-112-6" href="#__codelineno-112-6"></a><span class="w">  </span><span class="nx">timestamp</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-112-7" name="__codelineno-112-7" href="#__codelineno-112-7"></a><span class="w">  </span><span class="nx">duration?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-112-8" name="__codelineno-112-8" href="#__codelineno-112-8"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>响应示例</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-113-1" name="__codelineno-113-1" href="#__codelineno-113-1"></a><span class="p">{</span>
+<a id="__codelineno-113-2" name="__codelineno-113-2" href="#__codelineno-113-2"></a><span class="w">  </span><span class="nt">&quot;requestId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d&quot;</span><span class="p">,</span>
+<a id="__codelineno-113-3" name="__codelineno-113-3" href="#__codelineno-113-3"></a><span class="w">  </span><span class="nt">&quot;success&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-113-4" name="__codelineno-113-4" href="#__codelineno-113-4"></a><span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-113-5" name="__codelineno-113-5" href="#__codelineno-113-5"></a><span class="w">    </span><span class="nt">&quot;result&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span>
+<a id="__codelineno-113-6" name="__codelineno-113-6" href="#__codelineno-113-6"></a><span class="w">    </span><span class="nt">&quot;logs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+<a id="__codelineno-113-7" name="__codelineno-113-7" href="#__codelineno-113-7"></a><span class="w">    </span><span class="nt">&quot;durationMs&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">38</span><span class="p">,</span>
+<a id="__codelineno-113-8" name="__codelineno-113-8" href="#__codelineno-113-8"></a><span class="w">    </span><span class="nt">&quot;logsTruncated&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-113-9" name="__codelineno-113-9" href="#__codelineno-113-9"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-113-10" name="__codelineno-113-10" href="#__codelineno-113-10"></a><span class="w">  </span><span class="nt">&quot;timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1704067200500</span><span class="p">,</span>
+<a id="__codelineno-113-11" name="__codelineno-113-11" href="#__codelineno-113-11"></a><span class="w">  </span><span class="nt">&quot;duration&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">40</span>
+<a id="__codelineno-113-12" name="__codelineno-113-12" href="#__codelineno-113-12"></a><span class="p">}</span>
+</code></pre></div>
+<div class="admonition info">
+<p class="admonition-title">PPT 宿主能力自检（实现提示 / 非规范）</p>
+<p><code>PowerPointApi</code> requirement set 起步较晚，脚本调用当前宿主<strong>不存在</strong>的 API 时，代理对象上的方法为 <code>undefined</code> → 抛 <code>TypeError</code>，会被错误映射记为 <code>fault:"script"</code>（而真因是宿主能力不足）。脚本<strong>建议</strong>先用全局 <code>Office.context.requirements.isSetSupported("PowerPointApi", "1.x")</code> 自检目标能力再调用，以获得更准确的失败归因。</p>
+</div>
+<div class="admonition danger">
+<p class="admonition-title">安全模型与非原子性</p>
+<p><code>run:script</code> 以敞开全局对象的原生 JS 执行、<strong>非沙箱</strong>，信任边界即 Socket.IO 握手鉴权；失败时文档可能残留<strong>部分修改</strong>（无原子性 / 回滚）。执行前的人在环确认由<strong>上层 Agent 层</strong>承担，OASP 为纯能力提供方。完整规范见<a href="../conventions/#run-script">通用约定 · 脚本执行</a>。</p>
+</div>
+<p><strong>可能的错误</strong>（完整映射见<a href="../conventions/#run-script-errors">通用约定 · 脚本执行 · 错误映射</a>）:</p>
+<table>
+<thead>
+<tr>
+<th>错误码</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4001</td>
+<td><code>MISSING_PARAM</code> - 缺少 <code>script</code></td>
+</tr>
+<tr>
+<td>4003</td>
+<td><code>INVALID_PARAM_TYPE</code> - <code>args</code> 不可 JSON 序列化</td>
+</tr>
+<tr>
+<td>4004</td>
+<td><code>PARAM_OUT_OF_RANGE</code> - <code>timeoutMs</code> 越界</td>
+</tr>
+<tr>
+<td>4002</td>
+<td><code>INVALID_PARAM</code> - 脚本语法错（<code>phase:"compile"</code>）</td>
+</tr>
+<tr>
+<td>3016</td>
+<td><code>API_NOT_SUPPORTED</code> - 宿主不支持动态代码构造（<code>phase:"compile"</code>）</td>
+</tr>
+<tr>
+<td>3004</td>
+<td><code>OPERATION_FAILED</code> - 脚本自身抛错（<code>fault:"script"</code>）或 Office.js 调用失败（<code>fault:"office"</code>）</td>
+</tr>
+<tr>
+<td>1002</td>
+<td><code>TIMEOUT</code> - 执行超时</td>
+</tr>
+<tr>
+<td>3006</td>
+<td><code>CONTENT_TOO_LARGE</code> - result 过大（<code>phase:"serialize"</code>）</td>
 </tr>
 </tbody>
 </table>
