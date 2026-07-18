@@ -7,7 +7,10 @@
 
 ---
 
-## [Unreleased]
+## [0.4.0] - 2026-07-18
+
+!!! note "0.4.0 于 2026-07-18 原地重切"
+    0.4.0 首次切版于 2026-07-13，仅含本节末尾三条字体类变更。此后合入的 [#20](https://github.com/A2C-SMCP/oasp-protocol/issues/20)、[#17](https://github.com/A2C-SMCP/oasp-protocol/issues/17)、[#18](https://github.com/A2C-SMCP/oasp-protocol/issues/18)（`run:script` 逃生舱）原定随 `0.5.0` 发布；因截至重切时**无任何实现声明过 0.4.0**（office4ai 线上 `0.2.0`、office-editor4ai 未发版），不存在「同为 0.4.0 但事件集不同」的握手分叉风险，故取消 `0.5.0`、原地重切 0.4.0 并入三者。`v0.4.0` tag 与文档站 0.4.0 一并重新指向本次内容。
 
 ### 裁决四个 3xxx 孤儿错误码 —— `3012` 收敛 / `3007`·`3008` 接线 / `3005` 退役（订正非合规降级）
 
@@ -127,8 +130,6 @@
 **待裁决收敛**（原 issue 6 项 → 3 项由架构判断消除）：确认门移至上层 Agent 层后，「用户拒绝执行」新码（原候选 `3019`）**取消**（拒绝发生在 Agent 层、请求不到线缆）、确认门握手能力位**取消**、「能力被关闭」码收敛为既有 `3016`（仅剩宿主真的跑不了这一种）。动作词取 `run`（对齐 Office.js `Excel.run`/`Word.run`）；错误码取「compile→`4002` / execute→`3004` 且 `details.fault` 区分」而非专用码（承 #17 收敛号段之势）；不引入 `dryRun`。
 
 **兼容性**：纯加法 MINOR。`/excel`·`/ppt` 为 Draft；`/word` 为 Stable 但本事件为**纯加法**（新增事件不改任何既有契约），符合 Stable 变更门槛。跨仓跟进——office4ai：每命名空间一个 MCP 工具（`{ns}_run_script`，ESCAPE HATCH 定位 + 优先 typed 的 description，与既有离线 `office_run_script` 互指）、`{ns}:run:script` 派生 `server_timeout=(timeoutMs??60s)+GRACE`；office-editor4ai：三端 `AsyncFunction` 执行器（宿主无关核心进 `shared`）、`client.ts` 双重 ack 修复、**发版前**补测 Windows/WebView2 + Office-on-web 探针。
-
-## [0.4.0] - 2026-07-13
 
 ### /word 字体字段收敛为 WordFont + 修正 UnderlineStyle（含 Stable 破坏性变更）
 

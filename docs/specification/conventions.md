@@ -358,7 +358,7 @@ OASP 体系有三方（AI Agent / Server / AddIn），但**协议层只涉及 Se
 
 ### 版本号语义（MAJOR.MINOR.PATCH）
 
-协议版本号采用[语义化版本](https://semver.org/lang/zh-CN/)，格式 `MAJOR.MINOR.PATCH`，单一来源为 `pyproject.toml` 的 `version` 字段（当前 `0.3.0`，由 `bump-my-version` 管理）。
+协议版本号采用[语义化版本](https://semver.org/lang/zh-CN/)，格式 `MAJOR.MINOR.PATCH`，单一来源为 `pyproject.toml` 的 `version` 字段（当前 `{{ protocol_version }}`，由 `bump-my-version` 管理）。
 
 | 位 | 触发条件（任一即 bump） | 兼容性 |
 |----|------------------------|--------|
